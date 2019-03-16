@@ -16,7 +16,9 @@
     <modules>
         <module>HDSNotary-Server</module>
         <module>HDSNotary-Client</module>
+        <module>HDSNotaryLib</module>
     </modules>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
