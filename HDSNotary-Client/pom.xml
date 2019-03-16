@@ -43,6 +43,23 @@
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>java</executable>
+                    <mainClass>${mainClass}</mainClass>
+                    <includePluginDependencies>true</includePluginDependencies>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>appassembler-maven-plugin</artifactId>
                 <version>1.10</version>
                 <executions>
@@ -55,8 +72,10 @@
                 </executions>
                 <configuration>
                     <programs>
-                        <mainClass>${mainClass}</mainClass>
-                        <id>${project.artifactId}</id>
+                        <program>
+                            <mainClass>${mainClass}</mainClass>
+                            <id>${project.artifactId}</id>
+                        </program>
                     </programs>
                 </configuration>
             </plugin>

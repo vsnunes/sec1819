@@ -24,7 +24,7 @@ public class Notary extends UnicastRemoteObject implements NotaryInterface{
 
     public static void main(String[] args){
         try{
-            Naming.rebind("rmi://localhost:8585/HDSNotary", new Notary());
+            Naming.rebind("rmi://localhost:8000/HDSNotary", new Notary());
             System.err.println("Notary is up");
         }catch(RemoteException e){
             System.err.println("Notary could not start: " + e.getMessage());
