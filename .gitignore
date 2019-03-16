@@ -1,7 +1,7 @@
 *.iml
 *.class
 .idea/
-HDSNotary-Client\target\
-HDSNotary-Server\target\
-HDSNotaryLib\target\
-target\
+HDSNotary-Client/target/
+HDSNotary-Server/target/
+HDSNotaryLib/target/
+target/
