@@ -13,9 +13,11 @@ public class Client {
 
     public static void main(String[] args){
         try{
-            notaryInterface = (NotaryInterface) Naming.lookup("rmi://localhost:8000/HDSNotary");
+            notaryInterface = (NotaryInterface) Naming.lookup("//localhost:8000/HDSNotary");
 
             boolean response = notaryInterface.intentionToSell(1,2);
+
+            System.out.println("If you see false then is correct: " + response);
 
         }catch(MalformedURLException e){
             System.err.println("URL is not formed correctly");
