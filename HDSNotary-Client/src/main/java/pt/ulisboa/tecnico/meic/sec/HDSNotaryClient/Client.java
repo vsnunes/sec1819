@@ -9,11 +9,13 @@ import java.rmi.RemoteException;
 
 public class Client {
 
+    private static final String NOTARY_URI = "//localhost:8000/HDSNotary";
+
     private static NotaryInterface notaryInterface;
 
     public static void main(String[] args){
         try{
-            notaryInterface = (NotaryInterface) Naming.lookup("//localhost:8000/HDSNotary");
+            notaryInterface = (NotaryInterface) Naming.lookup(NOTARY_URI);
 
             boolean response = notaryInterface.intentionToSell(1,2);
 

@@ -1,46 +1,45 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
-import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
-
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 
-public class Notary extends UnicastRemoteObject implements NotaryInterface{
+public class Notary {
 
     private static final long serialVersionUID = 1L;
 
-    private Notary() throws RemoteException {
-        super();
-    }
+    /** Port for accepting clients connection to the service **/
+    private static final int NOTARY_SERVICE_PORT = 8000;
+    private static final String NOTARY_SERVICE_NAME = "HDSNotary";
 
-    @Override
-    public boolean intentionToSell(int userId, int goodId) throws RemoteException{
-        return false;
-    }
 
 
     public static void main(String[] args){
-        int registryPort = 8000;
+
         try {
-            Notary n = new Notary();
-            System.out.println("After create");
-            Registry reg = LocateRegistry.createRegistry(registryPort);
-            reg.rebind("HDSNotary", n);
+            NotaryService service = new NotaryService();
+
+            Registry reg = LocateRegistry.createRegistry(NOTARY_SERVICE_PORT);
+            reg.rebind(NOTARY_SERVICE_NAME, service);
 
             System.out.println("Notary server ready");
             System.out.println("Awaiting connections");
             System.out.println("Press enter to shutdown");
+
+            //Wait for connections
             try {
                 System.in.read();
             } catch (IOException e) {
+                System.err.println("** NOTARY: Problem in System.read: " + e.getMessage());
                 e.printStackTrace();
             }
+
+
             System.exit(0);
 
         } catch (RemoteException e) {
+            System.err.println("** NOTARY: Problem binding server: " + e.getMessage());
             e.printStackTrace();
         }
 
