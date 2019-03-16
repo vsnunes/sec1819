@@ -10,7 +10,7 @@ public class Notary {
     private static final long serialVersionUID = 1L;
 
     /** Port for accepting clients connection to the service **/
-    private static final int NOTARY_SERVICE_PORT = 8000;
+    private static final int NOTARY_SERVICE_PORT = 10000;
     private static final String NOTARY_SERVICE_NAME = "HDSNotary";
 
 

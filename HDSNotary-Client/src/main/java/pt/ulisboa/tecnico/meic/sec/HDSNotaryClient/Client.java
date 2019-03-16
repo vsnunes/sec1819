@@ -9,7 +9,7 @@ import java.rmi.RemoteException;
 
 public class Client {
 
-    private static final String NOTARY_URI = "//localhost:8000/HDSNotary";
+    private static final String NOTARY_URI = "//localhost:10000/HDSNotary";
 
     private static NotaryInterface notaryInterface;
 
