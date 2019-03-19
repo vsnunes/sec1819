@@ -10,26 +10,34 @@ public class Good {
 
     private boolean forSell;
 
-    Good() {
-        this.goodID = 0;
-        this.forSell = false;
-    }
+    private User owner;
 
-    Good(int goodID) throws GoodException {
-        checkArguments(goodID);
+    Good(int goodID, User owner) throws GoodException {
+        checkArguments(goodID, owner);
         this.goodID = goodID;
         this.forSell = false;
+        this.owner = owner;
     }
 
-    Good(int goodID, boolean forSell) throws GoodException {
-        checkArguments(goodID);
+    Good(int goodID, User owner, boolean forSell) throws GoodException {
+        checkArguments(goodID, owner);
         this.goodID = goodID;
         this.forSell = forSell;
+        this.owner = owner;
     }
 
     public void setGoodID(int goodID) throws GoodException{
-        checkArguments(goodID);
+        checkArguments(goodID, this.getOwner());
         this.goodID = goodID;
+    }
+
+    public User getOwner() {
+        return this.owner;
+    }
+
+    public void setOwner(User owner) throws GoodException {
+        checkArguments(this.getGoodID(), owner);
+        this.owner = owner;
     }
 
     public int getGoodID() {
@@ -44,9 +52,11 @@ public class Good {
         this.forSell = forSell;
     }
 
-    private void checkArguments(int goodID) throws GoodException {
+    private void checkArguments(int goodID, User owner) throws GoodException {
         if (goodID < 0) {
             throw new GoodException("GoodID must be a non-negative value!");
         }
+        if (owner == null)
+            throw new GoodException("Good Owner cannot be null!");
     }
 }
