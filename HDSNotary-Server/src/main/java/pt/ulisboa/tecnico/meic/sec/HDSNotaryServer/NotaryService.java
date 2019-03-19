@@ -1,6 +1,5 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
-import javafx.util.Pair;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -12,15 +11,13 @@ import java.util.HashMap;
 
 public class NotaryService extends UnicastRemoteObject implements NotaryInterface {
 
-    HashMap<Integer, User> users;
-    HashMap<Integer, Good> goods;
-    HashMap<Good, User> ownerMap;
+    private HashMap<Integer, User> users;
+    private HashMap<Integer, Good> goods;
 
     public NotaryService() throws RemoteException {
         super();
-        users = new HashMap<Integer, User>();
-        goods = new HashMap<Integer, Good>();
-        ownerMap = new HashMap<Good, User>();
+        users = new HashMap<>();
+        goods = new HashMap<>();
     }
 
     @Override
@@ -32,12 +29,26 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public Pair<Integer, Boolean> getStateOfGood(int goodId) throws RemoteException {
-        return null;
+    public boolean getStateOfGood(int goodId) throws RemoteException {
+        Good good = goods.get(goodId);
+
+        return good.isForSell();
     }
 
     @Override
     public boolean transferGood(int sellerId, int buyerId, int goodId) throws RemoteException {
+        Good good = goods.get(goodId);
+
+        if(good != null){
+            if(good.isForSell()){
+                if(good.getOwner() == sellerId){
+                    if(users.containsKey(buyerId)){
+                        good.setOwner(buyerId);
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 
