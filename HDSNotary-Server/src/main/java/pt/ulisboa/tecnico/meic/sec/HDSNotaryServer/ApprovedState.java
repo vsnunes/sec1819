@@ -1,5 +1,9 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+/**
+ * Transaction Approved State.
+ * The notary already check the transaction everything was OK. Perform the ownership changing of the item.
+ */
 public class ApprovedState extends TransactionState {
     public ApprovedState() {
         super("Approved");

@@ -15,7 +15,7 @@ public class TransactionTest {
 
     private static final String PENDING_STATE = "Pending";
     private static final String APPROVED_STATE = "Approved";
-    private static final String REJECT_STATE = "Reject";
+    private static final String REJECT_STATE = "Rejected";
     private static final String CANCELLED_STATE = "Cancelled";
 
     @Before
@@ -25,7 +25,7 @@ public class TransactionTest {
     }
 
     @Test
-    public void simpleTransaction() throws GoodException {
+    public void simpleTransaction() {
 
         assertNotNull(transaction);
 
@@ -44,6 +44,10 @@ public class TransactionTest {
 
     }
 
+    /**
+     * Test the possibility of selling an item that does not belong to the seller.
+     * Eve is trying to sell "Good" belonging to "seller"
+     */
     @Test
     public void transactionWithItemTheft() {
         User eve = new User(10, 9);
@@ -95,6 +99,26 @@ public class TransactionTest {
 
         assertEquals(APPROVED_STATE, transaction.getTransactionStateDescription());
         assertEquals(CANCELLED_STATE, t2.getTransactionStateDescription());
+    }
+
+    /**
+     * A copy of the same good in different concurrent transactions.
+     * @throws GoodException
+     */
+    @Test
+    public void twoTransactionSameTwoGoods() throws GoodException {
+        Good anotherGood = new Good(2, seller, true);
+        User anotherBuyer = new User(3, 23);
+        Transaction t2 = new Transaction(2, seller, anotherBuyer, anotherGood);
+
+        assertEquals(PENDING_STATE, transaction.getTransactionStateDescription());
+        assertEquals(PENDING_STATE, t2.getTransactionStateDescription());
+
+        transaction.execute();
+        t2.execute();
+
+        assertEquals(APPROVED_STATE, transaction.getTransactionStateDescription());
+        assertEquals(APPROVED_STATE, t2.getTransactionStateDescription());
     }
 
 }
