@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+import Exceptions.GoodException;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -17,7 +17,7 @@ public class Client {
         try{
             notaryInterface = (NotaryInterface) Naming.lookup(NOTARY_URI);
 
-            boolean response = notaryInterface.intentionToSell(1,2);
+            boolean response = notaryInterface.intentionToSell(1,2, true);
 
             System.out.println("If you see false then is correct: " + response);
 

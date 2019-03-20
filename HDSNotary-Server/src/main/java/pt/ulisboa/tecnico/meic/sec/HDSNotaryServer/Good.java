@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+import Exceptions.GoodException;
+
 /**
  * A class for describing Good items
  */
@@ -40,8 +42,7 @@ public class Good {
         return this.owner;
     }
 
-    public void setOwner(User owner) throws GoodException {
-        checkArguments(this.getGoodID(), owner);
+    public void setOwner(User owner) {
         this.owner = owner;
     }
 

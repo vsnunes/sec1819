@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+import Exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 
 import java.io.*;
@@ -26,18 +27,29 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public boolean intentionToSell(int userId, int goodId, boolean bool) throws RemoteException {
+    public boolean intentionToSell(int userId, int goodId, boolean bool) throws RemoteException, GoodException {
         Good good = goods.get(goodId);
-        good.setForSell(bool);
-        doWrite();
-        return good.isForSell();
+        if(good != null){
+            good.setForSell(bool);
+            doWrite();
+            return good.isForSell();
+        }
+        else{
+            throw new GoodException("Good does not exist.");
+        }
+
     }
 
     @Override
-    public boolean getStateOfGood(int goodId) throws RemoteException {
+    public boolean getStateOfGood(int goodId) throws RemoteException, GoodException {
         Good good = goods.get(goodId);
+        if(good != null){
+            return good.isForSell();
+        }
+        else{
+            throw new GoodException("Good does not exist.");
+        }
 
-        return good.isForSell();
     }
 
     @Override
@@ -46,26 +58,15 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         User seller = users.get(sellerId);
         User buyer = users.get(buyerId);
 
-        Transaction transaction = new Transaction(1, seller, buyer, good);
-        transaction.execute();
-
-        if (transaction.getTransactionStateDescription().equals("Reject")) {
-            throw new RemoteException("Transaction Rejected!");
-        }
-
-        /*if(good != null && seller != null && buyer != null){
+        if(good != null && seller != null && buyer != null){
             if(good.isForSell()){
                 if(good.getOwner() == seller){
-                    try {
                         good.setOwner(buyer);
-                    } catch (GoodException e) {
-                        //Buyer is invalid
-                        throw new RemoteException("Buyer is invalid!");
-                    }
-                    return true;
+                        doWrite();
+                        return true;
                 }
             }
-        }*/
+        }
         doWrite();
         return false;
     }
