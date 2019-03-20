@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
 import org.junit.Before;
 import org.junit.Test;
+import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 
 import static org.junit.Assert.*;
 

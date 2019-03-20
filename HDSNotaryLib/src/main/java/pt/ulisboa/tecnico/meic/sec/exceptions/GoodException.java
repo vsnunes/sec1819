@@ -1,4 +1,4 @@
-package Exceptions;
+package pt.ulisboa.tecnico.meic.sec.exceptions;
 
 /**
  * Generic class for Good (Items) exceptions

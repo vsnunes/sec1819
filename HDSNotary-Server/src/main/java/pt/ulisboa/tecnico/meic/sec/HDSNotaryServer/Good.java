@@ -1,6 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
-import Exceptions.GoodException;
+import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 
 /**
  * A class for describing Good items

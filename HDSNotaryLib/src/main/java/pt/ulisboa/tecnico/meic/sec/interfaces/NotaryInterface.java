@@ -1,6 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.interfaces;
 
-import Exceptions.GoodException;
+import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
