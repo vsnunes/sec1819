@@ -71,6 +71,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         transaction.execute();
 
         if (transaction.getTransactionStateDescription().equals("Approved")) {
+            transaction.execute(); //change the ownership of the good
             doWrite();
             return true;
         }

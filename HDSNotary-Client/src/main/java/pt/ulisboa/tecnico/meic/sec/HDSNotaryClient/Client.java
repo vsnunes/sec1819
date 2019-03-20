@@ -58,7 +58,7 @@ public class Client {
 
                 try {
 
-                    response = notaryInterface.intentionToSell(1, 2, intention);
+                    response = notaryInterface.intentionToSell(userID, good, intention);
                 }
                 catch(GoodException e) {
                     new BoxUI("Notary report the following problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
@@ -101,7 +101,7 @@ public class Client {
                 break;
 
 
-                // === GET STATE OF GOOD ===
+                // === TRANSFER GOOD ===
                 case 3:
                     good =  Integer.parseInt(new BoxUI("What is the good ID to transfer?").showAndGet());
                     buyer = Integer.parseInt(new BoxUI("What is the buyer ID?").showAndGet());
