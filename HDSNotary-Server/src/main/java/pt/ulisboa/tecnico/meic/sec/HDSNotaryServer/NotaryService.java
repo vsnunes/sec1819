@@ -147,10 +147,29 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     }
     public void doPrint(){
-        Iterator iterator = goods.keySet().iterator();
-        while (iterator.hasNext()) {
-            Integer key = (Integer) iterator.next();
-            System.out.println("Owner: " + goods.get(key).getOwner().getUserID() + " Good: " + goods.get(key).getGoodID());
+        try {
+            //path to be defined
+            FileInputStream fi = new FileInputStream(new File("myObjects.bin"));
+            ObjectInputStream oi = new ObjectInputStream(fi);
+
+            // Read objects
+            HashMap<Integer, Good> test = (HashMap<Integer, Good>) oi.readObject();
+
+            oi.close();
+            fi.close();
+            Iterator iterator = test.keySet().iterator();
+            while (iterator.hasNext()) {
+                Integer key = (Integer) iterator.next();
+                System.out.println("Owner: " + test.get(key).getOwner().getUserID() + " Good: " + test.get(key).getGoodID());
+            }
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("File not found");
+        } catch (IOException e) {
+            System.out.println("Error initializing stream");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Class not found");
+            e.printStackTrace();
         }
     }
 
