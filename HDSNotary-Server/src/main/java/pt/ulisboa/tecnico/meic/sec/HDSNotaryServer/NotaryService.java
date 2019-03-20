@@ -33,6 +33,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     public boolean intentionToSell(int userId, int goodId, boolean bool) throws RemoteException, GoodException {
         Good good = goods.get(goodId);
         if(good != null){
+
+            //Check if user has privileges to sell an item
+            if (good.getOwner().getUserID() != userId) {
+                throw new GoodException("Good doesn't belong to you!");
+            }
+
             good.setForSell(bool);
             doWrite();
             return good.isForSell();
