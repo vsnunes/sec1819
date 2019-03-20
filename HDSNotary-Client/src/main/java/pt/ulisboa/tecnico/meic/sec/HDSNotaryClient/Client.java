@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
+import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.gui.MenuUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
@@ -16,10 +17,12 @@ public class Client {
 
     private static NotaryInterface notaryInterface;
 
-    private int userID = 1;
+    private static int userID = 1;
 
     public static void main(String[] args){
+        int option;
 
+        do {
         MenuUI menu = new MenuUI("User client");
 
         menu.addEntry("To Notary: Intention to sell");
@@ -28,53 +31,98 @@ public class Client {
         menu.addEntry("To User  : Buy Good");
         menu.addEntry("Exit");
 
-        int option = menu.display();
+        option = menu.display();
 
-        int good;
+        int good, buyer;
         boolean response;
 
-        try{
-            notaryInterface = (NotaryInterface) Naming.lookup(NOTARY_URI);
 
+            try {
+                notaryInterface = (NotaryInterface) Naming.lookup(NOTARY_URI);
+            } catch (NotBoundException e) {
+                new BoxUI(":( NotBound on Notary!").show(BoxUI.RED_BOLD_BRIGHT);
 
-            switch (option) {
-                // === INTENTION TO SELL ===
-                case 1:
-                    good = Integer.parseInt(new BoxUI("What is the good ID?").showAndGet());
-                    boolean intention = Boolean.parseBoolean(new BoxUI("To sell?").showAndGet());
-
-                    response = notaryInterface.intentionToSell(1,2, intention);
-
-                    if (response == true) {
-                        new BoxUI("The item is now for sale!").show(BoxUI.GREEN_BOLD);
-                    }
-
-                    break;
-
-                case 2:
-                    good = Integer.parseInt(new BoxUI("What is the good ID?").showAndGet());
-
-                    response = notaryInterface.getStateOfGood(good);
-
-                    if (response == true) {
-                        new BoxUI("The item is for sale!").show(BoxUI.GREEN_BOLD);
-                    }
-                    else new BoxUI("The item is NOT for sale!").show(BoxUI.RED_BOLD);
-
-                    break;
+            } catch (MalformedURLException e) {
+                new BoxUI(":( Malform URL! Cannot find Notary Service!").show(BoxUI.RED_BOLD_BRIGHT);
+            } catch (RemoteException e) {
+                new BoxUI(":( It looks like I miss the connection with Notary!").show(BoxUI.RED_BOLD_BRIGHT);
             }
 
 
-        }catch(MalformedURLException e){
-            System.err.println("URL is not formed correctly");
-            System.exit(-1);
-        }catch(RemoteException e){
-            System.err.println("Client could not connect with Server: " + e.getMessage());
-            e.printStackTrace();
-            System.exit(-1);
-        }catch(NotBoundException e){
-            System.err.println("Service not bound on provided URL");
-            System.exit(-1);
-        }catch (GoodException e){}
+            switch (option) {
+            // === INTENTION TO SELL ===
+            case 1:
+                good = Integer.parseInt(new BoxUI("What is the good ID?").showAndGet());
+                boolean intention = Boolean.parseBoolean(new BoxUI("To sell?").showAndGet());
+
+                try {
+
+                    response = notaryInterface.intentionToSell(1, 2, intention);
+                }
+                catch(GoodException e) {
+                    new BoxUI("Notary report the following problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+                    break;
+                }
+                catch (RemoteException e) {
+                    new BoxUI("There were a problem in connecting to Notary!").show(BoxUI.RED_BOLD_BRIGHT);
+                    break;
+                }
+
+                if (response == true) {
+                    new BoxUI("The item is now for sale!").show(BoxUI.GREEN_BOLD);
+                }
+                else {
+                    new BoxUI("The item is now NOT for sale!").show(BoxUI.GREEN_BOLD);
+                }
+
+                break;
+
+                // === GET STATE OF GOOD ===
+            case 2:
+                good = Integer.parseInt(new BoxUI("What is the good ID?").showAndGet());
+
+                try {
+                    response = notaryInterface.getStateOfGood(good);
+                }
+                catch(GoodException e) {
+                    new BoxUI("Notary report the following problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+                    break;
+                }
+                catch (RemoteException e) {
+                    new BoxUI("There were a problem in connecting to Notary!").show(BoxUI.RED_BOLD_BRIGHT);
+                    break;
+                }
+
+                if (response == true) {
+                    new BoxUI("The item is for sale!").show(BoxUI.GREEN_BOLD);
+                } else new BoxUI("The item is NOT for sale!").show(BoxUI.RED_BOLD);
+
+                break;
+
+
+                // === GET STATE OF GOOD ===
+                case 3:
+                    good =  Integer.parseInt(new BoxUI("What is the good ID to transfer?").showAndGet());
+                    buyer = Integer.parseInt(new BoxUI("What is the buyer ID?").showAndGet());
+
+                    try {
+                        response = notaryInterface.transferGood(userID, buyer, good);
+                    } catch (RemoteException e) {
+                        new BoxUI("There were a problem in connecting to Notary!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
+
+                    } catch (TransactionException e) {
+                        new BoxUI("Notary report the following problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
+                    }
+
+                    if (response == true) {
+                        new BoxUI("Successfully transferred good!").show(BoxUI.GREEN_BOLD);
+                    } else new BoxUI("There was an error on the transferring process!").show(BoxUI.RED_BOLD);
+
+                    break;
+        }
+
+        }while (option != 5);
     }
 }

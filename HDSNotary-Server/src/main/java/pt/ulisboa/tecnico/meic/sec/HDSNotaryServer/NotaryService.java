@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
+import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 
 import java.io.*;
@@ -53,7 +54,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public boolean transferGood(int sellerId, int buyerId, int goodId) throws RemoteException {
+    public boolean transferGood(int sellerId, int buyerId, int goodId) throws RemoteException, TransactionException {
         Good good = goods.get(goodId);
         User seller = users.get(sellerId);
         User buyer = users.get(buyerId);
@@ -65,7 +66,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             doWrite();
             return true;
         }
-        return false;
+        else {
+            throw new TransactionException(transaction.getState().getObs());
+        }
     }
 
     /*
