@@ -149,7 +149,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         Iterator iterator = goods.keySet().iterator();
         while (iterator.hasNext()) {
             Integer key = (Integer) iterator.next();
-            System.out.println("Owner: " + goods.get(key).getOwner() + " User: " + goods.get(key).getGoodID());
+            System.out.println("Owner: " + goods.get(key).getOwner().getUserID() + " Good: " + goods.get(key).getGoodID());
         }
     }
 
