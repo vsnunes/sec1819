@@ -30,6 +30,7 @@ public class Client {
         menu.addEntry("To Notary: Transfer Good");
         menu.addEntry("To User  : Buy Good");
         menu.addEntry("Exit");
+        menu.addEntry("DEBUG");
 
         option = menu.display();
 
@@ -120,6 +121,15 @@ public class Client {
                         new BoxUI("Successfully transferred good!").show(BoxUI.GREEN_BOLD);
                     } else new BoxUI("There was an error on the transferring process!").show(BoxUI.RED_BOLD);
 
+                    break;
+
+                case 6:
+                    try {
+                        notaryInterface.doPrint();
+                    } catch (RemoteException e) {
+                        new BoxUI("There were a problem in connecting to Notary!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
+                    }
                     break;
         }
 
