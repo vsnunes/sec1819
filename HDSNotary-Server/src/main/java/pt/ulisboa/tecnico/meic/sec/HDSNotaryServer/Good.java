@@ -56,7 +56,5 @@ public class Good {
         if (goodID < 0) {
             throw new GoodException("GoodID must be a non-negative value!");
         }
-        if (owner == null)
-            throw new GoodException("Good Owner cannot be null!");
     }
 }

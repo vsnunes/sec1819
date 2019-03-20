@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-public class Notary {
+public class Main {
 
     private static final long serialVersionUID = 1L;
 
@@ -23,7 +23,7 @@ public class Notary {
             Registry reg = LocateRegistry.createRegistry(NOTARY_SERVICE_PORT);
             reg.rebind(NOTARY_SERVICE_NAME, service);
 
-            System.out.println("Notary server ready");
+            System.out.println("Main server ready");
             System.out.println("Awaiting connections");
             System.out.println("Press enter to shutdown");
 

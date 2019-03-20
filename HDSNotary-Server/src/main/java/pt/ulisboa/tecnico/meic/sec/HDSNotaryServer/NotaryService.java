@@ -38,14 +38,14 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     @Override
     public boolean transferGood(int sellerId, int buyerId, int goodId) throws RemoteException {
         Good good = goods.get(goodId);
+        User seller = users.get(sellerId);
+        User buyer = users.get(buyerId);
 
-        if(good != null){
+        if(good != null && seller != null && buyer != null){
             if(good.isForSell()){
-                if(good.getOwner() == sellerId){
-                    if(users.containsKey(buyerId)){
-                        good.setOwner(buyerId);
+                if(good.getOwner() == seller){
+                        good.setOwner(buyer);
                         return true;
-                    }
                 }
             }
         }
