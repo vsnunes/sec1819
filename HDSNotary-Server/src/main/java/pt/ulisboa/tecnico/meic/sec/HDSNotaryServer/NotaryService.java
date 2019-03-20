@@ -73,7 +73,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
      */
     private void doWrite(){
         try {
-            FileOutputStream f = new FileOutputStream(new File("myObjects.txt"));
+            FileOutputStream f = new FileOutputStream(new File("myObjects.bin"));
             ObjectOutputStream o = new ObjectOutputStream(f);
 
             o.writeObject(users);
@@ -95,7 +95,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private boolean doRead() {
         try {
             //path to be defined
-            FileInputStream fi = new FileInputStream(new File("somefile.txt"));
+            FileInputStream fi = new FileInputStream(new File("myObjects.bin"));
             ObjectInputStream oi = new ObjectInputStream(fi);
 
             // Read objects

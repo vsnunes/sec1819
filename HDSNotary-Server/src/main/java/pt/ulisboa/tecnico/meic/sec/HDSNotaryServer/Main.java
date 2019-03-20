@@ -17,9 +17,9 @@ public class Main {
 
 
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws RemoteException, GoodException{
 
-        try {
+        //try {
             NotaryService service = new NotaryService();
             service.createUser();
             service.createGood();
@@ -42,12 +42,12 @@ public class Main {
 
             System.exit(0);
 
-        } catch (RemoteException e) {
+        /*} catch (RemoteException e) {
             System.err.println("** NOTARY: Problem binding server: " + e.getMessage());
             e.printStackTrace();
         } catch (GoodException e){
             System.err.println("**NOTARY: Problem with good ID");
-        }
+        }*/
 
     }
 }

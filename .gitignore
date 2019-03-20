@@ -9,3 +9,4 @@ target/
 .project
 .settings/
 bin/
+HDSNotary-Server/myObjects.bin
