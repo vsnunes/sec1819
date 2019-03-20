@@ -12,11 +12,15 @@ public class Good {
 
     private User owner;
 
+    /** Prevents the good from concurrent transactions **/
+    private boolean inTransaction;
+
     Good(int goodID, User owner) throws GoodException {
         checkArguments(goodID, owner);
         this.goodID = goodID;
         this.forSell = false;
         this.owner = owner;
+        this.inTransaction = false;
     }
 
     Good(int goodID, User owner, boolean forSell) throws GoodException {
@@ -24,6 +28,7 @@ public class Good {
         this.goodID = goodID;
         this.forSell = forSell;
         this.owner = owner;
+        this.inTransaction = false;
     }
 
     public void setGoodID(int goodID) throws GoodException{
@@ -50,6 +55,14 @@ public class Good {
 
     public void setForSell(boolean forSell) {
         this.forSell = forSell;
+    }
+
+    public boolean isInTransaction() {
+        return inTransaction;
+    }
+
+    public void setInTransaction(boolean inTransaction) {
+        this.inTransaction = inTransaction;
     }
 
     private void checkArguments(int goodID, User owner) throws GoodException {

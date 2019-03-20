@@ -46,14 +46,26 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         User seller = users.get(sellerId);
         User buyer = users.get(buyerId);
 
-        if(good != null && seller != null && buyer != null){
+        Transaction transaction = new Transaction(1, seller, buyer, good);
+        transaction.execute();
+
+        if (transaction.getTransactionStateDescription().equals("Reject")) {
+            throw new RemoteException("Transaction Rejected!");
+        }
+
+        /*if(good != null && seller != null && buyer != null){
             if(good.isForSell()){
                 if(good.getOwner() == seller){
+                    try {
                         good.setOwner(buyer);
-                        return true;
+                    } catch (GoodException e) {
+                        //Buyer is invalid
+                        throw new RemoteException("Buyer is invalid!");
+                    }
+                    return true;
                 }
             }
-        }
+        }*/
         doWrite();
         return false;
     }
