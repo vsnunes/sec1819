@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
+import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 
 import java.net.MalformedURLException;
@@ -31,6 +32,6 @@ public class Client {
         }catch(NotBoundException e){
             System.err.println("Service not bound on provided URL");
             System.exit(-1);
-        }
+        }catch (GoodException e){}
     }
 }

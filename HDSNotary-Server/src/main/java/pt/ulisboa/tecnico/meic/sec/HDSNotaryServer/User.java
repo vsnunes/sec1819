@@ -4,7 +4,7 @@ public class User {
     private int userID;
     private int publicKey;
 
-    User(int id, int pk){
+    public User(int id, int pk){
         userID = id;
         publicKey = pk;
     }

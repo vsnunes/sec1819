@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
+
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -19,6 +21,8 @@ public class Main {
 
         try {
             NotaryService service = new NotaryService();
+            service.createUser();
+            service.createGood();
 
             Registry reg = LocateRegistry.createRegistry(NOTARY_SERVICE_PORT);
             reg.rebind(NOTARY_SERVICE_NAME, service);
@@ -41,6 +45,8 @@ public class Main {
         } catch (RemoteException e) {
             System.err.println("** NOTARY: Problem binding server: " + e.getMessage());
             e.printStackTrace();
+        } catch (GoodException e){
+            System.err.println("**NOTARY: Problem with good ID");
         }
 
     }

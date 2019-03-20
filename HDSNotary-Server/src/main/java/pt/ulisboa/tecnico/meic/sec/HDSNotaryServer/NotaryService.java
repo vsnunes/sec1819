@@ -74,7 +74,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     /*
     To be called when state changes
      */
-    public void doWrite(){
+    private void doWrite(){
         try {
             FileOutputStream f = new FileOutputStream(new File("myObjects.txt"));
             ObjectOutputStream o = new ObjectOutputStream(f);
@@ -95,7 +95,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     /*
     To be called when notary service starts
      */
-    public boolean doRead() {
+    private boolean doRead() {
         try {
             //path to be defined
             FileInputStream fi = new FileInputStream(new File("somefile.txt"));
@@ -119,6 +119,23 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             e.printStackTrace();
         }
         return false;
+    }
+
+    protected void createUser(){
+        users.put(1, new User(1,1));
+        users.put(2, new User(2,2));
+        users.put(3, new User(3,3));
+        users.put(4, new User(4,4));
+        users.put(5, new User(5,5));
+    }
+
+    protected void createGood() throws GoodException{
+        goods.put(1,new Good(1, users.get(1)));
+        goods.put(2,new Good(2, users.get(2)));
+        goods.put(3,new Good(3, users.get(3)));
+        goods.put(4,new Good(4, users.get(4)));
+        goods.put(5,new Good(5, users.get(5)));
+
     }
 
 }
