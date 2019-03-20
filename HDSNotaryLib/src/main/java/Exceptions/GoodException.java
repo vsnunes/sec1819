@@ -1,15 +1,15 @@
-package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
+package Exceptions;
 
 /**
  * Generic class for Good (Items) exceptions
  */
 public class GoodException extends Exception {
 
-    GoodException() {
+    public GoodException() {
         super();
     }
 
-    GoodException(String message) {
+    public GoodException(String message) {
         super(message);
     }
 
