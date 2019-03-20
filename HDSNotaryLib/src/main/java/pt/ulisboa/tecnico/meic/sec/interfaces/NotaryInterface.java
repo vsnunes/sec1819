@@ -12,4 +12,7 @@ public interface NotaryInterface extends Remote {
     boolean getStateOfGood(int goodId) throws RemoteException, GoodException;
 
     boolean transferGood(int sellerId, int buyerId, int goodId) throws RemoteException;
+
+    /*debug only*/
+    void doPrint() throws RemoteException;
 }

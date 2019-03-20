@@ -7,6 +7,7 @@ import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * A Class for implementing NotaryInterface on Server
@@ -23,6 +24,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             users = new HashMap<>();
             goods = new HashMap<>();
         }
+        doPrint();
 
     }
 
@@ -133,6 +135,13 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         goods.put(4,new Good(4, users.get(4)));
         goods.put(5,new Good(5, users.get(5)));
 
+    }
+    public void doPrint(){
+        Iterator iterator = goods.keySet().iterator();
+        while (iterator.hasNext()) {
+            Integer key = (Integer) iterator.next();
+            System.out.println("Owner: " + goods.get(key).getOwner() + " User: " + goods.get(key).getGoodID());
+        }
     }
 
 }
