@@ -27,10 +27,10 @@ public class Client {
 
         menu.addEntry("To Notary: Intention to sell");
         menu.addEntry("To Notary: Get State of Good");
-        menu.addEntry("To Notary: Transfer Good");
+        menu.addEntry("DEBUG -> To Notary: Transfer Good");
         menu.addEntry("To User  : Buy Good");
         menu.addEntry("Exit");
-        menu.addEntry("DEBUG");
+        menu.addEntry("DEBUG -> System state");
 
         option = menu.display();
 
