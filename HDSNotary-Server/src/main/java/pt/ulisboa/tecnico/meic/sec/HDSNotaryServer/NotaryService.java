@@ -40,7 +40,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         if(good != null){
 
             //Check if user has privileges to sell an item
-            if (good.getOwnerID() != userId) {
+            if (good.getOwner().getUserID() != userId) {
                 throw new GoodException("Good doesn't belong to you!");
             }
 
@@ -99,6 +99,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
             o.writeObject(goods);
             System.out.println("The Object goods was succesfully written to a file");
+            Iterator iterator = goods.keySet().iterator();
+            while (iterator.hasNext()) {
+                Integer key = (Integer) iterator.next();
+                o.writeObject(goods.get(key).getOwner());
+                System.out.println("The Object user with id " + goods.get(key).getOwner().getUserID() + " was succesfully written to a file");
+            }
             o.writeObject(users);
             System.out.println("The Object users was succesfully written to a file");
 
@@ -128,6 +134,13 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
             goods = (HashMap<Integer, Good>) oi.readObject();
             System.out.println("The Object goods has been read from the file...");
+            Iterator iterator = goods.keySet().iterator();
+            while (iterator.hasNext()) {
+                Integer key = (Integer) iterator.next();
+                goods.get(key).setOwner(goods.get(key).getOwner());
+                System.out.println("The Object user with id " + goods.get(key).getOwner().getUserID() + " was succesfully read from file");
+            }
+
             users = (HashMap<Integer, User>) oi.readObject();
             System.out.println("The Object users has been read from the file...");
 
@@ -156,11 +169,11 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     protected void createGood() throws GoodException{
-        goods.put(1,new Good(1, users.get(1).getUserID()));
-        goods.put(2,new Good(2, users.get(2).getUserID()));
-        goods.put(3,new Good(3, users.get(3).getUserID()));
-        goods.put(4,new Good(4, users.get(4).getUserID()));
-        goods.put(5,new Good(5, users.get(5).getUserID()));
+        goods.put(1,new Good(1, users.get(1)));
+        goods.put(2,new Good(2, users.get(2)));
+        goods.put(3,new Good(3, users.get(3)));
+        goods.put(4,new Good(4, users.get(4)));
+        goods.put(5,new Good(5, users.get(5)));
 
     }
     public void doPrint(){
@@ -173,12 +186,17 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
             HashMap<Integer, Good> test = (HashMap<Integer, Good>) oi.readObject();
             System.out.println("The Object goods has been read from the file...");
-            System.out.println(test);
-
             Iterator iterator = test.keySet().iterator();
             while (iterator.hasNext()) {
                 Integer key = (Integer) iterator.next();
-                System.out.println("Owner: " + test.get(key).getOwnerID() + " Good: " + test.get(key).getGoodID());
+                test.get(key).setOwner(test.get(key).getOwner());
+                System.out.println("The Object user with id " + test.get(key).getOwner().getUserID() + " was succesfully read from file");
+            }
+
+            iterator = test.keySet().iterator();
+            while (iterator.hasNext()) {
+                Integer key = (Integer) iterator.next();
+                System.out.println("Owner: " + test.get(key).getOwner().getUserID() + " Good: " + test.get(key).getGoodID());
             }
             oi.close();
 

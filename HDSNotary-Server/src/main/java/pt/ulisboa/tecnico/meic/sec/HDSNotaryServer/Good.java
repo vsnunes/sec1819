@@ -14,38 +14,38 @@ public class Good implements Serializable {
 
     private boolean forSell;
 
-    private int ownerID;
+    private User owner;
 
     /** Prevents the good from concurrent transactions **/
     private boolean inTransaction;
 
-    Good(int goodID, int owner) throws GoodException {
+    Good(int goodID, User owner) throws GoodException {
         checkArguments(goodID, owner);
         this.goodID = goodID;
         this.forSell = false;
-        this.ownerID = owner;
+        this.owner = owner;
         this.inTransaction = false;
     }
 
-    Good(int goodID, int owner, boolean forSell) throws GoodException {
+    Good(int goodID, User owner, boolean forSell) throws GoodException {
         checkArguments(goodID, owner);
         this.goodID = goodID;
         this.forSell = forSell;
-        this.ownerID = owner;
+        this.owner = owner;
         this.inTransaction = false;
     }
 
     public void setGoodID(int goodID) throws GoodException{
-        checkArguments(goodID, this.getOwnerID());
+        checkArguments(goodID, this.getOwner());
         this.goodID = goodID;
     }
 
-    public int getOwnerID() {
-        return this.ownerID;
+    public User getOwner() {
+        return this.owner;
     }
 
-    public void setOwnerID(int owner) {
-        this.ownerID = owner;
+    public void setOwner(User owner) {
+        this.owner = owner;
     }
 
     public int getGoodID() {
@@ -68,7 +68,7 @@ public class Good implements Serializable {
         this.inTransaction = inTransaction;
     }
 
-    private void checkArguments(int goodID, int owner) throws GoodException {
+    private void checkArguments(int goodID, User owner) throws GoodException {
         if (goodID < 0) {
             throw new GoodException("GoodID must be a non-negative value!");
         }
