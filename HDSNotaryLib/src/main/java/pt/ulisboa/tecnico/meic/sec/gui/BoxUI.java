@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 public class BoxUI {
     private String question;
 
+    private Thread waitingThread;
+
     // Reset
     public static final String RESET = "\033[0m";  // Text Reset
 
@@ -81,24 +83,35 @@ public class BoxUI {
     public static final String WHITE_BACKGROUND_BRIGHT = "\033[0;107m";   // WHITE
 
 
+    private static final String BOX_UPPER_RIGHT = "+";
+    private static final String BOX_UPPER_LEFT = "+";
+    private static final String BOX_BOTTOM_RIGHT = "+";
+    private static final String BOX_BOTTOM_LEFT = "+";
+    private static final String BOX_VERT = "|";
+    private static final String BOX_HORIZ = "-";
+
+    public BoxUI() {
+
+    }
+
     public BoxUI(String question) {
         this.question = question;
     }
 
     public void show() {
         System.out.println();
-        System.out.print("+");
+        System.out.print(BOX_UPPER_RIGHT);
 
         for (int i = 0; i < question.length(); i++)
-            System.out.print("-");
-        System.out.println("+");
+            System.out.print(BOX_HORIZ);
+        System.out.println(BOX_UPPER_LEFT);
 
-        System.out.println(question);
+        System.out.println(" " + question);
 
-        System.out.print("+");
+        System.out.print(BOX_BOTTOM_RIGHT);
         for (int i = 0; i < question.length(); i++)
-            System.out.print("-");
-        System.out.println("+");
+            System.out.print(BOX_HORIZ);
+        System.out.println(BOX_BOTTOM_LEFT);
 
         System.out.println(WHITE_BOLD + "Press any key to continue..." + RESET);
 
@@ -115,18 +128,18 @@ public class BoxUI {
 
     public void show(String format) {
         System.out.println();
-        System.out.print("+");
+        System.out.print(BOX_UPPER_RIGHT);
 
         for (int i = 0; i < question.length(); i++)
-            System.out.print("-");
-        System.out.println("+");
+            System.out.print(BOX_HORIZ);
+        System.out.println(BOX_UPPER_LEFT);
 
-        System.out.println(format + question + RESET);
+        System.out.println(format + " " + question + RESET);
 
-        System.out.print("+");
+        System.out.print(BOX_BOTTOM_RIGHT);
         for (int i = 0; i < question.length(); i++)
-            System.out.print("-");
-        System.out.println("+");
+            System.out.print(BOX_HORIZ);
+        System.out.println(BOX_BOTTOM_LEFT);
 
         System.out.println(WHITE_BOLD + "Press any key to continue..." + RESET);
 
@@ -145,18 +158,18 @@ public class BoxUI {
         String inputString = null;
 
         System.out.println();
-        System.out.print("+");
+        System.out.print(BOX_UPPER_RIGHT);
 
         for (int i = 0; i < question.length(); i++)
-            System.out.print("-");
-        System.out.println("+");
+            System.out.print(BOX_HORIZ);
+        System.out.println(BOX_UPPER_LEFT);
 
-        System.out.println(question);
+        System.out.println(" " + question);
 
-        System.out.print("+");
+        System.out.print(BOX_BOTTOM_RIGHT);
         for (int i = 0; i < question.length(); i++)
-            System.out.print("-");
-        System.out.println("+");
+            System.out.print(BOX_HORIZ);
+        System.out.println(BOX_BOTTOM_LEFT);
 
         System.out.println();
         System.out.print(WHITE_BOLD + "Your answer is: " + RESET);
@@ -170,5 +183,45 @@ public class BoxUI {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void initWait(String message) {
+
+        waitingThread = new Thread(() -> {
+            int i = 0;
+            char[] animationChars = new char[] {'|', '/', '-', '\\'};
+            String a = "";
+
+            try {
+                System.out.println();
+                System.out.print("   " + message);
+
+                while (true) {
+                    a = "\r" + animationChars[i];
+                    i = (i + 1) % 4;
+                    System.out.write(a.getBytes());
+                    System.out.flush();
+                    Thread.sleep(100);
+                }
+            } catch(InterruptedException e) {
+                System.out.print("Done!");
+                //Just to clean the old message
+                for (int j = 0; j <= message.length(); j++)
+                    System.out.print(" ");
+                System.out.flush();
+                System.out.println();
+            } catch (IOException e) {
+                System.out.println("IO Error");
+            }
+        });
+
+    }
+
+    public void displayWait() {
+        this.waitingThread.start();
+    }
+
+    public void stopWait() {
+        this.waitingThread.interrupt();
     }
 }
