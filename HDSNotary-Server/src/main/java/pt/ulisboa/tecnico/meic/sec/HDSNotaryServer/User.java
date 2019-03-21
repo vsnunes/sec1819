@@ -1,6 +1,8 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
     private int userID;
     private int publicKey;
 

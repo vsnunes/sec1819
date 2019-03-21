@@ -2,48 +2,50 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 
+import java.io.Serializable;
+
 /**
  * A class for describing Good items
  */
-public class Good {
+public class Good implements Serializable {
 
     /** The good identifier **/
     private int goodID;
 
     private boolean forSell;
 
-    private User owner;
+    private int ownerID;
 
     /** Prevents the good from concurrent transactions **/
     private boolean inTransaction;
 
-    Good(int goodID, User owner) throws GoodException {
+    Good(int goodID, int owner) throws GoodException {
         checkArguments(goodID, owner);
         this.goodID = goodID;
         this.forSell = false;
-        this.owner = owner;
+        this.ownerID = owner;
         this.inTransaction = false;
     }
 
-    Good(int goodID, User owner, boolean forSell) throws GoodException {
+    Good(int goodID, int owner, boolean forSell) throws GoodException {
         checkArguments(goodID, owner);
         this.goodID = goodID;
         this.forSell = forSell;
-        this.owner = owner;
+        this.ownerID = owner;
         this.inTransaction = false;
     }
 
     public void setGoodID(int goodID) throws GoodException{
-        checkArguments(goodID, this.getOwner());
+        checkArguments(goodID, this.getOwnerID());
         this.goodID = goodID;
     }
 
-    public User getOwner() {
-        return this.owner;
+    public int getOwnerID() {
+        return this.ownerID;
     }
 
-    public void setOwner(User owner) {
-        this.owner = owner;
+    public void setOwnerID(int owner) {
+        this.ownerID = owner;
     }
 
     public int getGoodID() {
@@ -66,7 +68,7 @@ public class Good {
         this.inTransaction = inTransaction;
     }
 
-    private void checkArguments(int goodID, User owner) throws GoodException {
+    private void checkArguments(int goodID, int owner) throws GoodException {
         if (goodID < 0) {
             throw new GoodException("GoodID must be a non-negative value!");
         }

@@ -21,8 +21,8 @@ public class Main {
 
         //try {
             NotaryService service = new NotaryService();
-            service.createUser();
-            service.createGood();
+            //service.createUser();
+            //service.createGood();
 
             Registry reg = LocateRegistry.createRegistry(NOTARY_SERVICE_PORT);
             reg.rebind(NOTARY_SERVICE_NAME, service);

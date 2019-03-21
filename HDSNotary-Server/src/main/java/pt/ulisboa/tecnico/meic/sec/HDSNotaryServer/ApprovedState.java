@@ -14,7 +14,7 @@ public class ApprovedState extends TransactionState {
         Good good = transaction.getGood();
 
         synchronized (this) {
-            good.setOwner(transaction.getBuyer());
+            good.setOwnerID(transaction.getBuyer().getUserID());
             //release the item from the transaction
             good.setInTransaction(false);
 

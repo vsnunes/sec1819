@@ -35,7 +35,7 @@ public class PendingState extends TransactionState {
         }
 
         //Seller is not the owner of the item!
-        else if (!transaction.getSeller().equals(good.getOwner())) {
+        else if (!(transaction.getSeller().getUserID() == good.getOwnerID())) {
 
             TransactionState state = new RejectedState();
             state.setObs("Good IS NOT owned by you therefore you cannot sell it!");

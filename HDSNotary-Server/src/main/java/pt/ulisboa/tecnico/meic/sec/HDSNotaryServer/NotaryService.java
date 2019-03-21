@@ -14,16 +14,20 @@ import java.util.Iterator;
  * A Class for implementing NotaryInterface on Server
  */
 
-public class NotaryService extends UnicastRemoteObject implements NotaryInterface {
+public class NotaryService extends UnicastRemoteObject implements NotaryInterface,Serializable {
 
     private HashMap<Integer, User> users;
     private HashMap<Integer, Good> goods;
 
-    public NotaryService() throws RemoteException {
+    public NotaryService() throws RemoteException, GoodException {
         super();
         if(!doRead()){
+            System.out.println("No data found, initializing...");
             users = new HashMap<>();
             goods = new HashMap<>();
+            createUser();
+            createGood();
+            doWrite();
         }
         doPrint();
 
@@ -35,7 +39,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         if(good != null){
 
             //Check if user has privileges to sell an item
-            if (good.getOwner().getUserID() != userId) {
+            if (good.getOwnerID() != userId) {
                 throw new GoodException("Good doesn't belong to you!");
             }
 
@@ -84,19 +88,23 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     To be called when state changes
      */
     private void doWrite(){
+        System.out.println("Writing...");
         try {
-            FileOutputStream f = new FileOutputStream(new File("myObjects.bin"));
+            File file = new File("myObjects.bin");
+            file.createNewFile();
+            FileOutputStream f = new FileOutputStream(file, false);
             ObjectOutputStream o = new ObjectOutputStream(f);
 
-            o.writeObject(users);
+
             o.writeObject(goods);
+            System.out.println("The Object goods was succesfully written to a file");
+            o.writeObject(users);
+            System.out.println("The Object users was succesfully written to a file");
+
 
             o.close();
-            f.close();
         }
-        catch (FileNotFoundException e) {
-            System.out.println("File not found");
-        } catch (IOException e) {
+         catch (IOException e) {
             System.out.println("Error initializing stream");
         }
     }
@@ -106,16 +114,23 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
      */
     private boolean doRead() {
         try {
+            File file = new File("myObjects.bin");
+            if(!file.exists()){
+                System.out.println("File does not exists");
+                return false;
+            }
             //path to be defined
-            FileInputStream fi = new FileInputStream(new File("myObjects.bin"));
+            FileInputStream fi = new FileInputStream(file);
             ObjectInputStream oi = new ObjectInputStream(fi);
 
             // Read objects
-            HashMap<Integer, User> users = (HashMap<Integer, User>) oi.readObject();
-            HashMap<Integer, Good> goods = (HashMap<Integer, Good>) oi.readObject();
+
+            goods = (HashMap<Integer, Good>) oi.readObject();
+            System.out.println("The Object goods has been read from the file...");
+            users = (HashMap<Integer, User>) oi.readObject();
+            System.out.println("The Object users has been read from the file...");
 
             oi.close();
-            fi.close();
 
             return true;
         }
@@ -123,6 +138,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             System.out.println("File not found");
         } catch (IOException e) {
             System.out.println("Error initializing stream");
+            e.printStackTrace();
         } catch (ClassNotFoundException e) {
             System.out.println("Class not found");
             e.printStackTrace();
@@ -139,11 +155,11 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     protected void createGood() throws GoodException{
-        goods.put(1,new Good(1, users.get(1)));
-        goods.put(2,new Good(2, users.get(2)));
-        goods.put(3,new Good(3, users.get(3)));
-        goods.put(4,new Good(4, users.get(4)));
-        goods.put(5,new Good(5, users.get(5)));
+        goods.put(1,new Good(1, users.get(1).getUserID()));
+        goods.put(2,new Good(2, users.get(2).getUserID()));
+        goods.put(3,new Good(3, users.get(3).getUserID()));
+        goods.put(4,new Good(4, users.get(4).getUserID()));
+        goods.put(5,new Good(5, users.get(5).getUserID()));
 
     }
     public void doPrint(){
@@ -153,20 +169,24 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             ObjectInputStream oi = new ObjectInputStream(fi);
 
             // Read objects
-            HashMap<Integer, Good> test = (HashMap<Integer, Good>) oi.readObject();
 
-            oi.close();
-            fi.close();
+            HashMap<Integer, Good> test = (HashMap<Integer, Good>) oi.readObject();
+            System.out.println("The Object goods has been read from the file...");
+            System.out.println(test);
+
             Iterator iterator = test.keySet().iterator();
             while (iterator.hasNext()) {
                 Integer key = (Integer) iterator.next();
-                System.out.println("Owner: " + test.get(key).getOwner().getUserID() + " Good: " + test.get(key).getGoodID());
+                System.out.println("Owner: " + test.get(key).getOwnerID() + " Good: " + test.get(key).getGoodID());
             }
+            oi.close();
+
         }
         catch (FileNotFoundException e) {
             System.out.println("File not found");
         } catch (IOException e) {
             System.out.println("Error initializing stream");
+            e.printStackTrace();
         } catch (ClassNotFoundException e) {
             System.out.println("Class not found");
             e.printStackTrace();
