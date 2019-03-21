@@ -20,7 +20,7 @@ public class Main {
     public static void main(String[] args) throws RemoteException, GoodException{
 
         //try {
-            NotaryService service = new NotaryService();
+            NotaryService service = NotaryService.getInstance();
             //service.createUser();
             //service.createGood();
 

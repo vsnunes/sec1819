@@ -1,9 +1,11 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+import java.io.Serializable;
+
 /**
  * A Class for describing Transactions of goods beetween two
  */
-public class Transaction {
+public class Transaction implements Serializable {
 
     private int transactionID;
 

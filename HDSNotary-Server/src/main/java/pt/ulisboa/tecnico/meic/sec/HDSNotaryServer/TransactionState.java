@@ -1,9 +1,11 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+import java.io.Serializable;
+
 /**
  * A class for describing the TransactionState
  */
-public abstract class TransactionState {
+public abstract class TransactionState implements Serializable {
 
     private String stateName;
 
