@@ -211,6 +211,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             }
             FileInputStream fi = new FileInputStream(file);
             oi = new ObjectInputStream(fi);
+            transactionCounter = (int) oi.readObject();
             while(true) {
                 Transaction transaction = (Transaction) oi.readObject();
                 System.out.println("The Object Transaction has been read from the file...");
@@ -252,6 +253,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         //TODO
 
     }
@@ -264,6 +266,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             file.createNewFile();
             FileOutputStream f = new FileOutputStream(file, true);
             ObjectOutputStream o = new ObjectOutputStream(f);
+            o.writeObject(transactionCounter);
             o.writeObject(transaction);
             System.out.println("The Object transaction was succesfully written to a file");
             o.writeObject(transaction.getSeller());
