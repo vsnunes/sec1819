@@ -18,6 +18,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     private HashMap<Integer, User> users;
     private HashMap<Integer, Good> goods;
+    private Transaction transaction;
 
     public NotaryService() throws RemoteException, GoodException {
         super();
@@ -71,7 +72,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         User seller = users.get(sellerId);
         User buyer = users.get(buyerId);
 
-        Transaction transaction = new Transaction(1, seller, buyer, good);
+        transaction = new Transaction(1, seller, buyer, good);
         transaction.execute();
 
         if (transaction.getTransactionStateDescription().equals("Approved")) {
