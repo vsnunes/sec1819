@@ -22,7 +22,7 @@ public class ApprovedState extends TransactionState {
             //release the item from the transaction
             good.setInTransaction(false);
             try {
-                NotaryService.getInstance().doDeleteTransaction();
+                NotaryService.getInstance().doDeleteTransaction(transaction);
             } catch (RemoteException e) {
                 e.printStackTrace();
             } catch (GoodException e) {
