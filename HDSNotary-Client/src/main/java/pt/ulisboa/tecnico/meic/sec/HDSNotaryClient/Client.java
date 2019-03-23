@@ -22,7 +22,6 @@ public class Client {
     public static void main(String[] args){
         int option;
         NotaryInterface notaryInterface;
-        Thread thread;
 
         try {
             clientInterface = ClientService.getInstance();
@@ -39,24 +38,11 @@ public class Client {
 
             notaryInterface = ClientService.notaryInterface;
 
+            Registry reg = LocateRegistry.createRegistry(ClientService.CLIENT_SERVICE_PORT);
+            reg.rebind(ClientService.CLIENT_SERVICE_NAME, clientInterface);
 
-            //In order to the client be able to execute operations and receiving others client requests this
-            //needs to be in a new thread
-            thread = new Thread(){
-                public void run(){
-                    try {
-                        Registry reg = LocateRegistry.createRegistry(ClientService.CLIENT_SERVICE_PORT);
-                        reg.rebind(ClientService.CLIENT_SERVICE_NAME, clientInterface);
-                    } catch (RemoteException e) {
-                        System.out.println("** CLIENT WORKER THREAD: Cannot register and rebind ClientService!");
-                        return;
-                    }
-                    System.out.println("Client worker ready");
-                    System.out.println("Awaiting connections");
-                }
-            };
-
-
+            System.out.println("Client worker ready");
+            System.out.println("Awaiting connections");
 
             System.out.println(" ====================== DEBUG ============================= ");
             System.out.println(" ClientID           : " + ClientService.userID);
@@ -71,8 +57,6 @@ public class Client {
             } catch (IOException e) {
                 System.err.println("** Client: Problem in System.read: " + e.getMessage());
             }
-
-            thread.start();
 
         } catch (RemoteException e) {
             System.err.println("Cannot create ClientServer singleton");
@@ -228,7 +212,5 @@ public class Client {
 
         }while (option != 5);
 
-        System.out.println("Terminating worker thread...");
-        thread.interrupt();
     }
 }

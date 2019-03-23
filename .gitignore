@@ -10,4 +10,4 @@ target/
 .settings/
 bin/
 HDSNotary-Server/Transaction.bin
-HDSNotary-Server/UserGoods.bin
+HDSNotary-Server/UsersGoods.bin

@@ -57,12 +57,8 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
         //Call transferGood of Notary
         try {
             response = notaryInterface.transferGood(userID, buyerId, goodId);
-
-            if (response == true) {
-                new BoxUI("Successfully transferred good!").show(BoxUI.GREEN_BOLD);
-            } else new BoxUI("There was an error on the transferring process!").show(BoxUI.RED_BOLD);
-
             return response;
+
         } catch (RemoteException e) {
             new BoxUI("There were a problem in connecting to Notary!").show(BoxUI.RED_BOLD_BRIGHT);
 
