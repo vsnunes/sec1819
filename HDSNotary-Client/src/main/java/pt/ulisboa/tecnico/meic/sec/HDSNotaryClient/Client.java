@@ -4,23 +4,81 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.gui.MenuUI;
+import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
 public class Client {
 
-    private static final String NOTARY_URI = "//localhost:10000/HDSNotary";
-
-    private static NotaryInterface notaryInterface;
-
-    private static int userID = 1;
+    private static ClientService clientInterface;
 
     public static void main(String[] args){
         int option;
+        NotaryInterface notaryInterface;
+        Thread thread;
+
+        try {
+            clientInterface = ClientService.getInstance();
+
+            //maven args for client ID, which by default is 1
+            if (args.length > 0) {
+                ClientService.userID = Integer.parseInt(args[0]);
+                ClientService.CLIENT_SERVICE_PORT = 10000 + ClientService.userID;
+                ClientService.CLIENT_SERVICE_NAME = "Client" + ClientService.userID;
+
+                if (args.length > 1)
+                    ClientService.NOTARY_URI = args[1];
+            }
+
+            notaryInterface = ClientService.notaryInterface;
+
+
+            //In order to the client be able to execute operations and receiving others client requests this
+            //needs to be in a new thread
+            thread = new Thread(){
+                public void run(){
+                    try {
+                        Registry reg = LocateRegistry.createRegistry(ClientService.CLIENT_SERVICE_PORT);
+                        reg.rebind(ClientService.CLIENT_SERVICE_NAME, clientInterface);
+                    } catch (RemoteException e) {
+                        System.out.println("** CLIENT WORKER THREAD: Cannot register and rebind ClientService!");
+                        return;
+                    }
+                    System.out.println("Client worker ready");
+                    System.out.println("Awaiting connections");
+                }
+            };
+
+
+
+            System.out.println(" ====================== DEBUG ============================= ");
+            System.out.println(" ClientID           : " + ClientService.userID);
+            System.out.println(" Client Service Name: " + ClientService.CLIENT_SERVICE_NAME);
+            System.out.println(" Client Service Port: " + ClientService.CLIENT_SERVICE_PORT);
+            System.out.println(" Notary URL         : " + ClientService.NOTARY_URI);
+            System.out.println(" ====================== DEBUG ============================= ");
+            System.out.println("Press any key to dismiss ...");
+
+            try {
+                System.in.read();
+            } catch (IOException e) {
+                System.err.println("** Client: Problem in System.read: " + e.getMessage());
+            }
+
+            thread.start();
+
+        } catch (RemoteException e) {
+            System.err.println("Cannot create ClientServer singleton");
+            return;
+        }
+
 
         do {
         MenuUI menu = new MenuUI("User client");
@@ -36,10 +94,12 @@ public class Client {
 
         int good, buyer;
         boolean response;
+        String clientURL;
+        ClientInterface anotherClient;
 
 
             try {
-                notaryInterface = (NotaryInterface) Naming.lookup(NOTARY_URI);
+                notaryInterface = (NotaryInterface) Naming.lookup(ClientService.NOTARY_URI);
             } catch (NotBoundException e) {
                 new BoxUI(":( NotBound on Notary!").show(BoxUI.RED_BOLD_BRIGHT);
 
@@ -58,7 +118,7 @@ public class Client {
 
                 try {
 
-                    response = notaryInterface.intentionToSell(userID, good, intention);
+                    response = notaryInterface.intentionToSell(ClientService.userID, good, intention);
                 }
                 catch(GoodException e) {
                     new BoxUI("Notary report the following problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
@@ -107,7 +167,7 @@ public class Client {
                     buyer = Integer.parseInt(new BoxUI("What is the buyer ID?").showAndGet());
 
                     try {
-                        response = notaryInterface.transferGood(userID, buyer, good);
+                        response = notaryInterface.transferGood(ClientService.userID, buyer, good);
                     } catch (RemoteException e) {
                         new BoxUI("There were a problem in connecting to Notary!").show(BoxUI.RED_BOLD_BRIGHT);
                         break;
@@ -123,6 +183,39 @@ public class Client {
 
                     break;
 
+                case 4:
+                    clientURL = new BoxUI("What is the client URL?").showAndGet();
+                    good =  Integer.parseInt(new BoxUI("What is the good ID to buy?").showAndGet());
+
+                    try {
+                        anotherClient = (ClientInterface) Naming.lookup(clientURL);
+
+
+                    } catch (NotBoundException e) {
+                        new BoxUI(":( NotBound on Client!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
+
+                    } catch (MalformedURLException e) {
+                        new BoxUI(":( Malform URL! Cannot find Client Service!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
+                    } catch (RemoteException e) {
+                        new BoxUI(":( It looks like I miss the connection with Client!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
+                    }
+
+                    try {
+                        response = anotherClient.buyGood(good, ClientService.userID);
+                    } catch (RemoteException e) {
+                        new BoxUI(":( It looks like I miss the connection with Client!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
+                    }
+
+                    if (response == true) {
+                        new BoxUI("Successfully bought good!").show(BoxUI.GREEN_BOLD);
+                    } else new BoxUI("Seller didn't sell the good!").show(BoxUI.RED_BOLD);
+
+                    break;
+
                 case 6:
                     try {
                         notaryInterface.doPrint();
@@ -134,5 +227,8 @@ public class Client {
         }
 
         }while (option != 5);
+
+        System.out.println("Terminating worker thread...");
+        thread.interrupt();
     }
 }

@@ -9,4 +9,5 @@ target/
 .project
 .settings/
 bin/
-HDSNotary-Server/myObjects.bin
+HDSNotary-Server/Transaction.bin
+HDSNotary-Server/UserGoods.bin

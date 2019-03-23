@@ -101,7 +101,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             return true;
         }
         else {
-            throw new TransactionException(transaction.getState().getObs());
+            return false;
+            //throw new TransactionException(transaction.getState().getObs());
         }
     }
 
