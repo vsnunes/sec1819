@@ -36,7 +36,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             doWrite();
         }
         else {
-            doRecoverTransactions();
+
+            try {
+                doRecoverTransactions();
+            } catch (TransactionException e) {
+                e.getMessage();
+            }
         }
         instance = this;
     }
@@ -171,7 +176,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         try {
             //path to be defined
 
-            FileInputStream fi = new FileInputStream(new File("UsersGoods.bin"));
+            File file = new File("UsersGoods.bin");
+            if(!file.exists()){
+                System.out.println("File UsersGoods.bin does not exists");
+                return;
+            }
+            FileInputStream fi = new FileInputStream(file);
             ObjectInputStream oi = new ObjectInputStream(fi);
             HashMap<Integer, Good> test = (HashMap<Integer, Good>) oi.readObject();
             System.out.println("The Object goods has been read from the file...");
@@ -198,11 +208,61 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             System.out.println("Class not found");
             e.printStackTrace();
         }
+
+        ArrayList<Transaction> transactions = new ArrayList<Transaction>();
+        ObjectInputStream oi = null;
+        try {
+            //path to be defined
+            File file = new File("Transaction.bin");
+            if(!file.exists()){
+                System.out.println("File Transaction.bin does not exists");
+                return;
+            }
+            FileInputStream fi = new FileInputStream(file);
+            oi = new ObjectInputStream(fi);
+            transactionCounter = (int) oi.readObject();
+            System.out.println("transactionCounter " + transactionCounter + " was recovered");
+            while(true) {
+                Transaction transaction = (Transaction) oi.readObject();
+                User seller = (User) oi.readObject();
+                User buyer = (User) oi.readObject();
+                Good good = (Good) oi.readObject();
+                User owner = (User) oi.readObject();
+                good.setOwner(owner);
+                TransactionState tsate = (TransactionState) oi.readObject();
+                transaction.setSeller(seller);
+                transaction.setBuyer(buyer);
+                transaction.setGood(good);
+                transaction.setState(tsate);
+                transactions.add(transaction);
+                System.out.println("Transaction with id " + transaction.getTransactionID() + " was recovered");
+            }
+
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("File Transaction.bin not found");
+        } catch (IOException e) {
+            if(transactions.size() == 0) {
+                System.out.println("Error initializing stream");
+                e.printStackTrace();
+            }
+        } catch (ClassNotFoundException e) {
+            System.out.println("Class not found");
+            e.printStackTrace();
+        }
+
+        try {
+            oi.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /*Execute transactions pending*/
     private ArrayList<Transaction> doReadTransactions(){
         System.out.println("Reading transaction...");
+        doPrint();
         ArrayList<Transaction> transactions = new ArrayList<Transaction>();
         ObjectInputStream oi = null;
         try {
@@ -235,7 +295,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 transaction.setGood(good);
                 transaction.setState(tsate);
                 transactions.add(transaction);
-
             }
 
         }
@@ -286,9 +345,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     protected void doDeleteTransaction(Transaction transaction){
         ArrayList<Transaction> transactions = doReadTransactions();
-        //Transaction test = new Transaction(25, users.get(1), users.get(2), goods.get(1));
+        Transaction test = new Transaction(25, users.get(1), users.get(2), goods.get(1));
         ArrayList<Transaction> tmp = transactions;
-        //transactions.add(test);
         if(transactions != null){
             for(Transaction t:transactions){
                 if(t.getTransactionID() == transaction.getTransactionID()){
@@ -299,6 +357,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                         System.out.println(file.getName() + " is deleted!");
                     }
                     for(Transaction elem:tmp){
+                        System.out.println(elem.getTransactionID());
                         doWriteTransaction(elem);
                     }
                     break;
@@ -307,12 +366,18 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         }
     }
 
-    private void doRecoverTransactions(){
+    private void doRecoverTransactions() throws TransactionException {
         ArrayList<Transaction> transactions = doReadTransactions();
         if(transactions != null) {
-            for (Transaction t : transactions) {
-                //TODO
-                doDeleteTransaction(t);
+            for (Transaction transaction : transactions) {
+                transaction.execute();
+                if (transaction.getTransactionStateDescription().equals("Approved")) {
+                    transaction.execute(); //change the ownership of the good
+                    doWrite();
+                }
+                else {
+                    throw new TransactionException(transaction.getState().getObs());
+                }
             }
         }
 
