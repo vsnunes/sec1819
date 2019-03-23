@@ -19,6 +19,10 @@ public class ApprovedState extends TransactionState {
 
         synchronized (this) {
             good.setOwner(transaction.getBuyer());
+
+            //item is now NOT for sell
+            good.setForSell(false);
+
             //release the item from the transaction
             good.setInTransaction(false);
             try {
