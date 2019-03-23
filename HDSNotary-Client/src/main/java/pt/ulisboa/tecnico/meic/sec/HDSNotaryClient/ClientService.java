@@ -15,15 +15,15 @@ import java.rmi.server.UnicastRemoteObject;
 public class ClientService extends UnicastRemoteObject implements ClientInterface, Serializable {
 
     /** URI Of Notary **/
-    public static final String NOTARY_URI = "//localhost:10000/HDSNotary";
+    public static String NOTARY_URI = "//localhost:10000/HDSNotary";
 
     public static NotaryInterface notaryInterface;
 
     public static int userID = 1;
 
     /** Port for accepting clients connection to the service **/
-    public static final int CLIENT_SERVICE_PORT = 10000 + userID;
-    public static final String CLIENT_SERVICE_NAME = "Client" + userID;
+    public static int CLIENT_SERVICE_PORT = 10000 + userID;
+    public static String CLIENT_SERVICE_NAME = "Client" + userID;
 
     /** Instance of ClientService the one will allow others client to connect to. **/
     private static ClientService instance;
@@ -51,7 +51,7 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
     }
 
     @Override
-    public boolean buyGood(int goodId, int buyerId) {
+    public boolean buyGood(int goodId, int buyerId) throws RemoteException {
         boolean response;
 
         //Call transferGood of Notary

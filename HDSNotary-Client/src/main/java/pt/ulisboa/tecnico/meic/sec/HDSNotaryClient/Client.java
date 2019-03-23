@@ -7,6 +7,7 @@ import pt.ulisboa.tecnico.meic.sec.gui.MenuUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -25,6 +26,16 @@ public class Client {
 
         try {
             clientInterface = ClientService.getInstance();
+
+            //maven args for client ID, which by default is 1
+            if (args.length > 0) {
+                ClientService.userID = Integer.parseInt(args[0]);
+                ClientService.CLIENT_SERVICE_PORT = 10000 + ClientService.userID;
+                ClientService.CLIENT_SERVICE_NAME = "Client" + ClientService.userID;
+
+                if (args.length > 1)
+                    ClientService.NOTARY_URI = args[1];
+            }
 
             notaryInterface = ClientService.notaryInterface;
 
@@ -45,9 +56,23 @@ public class Client {
                 }
             };
 
+
+
+            System.out.println(" ====================== DEBUG ============================= ");
+            System.out.println(" ClientID           : " + ClientService.userID);
+            System.out.println(" Client Service Name: " + ClientService.CLIENT_SERVICE_NAME);
+            System.out.println(" Client Service Port: " + ClientService.CLIENT_SERVICE_PORT);
+            System.out.println(" Notary URL         : " + ClientService.NOTARY_URI);
+            System.out.println(" ====================== DEBUG ============================= ");
+            System.out.println("Press any key to dismiss ...");
+
+            try {
+                System.in.read();
+            } catch (IOException e) {
+                System.err.println("** Client: Problem in System.read: " + e.getMessage());
+            }
+
             thread.start();
-
-
 
         } catch (RemoteException e) {
             System.err.println("Cannot create ClientServer singleton");
@@ -165,20 +190,29 @@ public class Client {
                     try {
                         anotherClient = (ClientInterface) Naming.lookup(clientURL);
 
-                        response = anotherClient.buyGood(good, ClientService.userID);
-
-                        if (response == true) {
-                            new BoxUI("Successfully bought good!").show(BoxUI.GREEN_BOLD);
-                        } else new BoxUI("Seller didn't sell the good!").show(BoxUI.RED_BOLD);
 
                     } catch (NotBoundException e) {
                         new BoxUI(":( NotBound on Client!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
 
                     } catch (MalformedURLException e) {
                         new BoxUI(":( Malform URL! Cannot find Client Service!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
                     } catch (RemoteException e) {
                         new BoxUI(":( It looks like I miss the connection with Client!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
                     }
+
+                    try {
+                        response = anotherClient.buyGood(good, ClientService.userID);
+                    } catch (RemoteException e) {
+                        new BoxUI(":( It looks like I miss the connection with Client!").show(BoxUI.RED_BOLD_BRIGHT);
+                        break;
+                    }
+
+                    if (response == true) {
+                        new BoxUI("Successfully bought good!").show(BoxUI.GREEN_BOLD);
+                    } else new BoxUI("Seller didn't sell the good!").show(BoxUI.RED_BOLD);
 
                     break;
 
