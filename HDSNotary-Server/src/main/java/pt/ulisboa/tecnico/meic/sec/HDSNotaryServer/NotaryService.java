@@ -266,10 +266,11 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 return;
             }
             FileInputStream fi = new FileInputStream(file);
-            oi = new ObjectInputStream(fi);
-            transactionCounter = (int) oi.readObject();
-            System.out.println("transactionCounter " + transactionCounter + " was recovered");
+
             while(true) {
+                oi = new ObjectInputStream(fi);
+                transactionCounter = (int) oi.readObject();
+                System.out.println("transactionCounter " + transactionCounter + " was recovered");
                 Transaction transaction = (Transaction) oi.readObject();
                 User seller = (User) oi.readObject();
                 User buyer = (User) oi.readObject();
@@ -320,9 +321,10 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 return null;
             }
             FileInputStream fi = new FileInputStream(file);
-            oi = new ObjectInputStream(fi);
-            transactionCounter = (int) oi.readObject();
+
             while(true) {
+                oi = new ObjectInputStream(fi);
+                transactionCounter = (int) oi.readObject();
                 Transaction transaction = (Transaction) oi.readObject();
                 //System.out.println("The Object Transaction has been read from the file...");
                 User seller = (User) oi.readObject();
