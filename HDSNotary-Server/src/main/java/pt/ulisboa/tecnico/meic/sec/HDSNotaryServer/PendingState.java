@@ -19,30 +19,35 @@ public class PendingState extends TransactionState {
 
         //Item is on another transaction concurrently
         if (good.isInTransaction()) {
-
+            System.out.println("1");
             TransactionState state = new CancelledState();
             state.setObs("Good is on another transaction concurrently");
 
             transaction.setState(state);
+            transaction.execute();
         }
 
         //Item is not for sell
         else if (good.isForSell() == false) {
+            System.out.println("2");
             TransactionState state = new RejectedState();
             state.setObs("Good is not for sale!");
 
             transaction.setState(state);
+            transaction.execute();
         }
 
         //Seller is not the owner of the item!
         else if (!(transaction.getSeller().getUserID() == good.getOwner().getUserID())) {
-
+            System.out.println("3");
             TransactionState state = new RejectedState();
             state.setObs("Good IS NOT owned by you therefore you cannot sell it!");
 
             transaction.setState(state);
+            transaction.execute();
         }
         else {
+            System.out.println("4");
             //prevent setInTransaction to be changed
             synchronized (this) {
                 good.setInTransaction(true);

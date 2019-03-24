@@ -16,6 +16,7 @@ public class CancelledState extends TransactionState {
 
     @Override
     public void execute(Transaction transaction) {
+        System.out.println("cancelled");
         try {
             NotaryService.getInstance().doDeleteTransaction(transaction);
         } catch (RemoteException e) {

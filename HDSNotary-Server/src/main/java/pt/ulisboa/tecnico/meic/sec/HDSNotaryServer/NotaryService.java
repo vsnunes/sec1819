@@ -391,6 +391,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     protected void doDeleteTransaction(Transaction transaction){
+        System.out.println("Deleting transaction...");
         ArrayList<Transaction> transactions = doReadTransactions();
         Transaction test = new Transaction(25, users.get(1), users.get(2), goods.get(1));
         ArrayList<Transaction> tmp = transactions;

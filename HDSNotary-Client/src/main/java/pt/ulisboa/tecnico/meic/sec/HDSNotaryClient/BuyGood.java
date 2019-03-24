@@ -18,7 +18,7 @@ public class BuyGood extends Operation {
     @Override
     public boolean getAndCheckArgs() {
         try {
-            String clientID = new BoxUI("What is the client URL?").showAndGet();
+            String clientID = new BoxUI("What is the client ID?").showAndGet();
             args.add("//localhost:1000" + clientID + "/Client" + clientID);
             args.add(Integer.parseInt(new BoxUI("What is the good ID to buy?").showAndGet()));
             return true;
