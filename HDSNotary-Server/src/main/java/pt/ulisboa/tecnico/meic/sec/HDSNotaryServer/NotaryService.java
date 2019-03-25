@@ -1,5 +1,4 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
-
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
@@ -20,13 +19,14 @@ import java.util.Iterator;
  */
 
 public class NotaryService extends UnicastRemoteObject implements NotaryInterface,Serializable {
-    /*UserGood.bin*/
+
+    /** HashMap for match the ID with the object even though the object has an ID**/
     private HashMap<Integer, User> users;
     private HashMap<Integer, Good> goods;
-    /**/
-    /*Transaction.bin*/
+
+    /** Every transaction has an ID so keeps record of the last ID used in a transaction **/
     private int transactionCounter = 0;
-    /**/
+
     private static NotaryService instance;
 
     private NotaryService() throws RemoteException, GoodException {
@@ -177,12 +177,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             //System.out.println("The Object goods was succesfully written to a file");
             o.writeObject(users);
             //System.out.println("The Object users was succesfully written to a file");
-            Iterator iterator = goods.keySet().iterator();
-            while (iterator.hasNext()) {
-                Integer key = (Integer) iterator.next();
-                o.writeObject(goods.get(key).getOwner());
-                //System.out.println("The Object user with id " + goods.get(key).getOwner().getUserID() + " was succesfully written to a file");
-            }
 
             o.close();
         }
@@ -208,12 +202,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             //System.out.println("The Object goods has been read from the file...");
             users = (HashMap<Integer, User>) oi.readObject();
             //System.out.println("The Object users has been read from the file...");
-            Iterator iterator = goods.keySet().iterator();
-            while (iterator.hasNext()) {
-                Integer key = (Integer) iterator.next();
-                goods.get(key).setOwner(goods.get(key).getOwner());
-                //System.out.println("The Object user with id " + goods.get(key).getOwner().getUserID() + " was succesfully read from file");
-            }
 
             oi.close();
             return true;
@@ -250,11 +238,14 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 test.get(key).setOwner(test.get(key).getOwner());
                 System.out.println("The Object user with id " + test.get(key).getOwner().getUserID() + " was succesfully read from file");
             }
+
             iterator = test.keySet().iterator();
+            System.out.println("=================================================================");
             while (iterator.hasNext()) {
                 Integer key = (Integer) iterator.next();
-                System.out.println("Owner: " + test.get(key).getOwner().getUserID() + " Good: " + test.get(key).getGoodID());
+                System.out.printf("Good: %d\tOwner: %d\tIs4Sale: %s\tOwner PubK OK?: %s\n", test.get(key).getGoodID(), test.get(key).getOwner().getUserID(), test.get(key).isForSell(), test.get(key).getOwner().getPublicKey() != null);
             }
+            System.out.println("=================================================================");
             oi.close();
         }
         catch (FileNotFoundException e) {
