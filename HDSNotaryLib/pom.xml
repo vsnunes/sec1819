@@ -10,9 +10,26 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
+    <properties>
+        <project.pteidlib.location>/usr/local/lib/pteid_jni</project.pteidlib.location>
+    </properties>
+
     <artifactId>HDSNotaryLib</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+
+    <dependencies>
+        <!-- JAVA JDK PTEID -->
+        <dependency>
+            <groupId>pteidlib</groupId>
+            <artifactId>pteid</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>
+                ${project.pteidlib.location}/pteidlibj.jar
+            </systemPath>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
