@@ -39,7 +39,7 @@ public class IntentionToSell extends Operation {
                 new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
             }
             else {
-                new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.GREEN_BOLD);
+                new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD_BRIGHT);
             }
             return response;
         }
