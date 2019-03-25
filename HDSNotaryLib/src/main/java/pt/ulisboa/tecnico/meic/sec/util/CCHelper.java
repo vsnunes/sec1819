@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.util;
 
+import org.omg.CORBA.DynAnyPackage.Invalid;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import sun.security.pkcs11.wrapper.*;
 
@@ -11,13 +12,19 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 /**
  * Helper class for Cartão do Cidadão Operations.
+ * NOTE: You should always call the CCInit first then the operations and lastly CCStop.
+ *
+ * CCInit();
+ *  < ops >
+ *    ...
+ * CCStop();
  */
 public class CCHelper {
 
@@ -32,11 +39,6 @@ public class CCHelper {
         try {
 
             System.out.println("            //Load the PTEidlibj");
-
-            System.loadLibrary(PTEID_LIB_NAME);
-            pteid.Init(""); // Initializes the eID Lib
-            pteid.SetSODChecking(false); // Don't check the integrity of the ID, address and photo (!)
-
 
             PKCS11 pkcs11;
             String osName = System.getProperty("os.name");
@@ -70,9 +72,7 @@ public class CCHelper {
             return pkcs11;
         }
 
-         catch (PteidException e) {
-            System.out.println("[Catch] PteidException: " + e.getMessage());
-        }catch (NoSuchMethodException e) {
+         catch (NoSuchMethodException e) {
             System.out.println("[Catch]  NoSuchMethodException:" + e.getMessage());
         }catch (IllegalAccessException e) {
             System.out.println("[Catch]  IllegalAccessException:" + e.getMessage());
@@ -155,6 +155,40 @@ public class CCHelper {
     }
 
     /**
+     * Given a signature data (return of CC_SignData) checks the validity of signature using the CC card
+     * @param signature to be checked
+     * @return true if signature is OK false otherwise
+     */
+    public static boolean CCverifySignature(byte[] signature) throws HDSSecurityException {
+        PKCS11 pkcs11 = getCC_PKCS11();
+
+        try {
+            long p11_session = pkcs11.C_OpenSession(0, PKCS11Constants.CKF_SERIAL_SESSION, null, null);
+
+            // Token login
+            System.out.println("            //Token login");
+            pkcs11.C_Login(p11_session, 1, null);
+
+            PublicKey publicKey = getCitizenPublicKey();
+
+            Signature verifySignature = Signature.getInstance("SHA1WithRSA");
+
+            verifySignature.initVerify(publicKey);
+
+            return verifySignature.verify(signature);
+
+        } catch (PKCS11Exception e) {
+            throw new HDSSecurityException("Insert your Citizen Card: " + e.getMessage());
+        } catch (NoSuchAlgorithmException e){
+            throw new HDSSecurityException("Wrong algorithm: " + e.getMessage());
+        } catch (InvalidKeyException e) {
+            throw new HDSSecurityException("Invalid key exception: " + e.getMessage());
+        } catch (SignatureException e) {
+            throw new HDSSecurityException("Problem in Signature: " + e.getMessage());
+        }
+    }
+
+    /**
      * Returns the n-th certificate, starting from 0
      * @param n
      * @return a binary byte array containing the certificate
@@ -208,5 +242,29 @@ public class CCHelper {
     public static PublicKey getCitizenPublicKey() throws HDSSecurityException {
         X509Certificate citizenCertificate = getCitizenAuthCert();
         return citizenCertificate.getPublicKey();
+    }
+
+    /**
+     * Starts CC operations
+     */
+    public static void CCinit() throws HDSSecurityException {
+        try {
+            System.loadLibrary(PTEID_LIB_NAME);
+            pteid.Init("");
+            pteid.SetSODChecking(false); // Don't check the integrity of the ID, address and photo (!)
+        }catch (PteidException e) {
+            throw new HDSSecurityException("Cannot init CC, possible missing card");
+        }
+    }
+
+    /**
+     * Stops CC operations
+     */
+    public static void CCstop() throws HDSSecurityException {
+        try {
+            pteid.Exit(0);
+        } catch (PteidException e) {
+            throw new HDSSecurityException("Cannot stop CC");
+        }
     }
 }

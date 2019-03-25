@@ -12,24 +12,56 @@
 
     <properties>
         <project.pteidlib.location>/usr/local/lib/pteid_jni</project.pteidlib.location>
+        <project.pteidlib.location.windows>C:/Program Files/Portugal Identity Card/sdk/Java</project.pteidlib.location.windows>
     </properties>
 
     <artifactId>HDSNotaryLib</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <dependencies>
-        <!-- JAVA JDK PTEID -->
-        <dependency>
-            <groupId>pteidlib</groupId>
-            <artifactId>pteid</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>
-                ${project.pteidlib.location}/pteidlibj.jar
-            </systemPath>
-        </dependency>
-    </dependencies>
+    <profiles>
+        <profile>
+            <id>platform-windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <dependencies>
+                <!-- JAVA JDK PTEID -->
+                <dependency>
+                    <groupId>pteidlib</groupId>
+                    <artifactId>pteid</artifactId>
+                    <version>1.0</version>
+                    <scope>system</scope>
+                    <systemPath>
+                        ${project.pteidlib.location.windows}/pteidlibj.jar
+                    </systemPath>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>platform-linux</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                </os>
+            </activation>
+            <dependencies>
+                <!-- JAVA JDK PTEID -->
+                <dependency>
+                    <groupId>pteidlib</groupId>
+                    <artifactId>pteid</artifactId>
+                    <version>1.0</version>
+                    <scope>system</scope>
+                    <systemPath>
+                        ${project.pteidlib.location}/pteidlibj.jar
+                    </systemPath>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
 
     <build>
         <plugins>
