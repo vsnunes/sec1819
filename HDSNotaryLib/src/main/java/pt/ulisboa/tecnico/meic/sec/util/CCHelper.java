@@ -1,6 +1,5 @@
 package pt.ulisboa.tecnico.meic.sec.util;
 
-import org.omg.CORBA.DynAnyPackage.Invalid;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import sun.security.pkcs11.wrapper.*;
 
@@ -9,6 +8,7 @@ import pteidlib.PteidException;
 import pteidlib.pteid;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -94,63 +94,50 @@ public class CCHelper {
      */
     public static byte[] CC_SignData(byte[] data) throws HDSSecurityException {
 
-        //First get the CC_PKCS11
-        PKCS11 pkcs11 = getCC_PKCS11();
-
-        if (pkcs11 == null) {
-            throw new HDSSecurityException("Invalid CC Card");
-        }
-
         try {
-            //Open the PKCS11 session
-            System.out.println("            //Open the PKCS11 session");
-            long p11_session = pkcs11.C_OpenSession(0, PKCS11Constants.CKF_SERIAL_SESSION, null, null);
 
-            // Token login
-            System.out.println("            //Token login");
-            pkcs11.C_Login(p11_session, 1, null);
-            CK_SESSION_INFO info = pkcs11.C_GetSessionInfo(p11_session);
 
-            // Get available keys
-            System.out.println("            //Get available keys");
-            CK_ATTRIBUTE[] attributes = new CK_ATTRIBUTE[1];
-            attributes[0] = new CK_ATTRIBUTE();
-            attributes[0].type = PKCS11Constants.CKA_CLASS;
-            attributes[0].pValue = new Long(PKCS11Constants.CKO_PRIVATE_KEY);
+            String f = "src/main/resources/CitizenCard.cfg";
+            Provider p = new sun.security.pkcs11.SunPKCS11( f );
+            Security.addProvider( p );
 
-            pkcs11.C_FindObjectsInit(p11_session, attributes);
-            long[] keyHandles = pkcs11.C_FindObjects(p11_session, 5);
 
-            // points to auth_key
-            System.out.println("            //points to auth_key. No. of keys:" + keyHandles.length);
+            Signature signature = Signature.getInstance("SHA1WithRSA");
 
+            KeyStore ks = KeyStore.getInstance( "PKCS11", "SunPKCS11-PTeID" );
             /*
-             * keyHandles[0] is the authenticity key (PT: chave de autenticação)
-             * keyHandles[1] is the signature key (PT: chave de assinatura)
-             * DO NOT USE signature key! --> Has legal value!
+             * This is a special case of KeyStore where its contents are not copied into memory (and
+             * this is why the parameters of the load method below are both null:
              */
-            long signatureKey = keyHandles[0];
-            pkcs11.C_FindObjectsFinal(p11_session);
+            ks.load( null, null );
 
+            // DEBUG! Prints all available keys. If you are reading this then the following code will help you :)
 
-            // initialize the signature method
-            System.out.println("            //initialize the signature method");
-            CK_MECHANISM mechanism = new CK_MECHANISM();
-            mechanism.mechanism = PKCS11Constants.CKM_SHA1_RSA_PKCS;
-            mechanism.pParameter = null;
-            pkcs11.C_SignInit(p11_session, mechanism, signatureKey);
+            /*Enumeration<String> aliases = ks.aliases();
+            while (aliases.hasMoreElements()) {
+                System.out.println( aliases.nextElement() );
+            }*/
 
-            java.util.Base64.Encoder encoder = java.util.Base64.getEncoder();
+            signature.initSign((PrivateKey) ks.getKey("CITIZEN AUTHENTICATION CERTIFICATE", null));
 
-            // sign
-            System.out.println("            //sign");
-            byte[] signature = pkcs11.C_Sign(p11_session, data);
-            System.out.println("            //signature:" + encoder.encode(signature));
+            return signature.sign();
 
-            return signature;
-
-        } catch (PKCS11Exception e) {
-            throw new HDSSecurityException("SigningData problem: " + e.getMessage());
+        } catch (NoSuchAlgorithmException e){
+            throw new HDSSecurityException("Wrong algorithm: " + e.getMessage());
+        } catch (NoSuchProviderException e) {
+            throw new HDSSecurityException("Wrong provider: " + e.getMessage());
+        } catch (KeyStoreException e) {
+            throw new HDSSecurityException("Problem with keystore: " + e.getMessage());
+        } catch (CertificateException e) {
+            throw new HDSSecurityException("Problem with certificate: " + e.getMessage());
+        } catch (IOException e) {
+            throw new HDSSecurityException("IO Problem: " + e.getMessage());
+        } catch (UnrecoverableKeyException e) {
+            throw new HDSSecurityException("Unrecoverable key problem: " + e.getMessage());
+        } catch (InvalidKeyException e) {
+            throw new HDSSecurityException("Invalid key exception: " + e.getMessage());
+        } catch (SignatureException e) {
+            throw new HDSSecurityException("Signature problem: " + e.getMessage());
         }
     }
 
@@ -160,14 +147,8 @@ public class CCHelper {
      * @return true if signature is OK false otherwise
      */
     public static boolean CCverifySignature(byte[] signature) throws HDSSecurityException {
-        PKCS11 pkcs11 = getCC_PKCS11();
 
         try {
-            long p11_session = pkcs11.C_OpenSession(0, PKCS11Constants.CKF_SERIAL_SESSION, null, null);
-
-            // Token login
-            System.out.println("            //Token login");
-            pkcs11.C_Login(p11_session, 1, null);
 
             PublicKey publicKey = getCitizenPublicKey();
 
@@ -177,8 +158,6 @@ public class CCHelper {
 
             return verifySignature.verify(signature);
 
-        } catch (PKCS11Exception e) {
-            throw new HDSSecurityException("Insert your Citizen Card: " + e.getMessage());
         } catch (NoSuchAlgorithmException e){
             throw new HDSSecurityException("Wrong algorithm: " + e.getMessage());
         } catch (InvalidKeyException e) {
