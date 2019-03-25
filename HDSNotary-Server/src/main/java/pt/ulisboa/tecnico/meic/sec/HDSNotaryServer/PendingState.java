@@ -23,7 +23,7 @@ public class PendingState extends TransactionState {
             state.setObs("Good is on another transaction concurrently");
 
             transaction.setState(state);
-           transaction.execute();
+            transaction.execute();
         }
 
         //Item is not for sell
