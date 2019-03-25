@@ -1,12 +1,13 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
 import java.io.Serializable;
+import java.security.PublicKey;
 
 public class User implements Serializable {
     private int userID;
-    private int publicKey;
+    private PublicKey publicKey;
 
-    public User(int id, int pk){
+    public User(int id, PublicKey pk){
         userID = id;
         publicKey = pk;
     }
@@ -15,7 +16,7 @@ public class User implements Serializable {
         return userID;
     }
 
-    public int getPublicKey() {
+    public PublicKey getPublicKey() {
         return publicKey;
     }
 
@@ -23,7 +24,7 @@ public class User implements Serializable {
         this.userID = userID;
     }
 
-    public void setPublicKey(int publicKey) {
+    public void setPublicKey(PublicKey publicKey) {
         this.publicKey = publicKey;
     }
 

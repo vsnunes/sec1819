@@ -11,3 +11,4 @@ target/
 bin/
 HDSNotary-Server/Transaction.bin
 HDSNotary-Server/UsersGoods.bin
+.directory

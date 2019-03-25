@@ -8,8 +8,8 @@ import static org.junit.Assert.*;
 
 public class TransactionTest {
 
-    private User seller = new User(12, 1);
-    private User buyer = new User(14,2);
+    private User seller = new User(12, null);
+    private User buyer = new User(14,null);
     private Good good;
     private Transaction transaction;
 
@@ -50,7 +50,7 @@ public class TransactionTest {
      */
     @Test
     public void transactionWithItemTheft() {
-        User eve = new User(10, 9);
+        User eve = new User(10, null);
         Transaction fraud = new Transaction(2, eve, buyer, good);
         assertEquals(PENDING_STATE, fraud.getTransactionStateDescription());
         fraud.execute();
@@ -88,7 +88,7 @@ public class TransactionTest {
      */
     @Test
     public void twoTransactionSameGood() {
-        User anotherBuyer = new User(3, 23);
+        User anotherBuyer = new User(3, null);
         Transaction t2 = new Transaction(2, seller, anotherBuyer, good);
 
         assertEquals(PENDING_STATE, transaction.getTransactionStateDescription());
@@ -108,7 +108,7 @@ public class TransactionTest {
     @Test
     public void twoTransactionSameTwoGoods() throws GoodException {
         Good anotherGood = new Good(2, seller, true);
-        User anotherBuyer = new User(3, 23);
+        User anotherBuyer = new User(3, null);
         Transaction t2 = new Transaction(2, seller, anotherBuyer, anotherGood);
 
         assertEquals(PENDING_STATE, transaction.getTransactionStateDescription());

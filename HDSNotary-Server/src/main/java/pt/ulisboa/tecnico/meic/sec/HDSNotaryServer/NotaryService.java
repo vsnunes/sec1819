@@ -4,9 +4,13 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 
+import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDER;
+import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
+
 import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -108,11 +112,18 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
 
     protected void createUser(){
-        users.put(1, new User(1,1));
-        users.put(2, new User(2,2));
-        users.put(3, new User(3,3));
-        users.put(4, new User(4,4));
-        users.put(5, new User(5,5));
+        try {
+            users.put(1, new User(1, readPublicKey(USERS_CERTS_FOLDER + "user1.crt")));
+            users.put(2, new User(2, readPublicKey(USERS_CERTS_FOLDER + "user2.crt")));
+            users.put(3, new User(3, readPublicKey(USERS_CERTS_FOLDER + "user3.crt")));
+            users.put(4, new User(4, readPublicKey(USERS_CERTS_FOLDER + "user4.crt")));
+            users.put(5, new User(5, readPublicKey(USERS_CERTS_FOLDER + "user5.crt")));
+            System.out.println("** Creating Users: All users' certificates were loaded successfully!");
+        }catch (CertificateException e) {
+            System.err.println("** Creating User: Failed to load certificate!");
+        } catch (IOException e){
+            System.err.println("** Creating User: IO Problem!");
+        }
     }
 
     protected void createGood() throws GoodException{

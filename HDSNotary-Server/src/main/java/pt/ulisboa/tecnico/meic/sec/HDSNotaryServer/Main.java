@@ -12,8 +12,11 @@ public class Main {
     private static final long serialVersionUID = 1L;
 
     /** Port for accepting clients connection to the service **/
-    private static final int NOTARY_SERVICE_PORT = 10000;
-    private static final String NOTARY_SERVICE_NAME = "HDSNotary";
+    public static final int NOTARY_SERVICE_PORT = 10000;
+    public static final String NOTARY_SERVICE_NAME = "HDSNotary";
+
+    /** User's certificates folder location. BE AWARE it must end with slash (/) ! **/
+    public static final String USERS_CERTS_FOLDER = "src/main/resources/certs/";
 
 
 

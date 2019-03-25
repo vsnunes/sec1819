@@ -6,7 +6,7 @@ import org.junit.Test;
 
 public class GoodTest {
 
-    private User user = new User(1, 2);
+    private User user = new User(1, null);
 
     @Test
     public void setForSellGood() throws GoodException {
@@ -52,7 +52,7 @@ public class GoodTest {
 
         Assert.assertNotNull(g.getOwner());
 
-        g.setOwner(new User(2, 4));
+        g.setOwner(new User(2, null));
 
         Assert.assertNotNull(g.getOwner());
 
