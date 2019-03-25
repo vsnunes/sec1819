@@ -66,9 +66,10 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             if (good.getOwner().getUserID() != userId) {
                 throw new GoodException("Good doesn't belong to you!");
             }
-
-            good.setForSell(bool);
-            doWrite();
+            if(bool) {
+                good.setForSell(bool);
+                doWrite();
+            }
             return good.isForSell();
         }
         else{
@@ -105,8 +106,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             return true;
         }
         else {
-            return false;
-            //throw new TransactionException(transaction.getState().getObs());
+            throw new TransactionException(transaction.getState().getObs());
         }
     }
 
