@@ -68,6 +68,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             }
             if(bool) {
                 good.setForSell(bool);
+                good.getOwner().getClock().increment();
                 doWrite();
             }
             return good.isForSell();
@@ -102,6 +103,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         if (transaction.getTransactionStateDescription().equals("Approved")) {
             transaction.execute(); //change the ownership of the good
+            seller.getClock().increment();
+            buyer.getClock().increment();
             doWrite();
             return true;
         }
@@ -231,19 +234,13 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             ObjectInputStream oi = new ObjectInputStream(fi);
             HashMap<Integer, Good> test = (HashMap<Integer, Good>) oi.readObject();
             System.out.println("The Object goods has been read from the file...");
-            HashMap<Integer, User> users = (HashMap<Integer, User>) oi.readObject();
-            Iterator iterator = test.keySet().iterator();
-            while (iterator.hasNext()) {
-                Integer key = (Integer) iterator.next();
-                test.get(key).setOwner(test.get(key).getOwner());
-                System.out.println("The Object user with id " + test.get(key).getOwner().getUserID() + " was succesfully read from file");
-            }
+            HashMap<Integer, User> usersTest = (HashMap<Integer, User>) oi.readObject();
 
-            iterator = test.keySet().iterator();
+            Iterator iterator = test.keySet().iterator();
             System.out.println("=================================================================");
             while (iterator.hasNext()) {
                 Integer key = (Integer) iterator.next();
-                System.out.printf("Good: %d\tOwner: %d\tIs4Sale: %s\tOwner PubK OK?: %s\n", test.get(key).getGoodID(), test.get(key).getOwner().getUserID(), test.get(key).isForSell(), test.get(key).getOwner().getPublicKey() != null);
+                System.out.printf("Good: %d\tOwner: %d\tOwner clock: %d\tIs4Sale: %s\tOwner PubK OK?: %s\n", test.get(key).getGoodID(), test.get(key).getOwner().getUserID(), test.get(key).getOwner().getClock().getClockValue(), test.get(key).isForSell(), test.get(key).getOwner().getPublicKey() != null);
             }
             System.out.println("=================================================================");
             oi.close();
@@ -312,7 +309,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     /*Execute transactions pending*/
     private ArrayList<Transaction> doReadTransactions(){
         System.out.println("Reading transaction...");
-        doPrint();
         ArrayList<Transaction> transactions = new ArrayList<Transaction>();
         ObjectInputStream oi = null;
         try {
