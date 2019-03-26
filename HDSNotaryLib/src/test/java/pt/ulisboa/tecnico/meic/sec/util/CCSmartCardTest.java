@@ -1,43 +1,49 @@
 package pt.ulisboa.tecnico.meic.sec.util;
 
+import static org.junit.Assert.*;
+import org.junit.Before;
 import org.junit.Test;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 
 import java.util.Random;
 
-import static org.junit.Assert.*;
-import static pt.ulisboa.tecnico.meic.sec.util.CCHelper.*;
+public class CCSmartCardTest {
 
-public class CCHelperTest {
+    private CCSmartCard card;
 
-    /*@Test
+    /*@Before
+    public void setUp() {
+        card = new CCSmartCard();
+    }
+
+    @Test
     public void simplePKCS11_PTEID() throws HDSSecurityException {
-        CCinit();
-        CCstop();
+        card.init();
+        card.stop();
     }
 
     @Test
     public void simpleSignTest() throws HDSSecurityException {
-        CCinit();
+        card.init();
 
         String data = "This is a test message";
 
-        byte[] signature = CC_SignData(data.getBytes());
+        byte[] signature = card.signData(data.getBytes());
 
-        assertEquals(true, CCverifySignature(signature));
+        assertEquals(true, card.verifySignature(signature));
 
-        CCstop();
+        card.stop();
     }
 
     @Test
     public void simpleVerifyWrongSignature() throws HDSSecurityException {
-        CCinit();
+        card.init();
 
         byte[] array = new byte[256];
         new Random().nextBytes(array);
 
-        assertEquals(false, CCverifySignature(array));
+        assertEquals(false, card.verifySignature(array));
 
-        CCstop();
+        card.stop();
     }*/
 }

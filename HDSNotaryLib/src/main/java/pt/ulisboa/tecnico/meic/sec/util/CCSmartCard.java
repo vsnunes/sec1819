@@ -18,7 +18,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 /**
- * Helper class for Cartão do Cidadão Operations.
+ * Certification operations for Cartão do Cidadão.
  * NOTE: You should always call the CCInit first then the operations and lastly CCStop.
  *
  * CCInit();
@@ -26,7 +26,7 @@ import java.security.cert.X509Certificate;
  *    ...
  * CCStop();
  */
-public class CCHelper {
+public class CCSmartCard implements Certification {
 
     public static final String PTEID_LIB_NAME = "pteidlibj";
 
@@ -34,7 +34,7 @@ public class CCHelper {
      * Gets the PKCS11 of the card
      * @return PKCS11 object
      */
-    public static PKCS11 getCC_PKCS11() {
+    public PKCS11 getCC_PKCS11() {
 
         try {
 
@@ -92,7 +92,8 @@ public class CCHelper {
      * @throws HDSSecurityException if something fails (either the CC operation or the cryptographic ones)
      * Note: This function calls pteid API which will require PIN de Autenticação (Authentication PIN)
      */
-    public static byte[] CC_SignData(byte[] data) throws HDSSecurityException {
+    @Override
+    public byte[] signData(byte[] data) throws HDSSecurityException {
 
         try {
 
@@ -146,7 +147,8 @@ public class CCHelper {
      * @param signature to be checked
      * @return true if signature is OK false otherwise
      */
-    public static boolean CCverifySignature(byte[] signature) throws HDSSecurityException {
+    @Override
+    public boolean verifySignature(byte[] signature) throws HDSSecurityException {
 
         try {
 
@@ -172,7 +174,7 @@ public class CCHelper {
      * @param n
      * @return a binary byte array containing the certificate
      */
-    private static byte[] getCertificateInBytes(int n) {
+    private byte[] getCertificateInBytes(int n) {
         byte[] certificate_bytes = null;
         try {
             PTEID_Certif[] certs = pteid.GetCertificates();
@@ -196,7 +198,7 @@ public class CCHelper {
      * Returns the Notary Authentication Certificate in the X509 format
      * @return X509Certificate of the Citizen
      */
-    public static X509Certificate getCitizenAuthCert() throws HDSSecurityException {
+    public X509Certificate getCitizenAuthCert() throws HDSSecurityException {
 
         //0 certificate corresponds to the authentication certificate in the Citizen card!
         byte[] certificateEncoded = getCertificateInBytes(0);
@@ -218,7 +220,7 @@ public class CCHelper {
      * @return PublicKey object corresponding to the Citizen's Public Key
      * @throws HDSSecurityException if its not possible to obtain the Citizen Public Key from its Citizen Card
      */
-    public static PublicKey getCitizenPublicKey() throws HDSSecurityException {
+    public PublicKey getCitizenPublicKey() throws HDSSecurityException {
         X509Certificate citizenCertificate = getCitizenAuthCert();
         return citizenCertificate.getPublicKey();
     }
@@ -226,7 +228,8 @@ public class CCHelper {
     /**
      * Starts CC operations
      */
-    public static void CCinit() throws HDSSecurityException {
+    @Override
+    public void init(String... args) throws HDSSecurityException {
         try {
             System.loadLibrary(PTEID_LIB_NAME);
             pteid.Init("");
@@ -239,7 +242,8 @@ public class CCHelper {
     /**
      * Stops CC operations
      */
-    public static void CCstop() throws HDSSecurityException {
+    @Override
+    public void stop() throws HDSSecurityException {
         try {
             pteid.Exit(0);
         } catch (PteidException e) {
