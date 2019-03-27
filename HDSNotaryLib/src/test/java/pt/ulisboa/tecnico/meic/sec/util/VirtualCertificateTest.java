@@ -21,7 +21,7 @@ public class VirtualCertificateTest {
     @Test
     public void simpleSignTest() throws HDSSecurityException {
         virtualSmartCard.init(new File("src/main/resources/certs/user1.crt").getAbsolutePath(), new File("src/main/resources/certs/java_certs/private_user1_pkcs8.pem").getAbsolutePath());
-
+        System.out.println(new File("src/main/resources/certs/user1.crt").getAbsolutePath());
         String data = "This is a test message";
 
         byte[] signature = virtualSmartCard.signData(data.getBytes());
