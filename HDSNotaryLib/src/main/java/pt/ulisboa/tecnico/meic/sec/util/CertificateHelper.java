@@ -17,7 +17,7 @@ import java.security.cert.Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * A class for describing basic RSA certificates operations.
@@ -57,13 +57,13 @@ public class CertificateHelper {
      */
     public static PrivateKey readPrivateKey(String privateKeyPath) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, URISyntaxException {
 
-        String privateKeyContent = new String(Files.readAllBytes(Paths.get(privateKeyPath)));
+        String privateKeyContent = new String(Files.readAllBytes(Paths.get(privateKeyPath)), StandardCharsets.UTF_8);
 
         privateKeyContent = privateKeyContent.replaceAll("\\n", "").replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "");
 
         KeyFactory kf = KeyFactory.getInstance("RSA");
 
-        PKCS8EncodedKeySpec keySpecPKCS8 = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyContent));
+        PKCS8EncodedKeySpec keySpecPKCS8 = new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(privateKeyContent));
         PrivateKey privKey = kf.generatePrivate(keySpecPKCS8);
         return privKey;
 

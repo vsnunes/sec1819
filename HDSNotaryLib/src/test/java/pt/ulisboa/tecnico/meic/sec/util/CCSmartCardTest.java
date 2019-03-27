@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.util;
 
+import java.nio.charset.StandardCharsets;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class CCSmartCardTest {
 
         String data = "This is a test message";
 
-        byte[] signature = card.signData(data.getBytes());
+        byte[] signature = card.signData(data.getBytes(StandardCharsets.UTF_8));
 
         assertEquals(true, card.verifySignature(signature));
 

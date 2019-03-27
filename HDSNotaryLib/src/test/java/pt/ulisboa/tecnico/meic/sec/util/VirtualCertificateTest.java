@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.util;
 
+import java.nio.charset.StandardCharsets;
 import org.junit.Before;
 import org.junit.Test;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
@@ -24,7 +25,7 @@ public class VirtualCertificateTest {
         System.out.println(new File("src/main/resources/certs/user1.crt").getAbsolutePath());
         String data = "This is a test message";
 
-        byte[] signature = virtualSmartCard.signData(data.getBytes());
+        byte[] signature = virtualSmartCard.signData(data.getBytes(StandardCharsets.UTF_8));
 
         assertEquals(true, virtualSmartCard.verifySignature(signature));
 
