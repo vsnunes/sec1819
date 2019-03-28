@@ -16,7 +16,7 @@ public class Main {
     public static final String NOTARY_SERVICE_NAME = "HDSNotary";
 
     /** User's certificates folder location. BE AWARE it must end with slash (/) ! **/
-    public static final String USERS_CERTS_FOLDER = "src/main/resources/certs/";
+    public static final String USERS_CERTS_FOLDER = "../HDSNotaryLib/src/main/resources/certs/";
 
 
 
