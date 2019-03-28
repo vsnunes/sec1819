@@ -41,8 +41,8 @@ public class IntentionToSell extends Operation {
         try {
 
             VirtualCertificate cert = new VirtualCertificate();
-            cert.init(new File("src/main/resources/certs/" + ClientService.userID + ".crt").getAbsolutePath(),
-                    new File("src/main/resources/certs/java_certs/private_" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
 
             /*prepare request arguments*/
             Interaction interaction = new Interaction();
@@ -51,7 +51,7 @@ public class IntentionToSell extends Operation {
             interaction.setResponse(intention);
             interaction.setHmac(Digest.createDigest(interaction, ClientService.userID, cert));
 
-            response = notaryInterface.intentionToSell(ClientService.userID, good, intention);
+            response = notaryInterface.intentionToSell(interaction);
             if (response == true) {
                 new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
             }
@@ -64,11 +64,11 @@ public class IntentionToSell extends Operation {
             new BoxUI(NOTARY_REPORT_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         }
         catch (RemoteException e) {
-            new BoxUI(NOTARY_CONN_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
+            new BoxUI(NOTARY_CONN_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         } catch (NoSuchAlgorithmException e) {
-            new BoxUI(CLIENT_DIGEST_PROBELM).show(BoxUI.RED_BOLD_BRIGHT);
+            new BoxUI(CLIENT_DIGEST_PROBELM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         } catch (HDSSecurityException e) {
-            new BoxUI(CLIENT_SECURITY_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
+            new BoxUI(CLIENT_SECURITY_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         }
 
         /**/

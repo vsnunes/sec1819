@@ -1,13 +1,19 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
+import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
+import pt.ulisboa.tecnico.meic.sec.util.Digest;
+import pt.ulisboa.tecnico.meic.sec.util.Interaction;
+import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.security.NoSuchAlgorithmException;
 
 public class BuyGood extends Operation {
 
@@ -52,10 +58,26 @@ public class BuyGood extends Operation {
         }
 
         try {
-            response = anotherClient.buyGood(good, ClientService.userID);
+
+            Interaction request = new Interaction();
+            request.setGoodID(good);
+            request.setBuyerID(ClientService.userID);
+
+            VirtualCertificate cert = new VirtualCertificate();
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
+
+
+            request.setHmac(Digest.createDigest(request, ClientService.userID, cert));
+
+            response = anotherClient.buyGood(request);
             return response;
         } catch (RemoteException e) {
             new BoxUI(CLIENT_CONNLOST_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
+        } catch (NoSuchAlgorithmException e) {
+            new BoxUI(CLIENT_NO_ALGORITHM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+        } catch (HDSSecurityException e) {
+            new BoxUI(CLIENT_SECURITY_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         }
 
         //DO NOT BLOCK THIS THREAD

@@ -1,16 +1,22 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
+import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
+import pt.ulisboa.tecnico.meic.sec.util.Digest;
+import pt.ulisboa.tecnico.meic.sec.util.Interaction;
+import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
+import java.io.File;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.NoSuchAlgorithmException;
 
 public class ClientService extends UnicastRemoteObject implements ClientInterface, Serializable {
 
@@ -51,12 +57,28 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
     }
 
     @Override
-    public boolean buyGood(int goodId, int buyerId) throws RemoteException {
+    public boolean buyGood(Interaction request) throws RemoteException {
+        int goodId = request.getGoodID();
+        int buyerId = request.getBuyerID();
+
+
         boolean response;
 
         //Call transferGood of Notary
         try {
-            response = notaryInterface.transferGood(userID, buyerId, goodId);
+            Interaction request4Notary = new Interaction();
+            request4Notary.setSellerID(userID);
+            request4Notary.setBuyerID(buyerId);
+            request4Notary.setGoodID(goodId);
+
+            VirtualCertificate cert = new VirtualCertificate();
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
+
+
+            request4Notary.setHmac(Digest.createDigest(request, ClientService.userID, cert));
+
+            response = notaryInterface.transferGood(request4Notary);
             return response;
 
         } catch (RemoteException e) {
@@ -66,6 +88,10 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
         } catch (TransactionException e) {
             new BoxUI("Notary report the following problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
 
+        } catch (NoSuchAlgorithmException e) {
+            new BoxUI("No such algorithm: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+        } catch (HDSSecurityException e) {
+            new BoxUI("Security problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         }
 
         return false;

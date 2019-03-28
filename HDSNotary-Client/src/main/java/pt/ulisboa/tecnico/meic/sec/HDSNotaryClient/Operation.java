@@ -20,18 +20,20 @@ public abstract class Operation {
     public static final String NOTARY_REPORT_PROBLEM = "Notary report the following problem: ";
     public static final String NOTARY_CONN_PROBLEM = "There were a problem in connecting to Notary!";
 
-    public static final String CLIENT_NOTBOUND_PROBLEM = ":( NotBound on Client!";
-    public static final String CLIENT_MALFOURL_PROBLEM = ":( Malform URL! Cannot find Client Service!";
-    public static final String CLIENT_CONNLOST_PROBLEM = ":( It looks like I miss the connection with Client!";
-    public static final String CLIENT_TRANSFER_PROBLEM = "There was an error on the transferring process!";
+    public static final String CLIENT_NOTBOUND_PROBLEM = ":( NotBound on Client! ";
+    public static final String CLIENT_MALFOURL_PROBLEM = ":( Malform URL! Cannot find Client Service! ";
+    public static final String CLIENT_CONNLOST_PROBLEM = ":( It looks like I miss the connection with Client! ";
+    public static final String CLIENT_TRANSFER_PROBLEM = "There was an error on the transferring process! ";
+    public static final String CLIENT_DIGEST_PROBELM = "Digest not created ";
+    public static final String CLIENT_SECURITY_PROBLEM = "Problem using security methods ";
+    public static final String CLIENT_NO_ALGORITHM = "No such algorithm: ";
 
     public static final String CLIENT_SUCCESS_TRANSFER = "Successfully transferred good!";
 
     public static final String INFO_ITEM_FORSALE = "The item is now for sale!";
     public static final String INFO_ITEM_NOTFORSALE = "The item is now NOT for sale!";
 
-    public static final String CLIENT_DIGEST_PROBELM = "Digest not created";
-    public static final String CLIENT_SECURITY_PROBLEM = "Problem using security methods";
+
 
 
 

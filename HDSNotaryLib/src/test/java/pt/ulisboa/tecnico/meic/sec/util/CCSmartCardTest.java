@@ -6,8 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 
-import java.util.Random;
-
 public class CCSmartCardTest {
 
     private CCSmartCard card;
@@ -40,13 +38,11 @@ public class CCSmartCardTest {
     public void simpleVerifyWrongSignature() throws HDSSecurityException {
         card.init();
 
-        byte[] array1 = new byte[128];
-        new Random().nextBytes(array1);
-        byte[] array2 = new byte[128];
-        new Random().nextBytes(array2);
+        String message1 = "Message test";
+        String message2 = "Message test";
 
-        byte[] signature1 = card.signData(array1);
-        byte[] signature2 = card.signData(array2);
+        byte[] signature1 = card.signData(message1.getBytes());
+        byte[] signature2 = card.signData(message2.getBytes());
 
         assertEquals(false, card.verifyData(signature1, signature2));
 

@@ -1,6 +1,12 @@
 package pt.ulisboa.tecnico.meic.sec.util;
 
-public class Interaction {
+import java.io.Serializable;
+
+/**
+ * A Class for describing interaction between entities (Notary <-> User) or (User <-> User)
+ * This class will encapsulate all request arguments OR all response arguments.
+ */
+public class Interaction implements Serializable {
     private byte[] hmac;
     private int buyerID;
     private int sellerID;
@@ -41,7 +47,7 @@ public class Interaction {
         this.sellerID = sellerID;
     }
 
-    public boolean isResponse() {
+    public boolean getResponse() {
         return response;
     }
 

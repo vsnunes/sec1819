@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
+import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDER;
 import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
@@ -58,7 +59,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public boolean intentionToSell(int userId, int goodId, boolean bool) throws RemoteException, GoodException {
+    public boolean intentionToSell(Interaction request) throws RemoteException, GoodException {
+        int goodId = request.getGoodID();
+        int userId = request.getUserID();
+        boolean bool = request.getResponse();
+
+
         Good good = goods.get(goodId);
         if(good != null){
 
@@ -80,7 +86,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public boolean getStateOfGood(int goodId) throws RemoteException, GoodException {
+    public boolean getStateOfGood(Interaction request) throws RemoteException, GoodException {
+        int goodId = request.getGoodID();
+
         Good good = goods.get(goodId);
         if(good != null){
             return good.isForSell();
@@ -92,7 +100,11 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public boolean transferGood(int sellerId, int buyerId, int goodId) throws RemoteException, TransactionException {
+    public boolean transferGood(Interaction request) throws RemoteException, TransactionException {
+        int goodId = request.getGoodID();
+        int sellerId = request.getSellerID();
+        int buyerId = request.getBuyerID();
+
         Good good = goods.get(goodId);
         User seller = users.get(sellerId);
         User buyer = users.get(buyerId);
