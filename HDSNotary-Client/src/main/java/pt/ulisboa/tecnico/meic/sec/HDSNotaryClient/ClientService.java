@@ -76,9 +76,9 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
                     new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
 
 
-            request4Notary.setHmac(Digest.createDigest(request, ClientService.userID, cert));
+            request4Notary.setHmac(Digest.createDigest(request, cert));
 
-            response = notaryInterface.transferGood(request4Notary);
+            response = notaryInterface.transferGood(request4Notary).getResponse();
             return response;
 
         } catch (RemoteException e) {

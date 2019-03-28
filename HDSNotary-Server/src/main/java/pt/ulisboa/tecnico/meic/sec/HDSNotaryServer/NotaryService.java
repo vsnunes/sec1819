@@ -1,8 +1,11 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
+import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
+import pt.ulisboa.tecnico.meic.sec.util.Digest;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
+import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDER;
 import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
@@ -10,6 +13,7 @@ import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
 import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,13 +81,15 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 good.getOwner().getClock().increment();
                 doWrite();
             }
-            return request;
+
+            return putHMAC(request);
         }
         else{
             throw new GoodException("Good does not exist.");
         }
 
     }
+
 
     @Override
     public boolean getStateOfGood(Interaction request) throws RemoteException, GoodException {
@@ -100,7 +106,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public boolean transferGood(Interaction request) throws RemoteException, TransactionException {
+    public Interaction transferGood(Interaction request) throws RemoteException, TransactionException {
         int goodId = request.getGoodID();
         int sellerId = request.getSellerID();
         int buyerId = request.getBuyerID();
@@ -118,11 +124,41 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             seller.getClock().increment();
             buyer.getClock().increment();
             doWrite();
-            return true;
+            return putHMAC(request);
         }
         else {
             throw new TransactionException(transaction.getState().getObs());
         }
+    }
+
+    @Override
+    public int getClock(int userID) throws RemoteException {
+        Iterator iterator = users.keySet().iterator();
+        while (iterator.hasNext()) {
+            Integer key = (Integer) iterator.next();
+            if(users.get(key).getUserID() == userID){
+                return users.get(key).getClock().getClockValue();
+            }
+        }
+        return -1;
+    }
+
+    private Interaction putHMAC(Interaction request){
+        VirtualCertificate cert = new VirtualCertificate();
+        try {
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem" ).getAbsolutePath());
+        } catch (HDSSecurityException e) {
+            e.printStackTrace();
+        }
+        try {
+            request.setHmac(Digest.createDigest(request, cert));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (HDSSecurityException e) {
+            e.printStackTrace();
+        }
+        return request;
     }
 
 

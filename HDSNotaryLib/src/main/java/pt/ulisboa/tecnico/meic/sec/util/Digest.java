@@ -7,7 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class Digest {
-    public static byte[] createDigest(Interaction data, int userID, Certification cert) throws NoSuchAlgorithmException, HDSSecurityException {
+    public static byte[] createDigest(Interaction data, Certification cert) throws NoSuchAlgorithmException, HDSSecurityException {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         return cert.signData(digest.digest(data.toString().getBytes(StandardCharsets.UTF_8)));
     }

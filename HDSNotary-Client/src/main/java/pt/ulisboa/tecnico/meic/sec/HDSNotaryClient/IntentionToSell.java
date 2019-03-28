@@ -49,7 +49,7 @@ public class IntentionToSell extends Operation {
             interaction.setUserID(ClientService.userID);
             interaction.setGoodID(good);
             interaction.setResponse(intention);
-            interaction.setHmac(Digest.createDigest(interaction, ClientService.userID, cert));
+            interaction.setHmac(Digest.createDigest(interaction, cert));
 
             response = notaryInterface.intentionToSell(interaction).getResponse();
             if (response == true) {

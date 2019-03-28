@@ -51,9 +51,9 @@ public class TransferGood extends Operation {
                     new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
 
 
-            request.setHmac(Digest.createDigest(request, ClientService.userID, cert));
+            request.setHmac(Digest.createDigest(request, cert));
 
-            response = notaryInterface.transferGood(request);
+            response = notaryInterface.transferGood(request).getResponse();
 
             if (response == true) {
                 new BoxUI(CLIENT_SUCCESS_TRANSFER).show(BoxUI.GREEN_BOLD);
