@@ -70,6 +70,8 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             request4Notary.setSellerID(userID);
             request4Notary.setBuyerID(buyerId);
             request4Notary.setGoodID(goodId);
+            request.setSellerClock(notaryInterface.getClock(userID));
+            request.setUserClock(notaryInterface.getClock(buyerId));
 
             VirtualCertificate cert = new VirtualCertificate();
             cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),

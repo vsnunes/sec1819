@@ -50,6 +50,7 @@ public class IntentionToSell extends Operation {
             interaction.setGoodID(good);
             interaction.setResponse(intention);
             interaction.setHmac(Digest.createDigest(interaction, cert));
+            interaction.setUserClock(notaryInterface.getClock(ClientService.userID));
 
             response = notaryInterface.intentionToSell(interaction).getResponse();
             if (response == true) {

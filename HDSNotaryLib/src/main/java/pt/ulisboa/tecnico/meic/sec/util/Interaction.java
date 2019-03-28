@@ -13,6 +13,9 @@ public class Interaction implements Serializable {
     private boolean response;
     private int goodID;
     private int userID;
+    private int userClock;
+    private int buyerClock;
+    private int sellerClock;
 
     public Interaction(){
         hmac = null;
@@ -21,6 +24,9 @@ public class Interaction implements Serializable {
         response = false;
         goodID = 0;
         userID = 0;
+        userClock = 0;
+        buyerClock = 0;
+        sellerClock = 0;
     }
 
     public byte[] getHmac() {
@@ -71,8 +77,36 @@ public class Interaction implements Serializable {
         this.userID = userID;
     }
 
+    public boolean isResponse() {
+        return response;
+    }
+
+    public int getUserClock() {
+        return userClock;
+    }
+
+    public void setUserClock(int userClock) {
+        this.userClock = userClock;
+    }
+
+    public int getBuyerClock() {
+        return buyerClock;
+    }
+
+    public void setBuyerClock(int buyerClock) {
+        this.buyerClock = buyerClock;
+    }
+
+    public int getSellerClock() {
+        return sellerClock;
+    }
+
+    public void setSellerClock(int sellerClock) {
+        this.sellerClock = sellerClock;
+    }
+
     @Override
     public String toString() {
-        return "" + buyerID + sellerID + response + goodID + userID;
+        return "" + buyerID + sellerID + response + goodID + userID + userClock + buyerClock + sellerClock;
     }
 }

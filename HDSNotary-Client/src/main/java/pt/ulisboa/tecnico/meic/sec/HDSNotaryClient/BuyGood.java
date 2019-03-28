@@ -69,6 +69,7 @@ public class BuyGood extends Operation {
 
 
             request.setHmac(Digest.createDigest(request, cert));
+            request.setUserClock(notaryInterface.getClock(ClientService.userID));
 
             response = anotherClient.buyGood(request);
             return response;

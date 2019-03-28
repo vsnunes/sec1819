@@ -3,6 +3,7 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
+import pt.ulisboa.tecnico.meic.sec.util.Certification;
 import pt.ulisboa.tecnico.meic.sec.util.Digest;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
@@ -68,6 +69,28 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         int userId = request.getUserID();
         boolean bool = request.getResponse();
 
+        Certification cert = new VirtualCertificate();
+        try {
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem" ).getAbsolutePath());
+        } catch (HDSSecurityException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            /*compare hmacs*/
+            if(Digest.verify(request, cert)){
+                throw new GoodException("Tampering detected!");
+            }
+            /*check freshness*/
+            if(request.getUserClock() != getClock(userId)){
+                throw new GoodException("Replay attack detected!!");
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (HDSSecurityException e) {
+            e.printStackTrace();
+        }
 
         Good good = goods.get(goodId);
         if(good != null){
@@ -144,7 +167,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     private Interaction putHMAC(Interaction request){
-        VirtualCertificate cert = new VirtualCertificate();
+        Certification cert = new VirtualCertificate();
         try {
             cert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
                     new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem" ).getAbsolutePath());

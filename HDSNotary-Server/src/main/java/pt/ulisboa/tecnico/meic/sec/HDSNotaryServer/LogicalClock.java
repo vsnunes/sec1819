@@ -38,6 +38,6 @@ public class LogicalClock implements Serializable {
     }
 
     public boolean isValid(int value) {
-        return value > userID;
+        return value == userID;
     }
 }

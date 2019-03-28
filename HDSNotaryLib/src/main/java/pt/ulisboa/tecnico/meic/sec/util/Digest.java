@@ -14,9 +14,9 @@ public class Digest {
     public static boolean verify(Interaction data, Certification cert) throws NoSuchAlgorithmException, HDSSecurityException {
 
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] received = digest.digest(data.toString().getBytes(StandardCharsets.UTF_8));
+        byte[] expected = digest.digest(data.toString().getBytes(StandardCharsets.UTF_8));
 
-        return cert.verifyData(data.getHmac(), received);
+        return cert.verifyData(expected, data.getHmac());
 
     }
 }
