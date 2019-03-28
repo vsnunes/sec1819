@@ -16,8 +16,8 @@ public interface Certification {
     /** Default signData method **/
     byte[] signData(byte[] data) throws HDSSecurityException;
 
-    /** Verify a sign signature **/
-    boolean verifySignature(byte[] expected, byte[] original) throws HDSSecurityException;
+    /** Verify a data signature **/
+    boolean verifyData(byte[] expected, byte[] original) throws HDSSecurityException;
 
 
 }

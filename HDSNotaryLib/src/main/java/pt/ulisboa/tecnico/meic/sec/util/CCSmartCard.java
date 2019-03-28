@@ -7,6 +7,10 @@ import pteidlib.PTEID_Certif;
 import pteidlib.PteidException;
 import pteidlib.pteid;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +20,7 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 
 /**
  * Certification operations for Cartão do Cidadão.
@@ -119,9 +124,15 @@ public class CCSmartCard implements Certification {
                 System.out.println( aliases.nextElement() );
             }*/
 
-            signature.initSign((PrivateKey) ks.getKey("CITIZEN AUTHENTICATION CERTIFICATE", null));
+            //signature.initSign((PrivateKey) ks.getKey("CITIZEN AUTHENTICATION CERTIFICATE", null));
 
-            return signature.sign();
+            PrivateKey pvK = (PrivateKey) ks.getKey("CITIZEN AUTHENTICATION CERTIFICATE", null);
+
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, pvK);
+
+
+            return cipher.doFinal(data);
 
         } catch (NoSuchAlgorithmException e){
             throw new HDSSecurityException("Wrong algorithm: " + e.getMessage());
@@ -137,35 +148,48 @@ public class CCSmartCard implements Certification {
             throw new HDSSecurityException("Unrecoverable key problem: " + e.getMessage());
         } catch (InvalidKeyException e) {
             throw new HDSSecurityException("Invalid key exception: " + e.getMessage());
-        } catch (SignatureException e) {
-            throw new HDSSecurityException("Signature problem: " + e.getMessage());
+        } catch (NoSuchPaddingException e) {
+            throw new HDSSecurityException("Padding problem when encrypting: " + e.getMessage());
+        } catch (IllegalBlockSizeException e) {
+            throw new HDSSecurityException("Illegal block when encrypting: " + e.getMessage());
+        } catch (BadPaddingException e) {
+            throw new HDSSecurityException("Bad padding problem: " + e.getMessage());
         }
     }
 
     /**
      * Given a signature data (return of CC_SignData) checks the validity of signature using the CC card
-     * @param signature to be checked
-     * @return true if signature is OK false otherwise
+     * @param expected is the data which is expected to obtain
+     * @param original is the original data received
+     * @return true if digest is OK
      */
     @Override
-    public boolean verifySignature(byte[] expected, byte[] original) throws HDSSecurityException {
+    public boolean verifyData(byte[] expected, byte[] original) throws HDSSecurityException {
 
         try {
 
             PublicKey publicKey = getCitizenPublicKey();
 
-            Signature verifySignature = Signature.getInstance("SHA1WithRSA");
+            //Signature verifySignature = Signature.getInstance("SHA1WithRSA");
 
-            verifySignature.initVerify(publicKey);
+            //verifySignature.initVerify(publicKey);
 
-            return verifySignature.verify(expected);
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.DECRYPT_MODE, publicKey);
+
+            return Arrays.equals(expected, cipher.doFinal(original));
+
 
         } catch (NoSuchAlgorithmException e){
             throw new HDSSecurityException("Wrong algorithm: " + e.getMessage());
         } catch (InvalidKeyException e) {
             throw new HDSSecurityException("Invalid key exception: " + e.getMessage());
-        } catch (SignatureException e) {
-            throw new HDSSecurityException("Problem in Signature: " + e.getMessage());
+        } catch (NoSuchPaddingException e) {
+            throw new HDSSecurityException("Padding problem when decrypting: " + e.getMessage());
+        } catch (IllegalBlockSizeException e) {
+            throw new HDSSecurityException("Illegal block when decrypting: " + e.getMessage());
+        } catch (BadPaddingException e) {
+            throw new HDSSecurityException("Bad padding problem: " + e.getMessage());
         }
     }
 

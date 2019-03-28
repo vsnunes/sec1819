@@ -31,7 +31,7 @@ public class CCSmartCardTest {
 
         byte[] signature = card.signData(data.getBytes(StandardCharsets.UTF_8));
 
-        assertEquals(true, card.verifySignature(signature));
+        assertEquals(true, card.verifyData(data.getBytes(), signature));
 
         card.stop();
     }
@@ -40,10 +40,15 @@ public class CCSmartCardTest {
     public void simpleVerifyWrongSignature() throws HDSSecurityException {
         card.init();
 
-        byte[] array = new byte[256];
-        new Random().nextBytes(array);
+        byte[] array1 = new byte[128];
+        new Random().nextBytes(array1);
+        byte[] array2 = new byte[128];
+        new Random().nextBytes(array2);
 
-        assertEquals(false, card.verifySignature(array));
+        byte[] signature1 = card.signData(array1);
+        byte[] signature2 = card.signData(array2);
+
+        assertEquals(false, card.verifyData(signature1, signature2));
 
         card.stop();
     }*/

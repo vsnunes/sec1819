@@ -16,7 +16,7 @@ public class Digest {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] received = digest.digest(data.toString().getBytes(StandardCharsets.UTF_8));
 
-        return cert.verifySignature(data.getHmac(), received);
+        return cert.verifyData(data.getHmac(), received);
 
     }
 }

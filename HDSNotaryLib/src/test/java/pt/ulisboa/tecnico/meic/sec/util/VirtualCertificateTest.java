@@ -12,6 +12,9 @@ import static org.junit.Assert.*;
 
 public class VirtualCertificateTest {
 
+    public static final String USER_1_CRT = "src/main/resources/certs/user1.crt";
+    public static final String USER_1_PKCS_8_PEM = "src/main/resources/certs/java_certs/private_user1_pkcs8.pem";
+
     private VirtualCertificate virtualSmartCard;
 
     @Before
@@ -25,13 +28,13 @@ public class VirtualCertificateTest {
      */
     @Test
     public void simpleSignTest() throws HDSSecurityException {
-        virtualSmartCard.init(new File("src/main/resources/certs/user1.crt").getAbsolutePath(), new File("src/main/resources/certs/java_certs/private_user1_pkcs8.pem").getAbsolutePath());
+        virtualSmartCard.init(new File(USER_1_CRT).getAbsolutePath(), new File(USER_1_PKCS_8_PEM).getAbsolutePath());
         System.out.println(new File("src/main/resources/certs/user1.crt").getAbsolutePath());
         String data = "This is a test message";
 
         byte[] signature = virtualSmartCard.signData(data.getBytes(StandardCharsets.UTF_8));
 
-        assertEquals(true, virtualSmartCard.verifySignature(data.getBytes(), signature));
+        assertEquals(true, virtualSmartCard.verifyData(data.getBytes(), signature));
 
         virtualSmartCard.stop();
     }
@@ -42,7 +45,7 @@ public class VirtualCertificateTest {
      */
     @Test
     public void simpleVerifyWrongSignature() throws HDSSecurityException {
-        virtualSmartCard.init(new File("src/main/resources/certs/user1.crt").getAbsolutePath(), new File("src/main/resources/certs/java_certs/private_user1_pkcs8.pem").getAbsolutePath());
+        virtualSmartCard.init(new File(USER_1_CRT).getAbsolutePath(), new File(USER_1_PKCS_8_PEM).getAbsolutePath());
         byte[] array1 = new byte[128];
         new Random().nextBytes(array1);
         byte[] array2 = new byte[128];
@@ -51,7 +54,7 @@ public class VirtualCertificateTest {
         byte[] signature1 = virtualSmartCard.signData(array1);
         byte[] signature2 = virtualSmartCard.signData(array2);
 
-        assertEquals(false, virtualSmartCard.verifySignature(signature1, signature2));
+        assertEquals(false, virtualSmartCard.verifyData(signature1, signature2));
 
         virtualSmartCard.stop();
     }

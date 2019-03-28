@@ -71,7 +71,7 @@ public class VirtualCertificate implements Certification {
     }
 
     @Override
-    public boolean verifySignature(byte[] expected, byte[] original) throws HDSSecurityException {
+    public boolean verifyData(byte[] expected, byte[] original) throws HDSSecurityException {
 
         try {
             PublicKey puK = readPublicKey(pathToCertificate);
