@@ -30,6 +30,11 @@ public abstract class Operation {
     public static final String INFO_ITEM_FORSALE = "The item is now for sale!";
     public static final String INFO_ITEM_NOTFORSALE = "The item is now NOT for sale!";
 
+    public static final String CLIENT_DIGEST_PROBELM = "Digest not created";
+    public static final String CLIENT_SECURITY_PROBLEM = "Problem using security methods";
+
+
+
 
     protected String name;
 

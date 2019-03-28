@@ -18,4 +18,6 @@ public interface Certification {
 
     /** Verify a sign signature **/
     boolean verifySignature(byte[] signature) throws HDSSecurityException;
+
+
 }

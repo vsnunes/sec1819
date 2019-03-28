@@ -59,7 +59,7 @@ public class Client {
             }
 
         } catch (RemoteException e) {
-            System.err.println("Cannot create ClientServer singleton");
+            System.err.println("Cannot createDigest ClientServer singleton");
             return;
         }
 

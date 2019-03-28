@@ -1,11 +1,17 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
+import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
+import pt.ulisboa.tecnico.meic.sec.util.Digest;
+import pt.ulisboa.tecnico.meic.sec.util.Interaction;
+import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
+import java.io.File;
 import java.rmi.RemoteException;
+import java.security.NoSuchAlgorithmException;
 
 public class IntentionToSell extends Operation {
 
@@ -34,6 +40,17 @@ public class IntentionToSell extends Operation {
 
         try {
 
+            VirtualCertificate cert = new VirtualCertificate();
+            cert.init(new File("src/main/resources/certs/" + ClientService.userID + ".crt").getAbsolutePath(),
+                    new File("src/main/resources/certs/java_certs/private_" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
+
+            /*prepare request arguments*/
+            Interaction interaction = new Interaction();
+            interaction.setUserID(ClientService.userID);
+            interaction.setGoodID(good);
+            interaction.setResponse(intention);
+            interaction.setHmac(Digest.createDigest(interaction, ClientService.userID, cert));
+
             response = notaryInterface.intentionToSell(ClientService.userID, good, intention);
             if (response == true) {
                 new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
@@ -48,6 +65,10 @@ public class IntentionToSell extends Operation {
         }
         catch (RemoteException e) {
             new BoxUI(NOTARY_CONN_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
+        } catch (NoSuchAlgorithmException e) {
+            new BoxUI(CLIENT_DIGEST_PROBELM).show(BoxUI.RED_BOLD_BRIGHT);
+        } catch (HDSSecurityException e) {
+            new BoxUI(CLIENT_SECURITY_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
         }
 
         /**/
