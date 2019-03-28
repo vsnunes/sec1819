@@ -51,7 +51,7 @@ public class IntentionToSell extends Operation {
             interaction.setResponse(intention);
             interaction.setHmac(Digest.createDigest(interaction, ClientService.userID, cert));
 
-            response = notaryInterface.intentionToSell(interaction);
+            response = notaryInterface.intentionToSell(interaction).getResponse();
             if (response == true) {
                 new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
             }

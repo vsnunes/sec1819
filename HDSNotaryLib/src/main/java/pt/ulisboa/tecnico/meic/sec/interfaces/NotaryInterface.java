@@ -9,7 +9,7 @@ import java.rmi.RemoteException;
 
 public interface NotaryInterface extends Remote {
 
-    boolean intentionToSell(Interaction request) throws RemoteException, GoodException;
+    Interaction intentionToSell(Interaction request) throws RemoteException, GoodException;
 
     boolean getStateOfGood(Interaction request) throws RemoteException, GoodException;
 

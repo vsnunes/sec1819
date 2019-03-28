@@ -59,7 +59,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public boolean intentionToSell(Interaction request) throws RemoteException, GoodException {
+    public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException {
         int goodId = request.getGoodID();
         int userId = request.getUserID();
         boolean bool = request.getResponse();
@@ -77,7 +77,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 good.getOwner().getClock().increment();
                 doWrite();
             }
-            return good.isForSell();
+            return request;
         }
         else{
             throw new GoodException("Good does not exist.");
