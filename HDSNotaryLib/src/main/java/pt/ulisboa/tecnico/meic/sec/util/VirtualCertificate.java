@@ -2,11 +2,16 @@ package pt.ulisboa.tecnico.meic.sec.util;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 
 import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
 
@@ -39,13 +44,13 @@ public class VirtualCertificate implements Certification {
     public byte[] signData(byte[] data) throws HDSSecurityException {
 
         try {
-            Signature signature = Signature.getInstance("SHA1withRSA");
 
             PrivateKey pvK = readPrivateKey(pathToPrivateKey);
 
-            signature.initSign(pvK);
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, pvK);
 
-            return signature.sign();
+            return cipher.doFinal(data);
         } catch(NoSuchAlgorithmException e) {
             throw new HDSSecurityException("No such algorithm: " + e.getMessage());
         } catch (IOException e) {
@@ -54,24 +59,28 @@ public class VirtualCertificate implements Certification {
             throw new HDSSecurityException("Invalid Key: " + e.getMessage());
         } catch (InvalidKeyException e) {
             throw new HDSSecurityException("Invalid Key exception: " + e.getMessage());
-        } catch (SignatureException e) {
-            throw new HDSSecurityException("Signature problem: " + e.getMessage());
         } catch (URISyntaxException e) {
             throw new HDSSecurityException("URI problem: " + e.getMessage());
+        } catch (NoSuchPaddingException e) {
+            throw new HDSSecurityException("Padding problem when encrypting: " + e.getMessage());
+        } catch (IllegalBlockSizeException e) {
+            throw new HDSSecurityException("Illegal block when encrypting: " + e.getMessage());
+        } catch (BadPaddingException e) {
+            throw new HDSSecurityException("Bad padding problem: " + e.getMessage());
         }
     }
 
     @Override
-    public boolean verifySignature(byte[] signature) throws HDSSecurityException {
+    public boolean verifySignature(byte[] expected, byte[] original) throws HDSSecurityException {
 
         try {
-            Signature verifySignature = Signature.getInstance("SHA1withRSA");
-
             PublicKey puK = readPublicKey(pathToCertificate);
 
-            verifySignature.initVerify(puK);
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.DECRYPT_MODE, puK);
 
-            return verifySignature.verify(signature);
+            return Arrays.equals(expected, cipher.doFinal(original));
+
         } catch(NoSuchAlgorithmException e) {
             throw new HDSSecurityException("No such algorithm: " + e.getMessage());
         } catch(CertificateException e) {
@@ -80,8 +89,12 @@ public class VirtualCertificate implements Certification {
             throw new HDSSecurityException("IO Problem: " + e.getMessage());
         } catch (InvalidKeyException e) {
             throw new HDSSecurityException("Invalid Key exception: " + e.getMessage());
-        } catch (SignatureException e) {
-            throw new HDSSecurityException("Signature problem: " + e.getMessage());
+        } catch (NoSuchPaddingException e) {
+            throw new HDSSecurityException("Padding problem when decrypting: " + e.getMessage());
+        } catch (IllegalBlockSizeException e) {
+            throw new HDSSecurityException("Illegal block when decrypting: " + e.getMessage());
+        } catch (BadPaddingException e) {
+            throw new HDSSecurityException("Bad padding problem: " + e.getMessage());
         }
     }
 }

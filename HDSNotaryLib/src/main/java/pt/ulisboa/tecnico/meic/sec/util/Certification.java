@@ -17,7 +17,7 @@ public interface Certification {
     byte[] signData(byte[] data) throws HDSSecurityException;
 
     /** Verify a sign signature **/
-    boolean verifySignature(byte[] signature) throws HDSSecurityException;
+    boolean verifySignature(byte[] expected, byte[] original) throws HDSSecurityException;
 
 
 }

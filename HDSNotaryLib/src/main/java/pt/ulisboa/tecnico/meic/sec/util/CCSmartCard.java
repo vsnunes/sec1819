@@ -148,7 +148,7 @@ public class CCSmartCard implements Certification {
      * @return true if signature is OK false otherwise
      */
     @Override
-    public boolean verifySignature(byte[] signature) throws HDSSecurityException {
+    public boolean verifySignature(byte[] expected, byte[] original) throws HDSSecurityException {
 
         try {
 
@@ -158,7 +158,7 @@ public class CCSmartCard implements Certification {
 
             verifySignature.initVerify(publicKey);
 
-            return verifySignature.verify(signature);
+            return verifySignature.verify(expected);
 
         } catch (NoSuchAlgorithmException e){
             throw new HDSSecurityException("Wrong algorithm: " + e.getMessage());

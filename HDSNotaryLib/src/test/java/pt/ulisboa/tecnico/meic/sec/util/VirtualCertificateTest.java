@@ -19,6 +19,10 @@ public class VirtualCertificateTest {
         virtualSmartCard = new VirtualCertificate();
     }
 
+    /**
+     * Test for Small message signature success
+     * @throws HDSSecurityException
+     */
     @Test
     public void simpleSignTest() throws HDSSecurityException {
         virtualSmartCard.init(new File("src/main/resources/certs/user1.crt").getAbsolutePath(), new File("src/main/resources/certs/java_certs/private_user1_pkcs8.pem").getAbsolutePath());
@@ -27,18 +31,27 @@ public class VirtualCertificateTest {
 
         byte[] signature = virtualSmartCard.signData(data.getBytes(StandardCharsets.UTF_8));
 
-        assertEquals(true, virtualSmartCard.verifySignature(signature));
+        assertEquals(true, virtualSmartCard.verifySignature(data.getBytes(), signature));
 
         virtualSmartCard.stop();
     }
 
+    /**
+     * Tests for different signatures
+     * @throws HDSSecurityException
+     */
     @Test
     public void simpleVerifyWrongSignature() throws HDSSecurityException {
         virtualSmartCard.init(new File("src/main/resources/certs/user1.crt").getAbsolutePath(), new File("src/main/resources/certs/java_certs/private_user1_pkcs8.pem").getAbsolutePath());
-        byte[] array = new byte[256];
-        new Random().nextBytes(array);
+        byte[] array1 = new byte[128];
+        new Random().nextBytes(array1);
+        byte[] array2 = new byte[128];
+        new Random().nextBytes(array2);
 
-        assertEquals(false, virtualSmartCard.verifySignature(array));
+        byte[] signature1 = virtualSmartCard.signData(array1);
+        byte[] signature2 = virtualSmartCard.signData(array2);
+
+        assertEquals(false, virtualSmartCard.verifySignature(signature1, signature2));
 
         virtualSmartCard.stop();
     }

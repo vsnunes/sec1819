@@ -12,14 +12,11 @@ public class Digest {
         return cert.signData(digest.digest(data.toString().getBytes(StandardCharsets.UTF_8)));
     }
     public static boolean verify(Interaction data, Certification cert) throws NoSuchAlgorithmException, HDSSecurityException {
-        if(!cert.verifySignature(data.getHmac())){
-            return false;
-        }
 
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] newDigest = digest.digest(data.toString().getBytes(StandardCharsets.UTF_8));
+        byte[] received = digest.digest(data.toString().getBytes(StandardCharsets.UTF_8));
 
-        return false;
+        return cert.verifySignature(data.getHmac(), received);
 
     }
 }
