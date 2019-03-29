@@ -71,8 +71,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         Certification cert = new VirtualCertificate();
         try {
-            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
-                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem" ).getAbsolutePath());
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + userId + ".crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + userId + "_pkcs8.pem" ).getAbsolutePath());
         } catch (HDSSecurityException e) {
             e.printStackTrace();
         }
