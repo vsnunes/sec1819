@@ -53,12 +53,12 @@ public class GetStateOfGood extends Operation {
 
             /*compare hmacs*/
             if(Digest.verify(response, cert) == false){
-                throw new HDSSecurityException("Tampering detected!");
+                throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
             }
 
             /*check freshness*/
             if(request.getUserClock() != response.getUserClock()){
-                throw new HDSSecurityException("Replay attack detected!!");
+                throw new HDSSecurityException(NOTARY_REPORT_DUP_MSG);
             }
 
             if (response.getResponse() == true) {
