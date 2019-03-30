@@ -34,7 +34,7 @@ public class TransferGood extends Operation {
 
     @Override
     public boolean execute() {
-        boolean response;
+        Interaction response;
 
         int good = (int)args.get(0);
         int buyer = (int)args.get(1);
@@ -53,13 +53,28 @@ public class TransferGood extends Operation {
 
             request.setHmac(Digest.createDigest(request, cert));
 
-            response = notaryInterface.transferGood(request).getResponse();
+            response = notaryInterface.transferGood(request);
 
-            if (response == true) {
+            VirtualCertificate notaryCert = new VirtualCertificate();
+            notaryCert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem").getAbsolutePath());
+
+
+            /*compare hmacs*/
+            if(Digest.verify(response, notaryCert) == false){
+                throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
+            }
+
+            /*check freshness*/
+            if(request.getUserClock() != response.getUserClock()){
+                throw new HDSSecurityException(NOTARY_REPORT_DUP_MSG);
+            }
+
+            if (response.getResponse() == true) {
                 new BoxUI(CLIENT_SUCCESS_TRANSFER).show(BoxUI.GREEN_BOLD);
             } else new BoxUI(CLIENT_TRANSFER_PROBLEM).show(BoxUI.RED_BOLD);
 
-            return response;
+            return response.getResponse();
 
         } catch(TransactionException e) {
             new BoxUI(NOTARY_REPORT_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);

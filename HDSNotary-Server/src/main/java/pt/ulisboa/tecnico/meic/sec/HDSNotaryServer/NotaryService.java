@@ -147,6 +147,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             seller.getClock().increment();
             buyer.getClock().increment();
             doWrite();
+            request.setResponse(true);
             return putHMAC(request);
         }
         else {
