@@ -74,19 +74,15 @@ public class IntentionToSell extends Operation {
         }
         catch(GoodException e) {
             setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
-            return;
         }
         catch (RemoteException e) {
             setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
-            return;
 
         } catch (NoSuchAlgorithmException e) {
             setStatus(Status.FAILURE_DIGEST, e.getMessage());
-            return;
 
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
-            return;
         }
 
     }

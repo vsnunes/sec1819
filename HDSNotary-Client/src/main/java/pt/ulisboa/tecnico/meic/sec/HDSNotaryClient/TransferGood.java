@@ -1,4 +1,5 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
+import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
@@ -72,19 +73,18 @@ public class TransferGood extends Operation {
 
         } catch(TransactionException e) {
             setStatus(Status.FAILURE_TRANSACTION, e.getMessage());
-            return;
         }
         catch (RemoteException e) {
             setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
-            return;
 
         } catch (NoSuchAlgorithmException e) {
             setStatus(Status.FAILURE_DIGEST, e.getMessage());
-            return;
 
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
-            return;
+
+        } catch (GoodException e) {
+            setStatus(Status.FAILURE_GOOD, e.getMessage());
         }
 
 

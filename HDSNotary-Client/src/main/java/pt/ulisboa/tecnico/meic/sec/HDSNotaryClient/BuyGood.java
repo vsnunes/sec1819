@@ -68,23 +68,21 @@ public class BuyGood extends Operation {
                     new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
 
 
-            request.setHmac(Digest.createDigest(request, cert));
-            request.setUserClock(notaryInterface.getClock(ClientService.userID));
+            request.setBuyerClock(notaryInterface.getClock(ClientService.userID));
+            String data = "" + good + ClientService.userID + notaryInterface.getClock(ClientService.userID);
+            request.setBuyerHMAC(Digest.createDigest(data, cert));
 
             response = anotherClient.buyGood(request);
             setStatus(response);
 
         } catch (RemoteException e) {
             setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
-            return;
 
         } catch (NoSuchAlgorithmException e) {
             setStatus(Status.FAILURE_DIGEST, e.getMessage());
-            return;
 
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
-            return;
         }
 
         //DO NOT BLOCK THIS THREAD

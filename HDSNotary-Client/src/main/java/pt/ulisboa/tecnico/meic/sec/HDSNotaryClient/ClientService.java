@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
+import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
@@ -66,21 +67,20 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
 
         //Call transferGood of Notary
         try {
-            Interaction request4Notary = new Interaction();
-            request4Notary.setSellerID(userID);
-            request4Notary.setBuyerID(buyerId);
-            request4Notary.setGoodID(goodId);
+            request.setSellerID(userID);
+            request.setBuyerID(buyerId);
+            request.setGoodID(goodId);
             request.setSellerClock(notaryInterface.getClock(userID));
-            request.setUserClock(notaryInterface.getClock(buyerId));
+            request.setBuyerClock(notaryInterface.getClock(buyerId));
 
             VirtualCertificate cert = new VirtualCertificate();
             cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
                     new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
 
+            String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
+            request.setSellerHMAC(Digest.createDigest(data, cert));
 
-            request4Notary.setHmac(Digest.createDigest(request, cert));
-
-            response = notaryInterface.transferGood(request4Notary).getResponse();
+            response = notaryInterface.transferGood(request).getResponse();
             return response;
 
         } catch (RemoteException e) {
@@ -94,6 +94,8 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             new BoxUI("No such algorithm: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         } catch (HDSSecurityException e) {
             new BoxUI("Security problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+        } catch (GoodException e) {
+            new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         }
 
         return false;

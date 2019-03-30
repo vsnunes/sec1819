@@ -63,6 +63,10 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         return instance;
     }
 
+    private void verifyFreshnessAndTampering(){
+
+    }
+
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
@@ -131,7 +135,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, HDSSecurityException {
+    public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
         int sellerId = request.getSellerID();
         int buyerId = request.getBuyerID();
@@ -139,6 +143,57 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         Good good = goods.get(goodId);
         User seller = users.get(sellerId);
         User buyer = users.get(buyerId);
+
+       /*verificar para o buyer*/
+        Certification cert = new VirtualCertificate();
+        try {
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + buyerId + ".crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + buyerId + "_pkcs8.pem" ).getAbsolutePath());
+        } catch (HDSSecurityException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            /*compare hmacs*/
+            String data = "" + request.getGoodID() + request.getBuyerID() + request.getBuyerClock();
+            if(!Digest.verify(request.getBuyerHMAC(), data,  cert)){
+                throw new GoodException("Tampering detected in Buyer!");
+            }
+            /*check freshness*/
+            if(request.getBuyerClock() != getClock(buyerId)){
+                throw new GoodException("Replay attack detected in Buyer!!");
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (HDSSecurityException e) {
+            e.printStackTrace();
+        }
+
+        /*verificar para o seller*/
+        cert = new VirtualCertificate();
+        try {
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + sellerId + ".crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + sellerId + "_pkcs8.pem" ).getAbsolutePath());
+        } catch (HDSSecurityException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            /*compare hmacs*/
+            String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
+            if(!Digest.verify(request.getSellerHMAC(), data, cert)){
+                throw new GoodException("Tampering detected in Seller!");
+            }
+            /*check freshness*/
+            if(request.getSellerClock() != getClock(sellerId)){
+                throw new GoodException("Replay attack detected in Seller!!");
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (HDSSecurityException e) {
+            e.printStackTrace();
+        }
+
 
         Transaction transaction = new Transaction(transactionCounter++, seller, buyer, good);
         doWriteTransaction(transaction);

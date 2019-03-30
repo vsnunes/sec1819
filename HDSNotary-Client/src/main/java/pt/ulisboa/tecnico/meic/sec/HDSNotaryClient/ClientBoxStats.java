@@ -61,6 +61,10 @@ public class ClientBoxStats implements ClientVisitor {
             case FAILURE_CONN_LOST:
                 new BoxUI(CLIENT_CONNLOST_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
                 return true;
+
+            case FAILURE_GOOD:
+                new BoxUI(NOTARY_REPORT_PROBLEM + operation.getStatusVerbose()).show(BoxUI.RED_BOLD_BRIGHT);
+                return true;
         }
 
         return false;
