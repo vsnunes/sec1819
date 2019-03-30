@@ -14,12 +14,16 @@ public class ClientBoxStats implements ClientVisitor {
     public static final String CLIENT_TRANSFER_PROBLEM = "There was an error on the transferring process! ";
     public static final String CLIENT_DIGEST_PROBELM = "Digest not created ";
     public static final String CLIENT_SECURITY_PROBLEM = "Problem using security methods ";
+    public static final String CLIENT_BUYGOOD_OK = "Successfully bought item";
+    public static final String CLIENT_BUYGOOD_NOTOK = "Error while buying the item";
+
+
 
     public static final String CLIENT_SUCCESS_TRANSFER = "Successfully transferred good!";
 
     public static final String INFO_ITEM_FORSALE = "The item is now for sale!";
     public static final String INFO_ITEM_NOTFORSALE = "The item is now NOT for sale!";
-    public static final String INFO_ITEM_INT_FORSALE = "The item is now maked for sale!";
+    public static final String INFO_ITEM_INT_FORSALE = "The item is now marked for sale!";
     public static final String INFO_ITEM_INT_NOTFORSALE = "The item is now market NOT for sale!";
 
     /**
@@ -73,10 +77,10 @@ public class ClientBoxStats implements ClientVisitor {
     @Override
     public void accept(BuyGood operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
+            new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
         }
         else {
-            new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD_BRIGHT);
+            new BoxUI(CLIENT_BUYGOOD_NOTOK).show(BoxUI.RED_BOLD_BRIGHT);
         }
     }
 
