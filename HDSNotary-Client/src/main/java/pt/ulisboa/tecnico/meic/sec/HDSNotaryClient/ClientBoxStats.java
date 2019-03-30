@@ -16,6 +16,8 @@ public class ClientBoxStats implements ClientVisitor {
     public static final String CLIENT_SECURITY_PROBLEM = "Problem using security methods ";
     public static final String CLIENT_BUYGOOD_OK = "Successfully bought item";
     public static final String CLIENT_BUYGOOD_NOTOK = "Error while buying the item";
+    public final static String INFO_TAMP = "Tampering detected";
+    public final static String INFO_REPLAY = "Replay attack detected";
 
 
 
@@ -68,6 +70,14 @@ public class ClientBoxStats implements ClientVisitor {
 
             case FAILURE_GOOD:
                 new BoxUI(NOTARY_REPORT_PROBLEM + operation.getStatusVerbose()).show(BoxUI.RED_BOLD_BRIGHT);
+                return true;
+
+            case FAILURE_TAMP:
+                new BoxUI(INFO_TAMP ).show(BoxUI.RED_BOLD_BRIGHT);
+                return true;
+
+            case FAILURE_REPLAY:
+                new BoxUI(INFO_REPLAY).show(BoxUI.RED_BOLD_BRIGHT);
                 return true;
         }
 

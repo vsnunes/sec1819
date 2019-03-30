@@ -19,6 +19,9 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
 
+import static pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.Operation.NOTARY_REPORT_DUP_MSG;
+import static pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.Operation.NOTARY_REPORT_TAMPERING;
+
 public class ClientService extends UnicastRemoteObject implements ClientInterface, Serializable {
 
     /** URI Of Notary **/
@@ -58,12 +61,12 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
     }
 
     @Override
-    public boolean buyGood(Interaction request) throws RemoteException {
+    public Interaction buyGood(Interaction request) throws RemoteException {
         int goodId = request.getGoodID();
         int buyerId = request.getBuyerID();
 
 
-        boolean response;
+        Interaction response;
 
         //Call transferGood of Notary
         try {
@@ -80,7 +83,33 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
             request.setSellerHMAC(Digest.createDigest(data, cert));
 
-            response = notaryInterface.transferGood(request).getResponse();
+            response = notaryInterface.transferGood(request);
+            /*checks answer from notary*/
+            cert = new VirtualCertificate();
+            try {
+                cert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
+                        new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem" ).getAbsolutePath());
+            } catch (HDSSecurityException e) {
+                e.printStackTrace();
+            }
+            /*compare hmacs*/
+            if(Digest.verify(response, cert) == false){
+                throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
+            }
+
+            /*check freshness*/
+            if(request.getSellerClock() != response.getSellerClock()){
+                throw new HDSSecurityException(NOTARY_REPORT_DUP_MSG);
+            }
+
+            /*build a new hmac*/
+            cert = new VirtualCertificate();
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
+
+            data = "" + response.getSellerID() + response.getBuyerID() + response.getGoodID() + response.getSellerClock() + response.getBuyerClock();
+            request.setSellerHMAC(Digest.createDigest(data, cert));
+
             return response;
 
         } catch (RemoteException e) {
@@ -98,6 +127,6 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         }
 
-        return false;
+        return null;
     }
 }
