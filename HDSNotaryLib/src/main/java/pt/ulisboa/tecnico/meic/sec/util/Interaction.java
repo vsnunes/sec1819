@@ -8,6 +8,8 @@ import java.io.Serializable;
  */
 public class Interaction implements Serializable {
     private byte[] hmac;
+    private byte[] sellerHMAC;
+    private byte[] buyerHMAC;
     private int buyerID;
     private int sellerID;
     private boolean response;
@@ -17,8 +19,11 @@ public class Interaction implements Serializable {
     private int buyerClock;
     private int sellerClock;
 
+
     public Interaction(){
         hmac = null;
+        sellerHMAC = null;
+        buyerHMAC = null;
         buyerID = 0;
         sellerID = 0;
         response = false;
@@ -35,6 +40,22 @@ public class Interaction implements Serializable {
 
     public void setHmac(byte[] hmac) {
         this.hmac = hmac;
+    }
+
+    public byte[] getSellerHMAC() {
+        return sellerHMAC;
+    }
+
+    public void setSellerHMAC(byte[] sellerHMAC) {
+        this.sellerHMAC = sellerHMAC;
+    }
+
+    public byte[] getBuyerHMAC() {
+        return buyerHMAC;
+    }
+
+    public void setBuyerHMAC(byte[] buyerHMAC) {
+        this.buyerHMAC = buyerHMAC;
     }
 
     public int getBuyerID() {

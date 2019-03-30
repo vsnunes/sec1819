@@ -11,6 +11,7 @@ public class Digest {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         return cert.signData(digest.digest(data.toString().getBytes(StandardCharsets.UTF_8)));
     }
+
     public static boolean verify(Interaction data, Certification cert) throws NoSuchAlgorithmException, HDSSecurityException {
 
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -19,4 +20,21 @@ public class Digest {
         return cert.verifyData(expected, data.getHmac());
 
     }
+
+    /*used between clients*/
+    public static byte[] createDigest(String data, Certification cert) throws NoSuchAlgorithmException, HDSSecurityException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        return cert.signData(digest.digest(data.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    public static boolean verify(byte[] hmac, String data, Certification cert) throws NoSuchAlgorithmException, HDSSecurityException {
+
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] expected = digest.digest(data.getBytes(StandardCharsets.UTF_8));
+
+        return cert.verifyData(expected, hmac);
+
+    }
+
+
 }

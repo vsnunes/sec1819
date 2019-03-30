@@ -13,7 +13,7 @@ public interface NotaryInterface extends Remote {
 
     boolean getStateOfGood(Interaction request) throws RemoteException, GoodException;
 
-    Interaction transferGood(Interaction request) throws RemoteException, TransactionException;
+    Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException;
 
     int getClock(int userID) throws RemoteException;
 

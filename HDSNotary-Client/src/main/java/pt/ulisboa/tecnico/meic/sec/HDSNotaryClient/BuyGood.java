@@ -68,8 +68,9 @@ public class BuyGood extends Operation {
                     new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
 
 
-            request.setHmac(Digest.createDigest(request, cert));
-            request.setUserClock(notaryInterface.getClock(ClientService.userID));
+            request.setBuyerClock(notaryInterface.getClock(ClientService.userID));
+            String data = "" + good + ClientService.userID + notaryInterface.getClock(ClientService.userID);
+            request.setBuyerHMAC(Digest.createDigest(data, cert));
 
             response = anotherClient.buyGood(request);
             return response;
