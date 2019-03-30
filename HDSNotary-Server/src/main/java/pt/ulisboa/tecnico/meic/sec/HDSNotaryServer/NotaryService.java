@@ -153,7 +153,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         try {
             /*compare hmacs*/
-            String data = "" + request.getGoodID() + request.getBuyerID() + request.getBuyerClock();
+            String data = "" + request.getGoodID() + request.getBuyerID() + request.getBuyerClock() + request.getSellerClock();
             if(!Digest.verify(request.getBuyerHMAC(), data,  cert)){
                 throw new GoodException("Tampering detected in Buyer!");
             }

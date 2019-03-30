@@ -7,6 +7,6 @@ import java.rmi.RemoteException;
 
 public interface ClientInterface extends Remote {
 
-    boolean buyGood(Interaction request) throws RemoteException;
+    Interaction buyGood(Interaction request) throws RemoteException;
 
 }

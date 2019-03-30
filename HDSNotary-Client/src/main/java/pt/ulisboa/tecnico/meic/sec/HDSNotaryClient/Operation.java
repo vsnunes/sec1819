@@ -23,7 +23,7 @@ public abstract class Operation {
     /** Possible Operation status **/
     public enum Status {NOT_EXECUTED, SUCCESS, FAILURE, FAILURE_NOTARY_REPORT, FAILURE_NOTARY_CONN, FAILURE_DIGEST,
                         FAILURE_SECURITY, FAILURE_TRANSACTION, FAILURE_NOT_BOUND, FAILURE_MAL_FORM_URL, FAILURE_CONN_LOST,
-                        FAILURE_GOOD}
+                        FAILURE_GOOD, FAILURE_TAMP, FAILURE_REPLAY}
 
 
     protected String name;

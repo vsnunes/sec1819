@@ -16,7 +16,7 @@ import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
 public class BuyGood extends Operation {
-
+    private String clientID;
     public BuyGood(ClientInterface ci, NotaryInterface ni) {
         super("BuyGood", ci, ni);
     }
@@ -24,7 +24,7 @@ public class BuyGood extends Operation {
     @Override
     public boolean getAndCheckArgs() {
         try {
-            String clientID = new BoxUI("What is the client ID?").showAndGet();
+            clientID = new BoxUI("What is the client ID?").showAndGet();
             args.add("//localhost:1000" + clientID + "/Client" + clientID);
             args.add(Integer.parseInt(new BoxUI("What is the good ID to buy?").showAndGet()));
             return true;
@@ -36,7 +36,7 @@ public class BuyGood extends Operation {
     @Override
     public void execute() {
         ClientInterface anotherClient;
-        boolean response;
+        Interaction response;
 
         String clientURL = (String) args.get(0);
         int good = (int) args.get(1);
@@ -69,11 +69,60 @@ public class BuyGood extends Operation {
 
 
             request.setBuyerClock(notaryInterface.getClock(ClientService.userID));
-            String data = "" + good + ClientService.userID + notaryInterface.getClock(ClientService.userID);
+            request.setSellerClock(notaryInterface.getClock(Integer.parseInt(clientID)));
+
+            String data = "" + good + ClientService.userID + notaryInterface.getClock(ClientService.userID) + notaryInterface.getClock(Integer.parseInt(clientID));
             request.setBuyerHMAC(Digest.createDigest(data, cert));
 
             response = anotherClient.buyGood(request);
-            setStatus(response);
+            if(response != null) {
+                /*checks answer from notary*/
+                cert = new VirtualCertificate();
+                try {
+                    cert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
+                            new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem").getAbsolutePath());
+                } catch (HDSSecurityException e) {
+                    e.printStackTrace();
+                }
+                /*compare hmacs*/
+                if (Digest.verify(response, cert) == false) {
+                    throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
+                }
+
+                /*verify seller*/
+                cert = new VirtualCertificate();
+                try {
+                    cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + response.getSellerID() + ".crt").getAbsolutePath(),
+                            new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + response.getSellerID() + "_pkcs8.pem" ).getAbsolutePath());
+                } catch (HDSSecurityException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    /*compare hmacs*/
+                    data = "" + response.getSellerID() + response.getBuyerID() + response.getGoodID() + response.getSellerClock() + response.getBuyerClock();
+                    if(!Digest.verify(response.getSellerHMAC(), data, cert)){
+                        setStatus(Status.FAILURE_TAMP);
+                        return;
+                        //throw new GoodException("Tampering detected in Seller!");
+                    }
+                    /*check freshness*/
+                    if(request.getSellerClock() != response.getSellerClock()){
+                        setStatus(Status.FAILURE_REPLAY);
+                        return;
+                        //throw new GoodException("Replay attack detected in Seller!!");
+                    }
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (HDSSecurityException e) {
+                    e.printStackTrace();
+                }
+
+
+                setStatus(response.getResponse());
+            } else{
+                setStatus(false);
+            }
 
         } catch (RemoteException e) {
             setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
