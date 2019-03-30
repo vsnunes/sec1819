@@ -64,8 +64,8 @@ public class BuyGood extends Operation {
             request.setBuyerID(ClientService.userID);
 
             VirtualCertificate cert = new VirtualCertificate();
-            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
-                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
+            cert.init("", new File(System.getProperty("project.user.private.path") +
+                    ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
 
             request.setBuyerClock(notaryInterface.getClock(ClientService.userID));

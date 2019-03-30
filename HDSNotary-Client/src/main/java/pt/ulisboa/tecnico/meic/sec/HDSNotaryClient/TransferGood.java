@@ -46,18 +46,15 @@ public class TransferGood extends Operation {
             request.setSellerID(ClientService.userID);
 
             VirtualCertificate cert = new VirtualCertificate();
-            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
-                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
-
+            cert.init("", new File(System.getProperty("project.user.private.path") +
+                    ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
             request.setHmac(Digest.createDigest(request, cert));
 
             response = notaryInterface.transferGood(request);
 
             VirtualCertificate notaryCert = new VirtualCertificate();
-            notaryCert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
-                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem").getAbsolutePath());
-
+            notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
 
             /*compare hmacs*/
             if(Digest.verify(response, notaryCert) == false){

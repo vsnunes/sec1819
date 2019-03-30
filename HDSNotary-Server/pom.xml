@@ -8,6 +8,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mainClass>pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main</mainClass>
+
+        <!-- Location of User certificates -->
+        <project.users.cert.path>../HDSNotaryLib/src/main/resources/certs/user</project.users.cert.path>
+        <project.users.cert.ext>.crt</project.users.cert.ext>
+
+        <!-- Location of Notary Private Key -->
+        <project.notary.private>../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem</project.notary.private>
     </properties>
 
 
@@ -58,6 +65,20 @@
                     <executable>java</executable>
                     <mainClass>${mainClass}</mainClass>
                     <includePluginDependencies>true</includePluginDependencies>
+                    <systemProperties>
+                        <systemProperty>
+                            <key>project.users.cert.path</key>
+                            <value>${project.users.cert.path}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <key>project.users.cert.ext</key>
+                            <value>${project.users.cert.ext}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <key>project.notary.private</key>
+                            <value>${project.notary.private}</value>
+                        </systemProperty>
+                    </systemProperties>
                 </configuration>
             </plugin>
             <plugin>

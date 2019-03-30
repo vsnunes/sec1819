@@ -31,8 +31,11 @@ public class VirtualCertificate implements Certification {
 
     @Override
     public void init(String... args) throws HDSSecurityException {
-        this.pathToCertificate = args[0];
-        this.pathToPrivateKey = args[1];
+        int length = args.length;
+        if (length > 0)
+            this.pathToCertificate = args[0];
+        if (length > 1)
+            this.pathToPrivateKey = args[1];
     }
 
     @Override
