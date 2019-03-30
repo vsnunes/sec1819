@@ -92,7 +92,46 @@ public class Client {
             if (operation.getAndCheckArgs() == false) {
                 new BoxUI("Wrong parameters! Try again!").show(BoxUI.RED_BOLD_BRIGHT);
             } else {
+
+                /** Animation Thread **/
+                Thread waitingThread = new Thread() {
+                    public void run() {
+                        int i = 0;
+                        //Animation when waiting for responses
+                        char[] animationChars = new char[] {'|', '/', '-', '\\'};
+                        String a = "";
+
+                        System.out.print("  Processing ...");
+                        System.out.flush();
+                        while(true) {
+
+                            try {
+                                Thread.sleep(100);
+
+                                a = "\r" + animationChars[i++ % 4];
+                                try {
+                                    System.out.write(a.getBytes());
+                                } catch (IOException e) {
+                                    System.out.println("IO Error");
+                                }
+                                System.out.flush();
+                            } catch (InterruptedException e) {
+                                System.out.println("Done!            ");
+                                System.out.flush();
+                                return;
+                            }
+                        }
+                    }};
+
+
+                //Display waiting animation :)
+                waitingThread.start();
+
                 operation.execute();
+
+                //Stopping waiting animation
+                waitingThread.interrupt();
+
 
                 ClientVisitor visitor = new ClientBoxStats();
 
