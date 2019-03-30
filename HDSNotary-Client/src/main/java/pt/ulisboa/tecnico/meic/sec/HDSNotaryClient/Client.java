@@ -94,6 +94,16 @@ public class Client {
                 new BoxUI("Wrong parameters! Try again!").show(BoxUI.RED_BOLD_BRIGHT);
             } else {
                 operation.execute();
+
+                ClientVisitor visitor = new ClientBoxStats();
+
+
+                if (visitor.check4Failures(operation) == false) {
+                    //Display the results using BoxUI when no FAILURES were detected!
+                    operation.visit(visitor);
+                }
+
+
             }
 
 

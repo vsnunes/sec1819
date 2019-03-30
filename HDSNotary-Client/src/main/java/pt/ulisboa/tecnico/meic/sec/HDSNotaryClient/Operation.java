@@ -16,27 +16,13 @@ public abstract class Operation {
     public static final String REQUEST_TOSELL = "To sell?";
     public static final String REQUEST_BUYER = "What is the buyer ID?";
 
-    /** Notary error messages verbose **/
-    public static final String NOTARY_REPORT_PROBLEM = "Notary report the following problem: ";
-    public static final String NOTARY_CONN_PROBLEM = "There were a problem in connecting to Notary!";
-
-    public static final String CLIENT_NOTBOUND_PROBLEM = ":( NotBound on Client! ";
-    public static final String CLIENT_MALFOURL_PROBLEM = ":( Malform URL! Cannot find Client Service! ";
-    public static final String CLIENT_CONNLOST_PROBLEM = ":( It looks like I miss the connection with Client! ";
-    public static final String CLIENT_TRANSFER_PROBLEM = "There was an error on the transferring process! ";
-    public static final String CLIENT_DIGEST_PROBELM = "Digest not created ";
-    public static final String CLIENT_SECURITY_PROBLEM = "Problem using security methods ";
-    public static final String CLIENT_NO_ALGORITHM = "No such algorithm: ";
-
-    public static final String CLIENT_SUCCESS_TRANSFER = "Successfully transferred good!";
-
-    public static final String INFO_ITEM_FORSALE = "The item is now for sale!";
-    public static final String INFO_ITEM_NOTFORSALE = "The item is now NOT for sale!";
-
     /** Security problems verbose reports **/
     public static final String NOTARY_REPORT_TAMPERING = "Tampering detected!";
     public static final String NOTARY_REPORT_DUP_MSG = "Replay attack detected!!";
 
+    /** Possible Operation status **/
+    public enum Status {NOT_EXECUTED, SUCCESS, FAILURE, FAILURE_NOTARY_REPORT, FAILURE_NOTARY_CONN, FAILURE_DIGEST,
+                        FAILURE_SECURITY, FAILURE_TRANSACTION, FAILURE_NOT_BOUND, FAILURE_MAL_FORM_URL, FAILURE_CONN_LOST}
 
 
     protected String name;
@@ -47,21 +33,29 @@ public abstract class Operation {
 
     protected NotaryInterface notaryInterface;
 
+    /** Status of this operation **/
+    protected Status status;
+    /** A verbose to display why the operation is on this state **/
+    protected String statusVerbose;
+
     public Operation(String name) {
         this.name = name;
         this.args = new ArrayList<>();
+        this.status = Status.NOT_EXECUTED;
     }
 
     public Operation(String name, ClientInterface clientInterface) {
         this.name = name;
         this.args = new ArrayList<>();
         this.clientInterface = clientInterface;
+        this.status = Status.NOT_EXECUTED;
     }
 
     public Operation(String name, NotaryInterface notaryInterface) {
         this.name = name;
         this.args = new ArrayList<>();
         this.notaryInterface = notaryInterface;
+        this.status = Status.NOT_EXECUTED;
     }
 
     public Operation(String name, ClientInterface clientInterface, NotaryInterface notaryInterface) {
@@ -69,11 +63,46 @@ public abstract class Operation {
         this.args = new ArrayList<>();
         this.clientInterface = clientInterface;
         this.notaryInterface = notaryInterface;
+        this.status = Status.NOT_EXECUTED;
     }
 
     public Operation(String name, List<Object> args) {
         this.name = name;
         this.args = args;
+        this.status = Status.NOT_EXECUTED;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+
+    public void setStatus(boolean result) {
+        if (result == true)
+            this.status = Status.SUCCESS;
+        else this.status = Status.FAILURE;
+    }
+
+    public void setStatus(Status status, String statusVerbose) {
+        this.status = status;
+        this.statusVerbose = statusVerbose;
+    }
+
+
+    public void setStatus(boolean result, String statusVerbose) {
+        if (result == true)
+            this.status = Status.SUCCESS;
+        else this.status = Status.FAILURE;
+
+        this.statusVerbose = statusVerbose;
+    }
+
+    public String getStatusVerbose() {
+        return statusVerbose;
     }
 
     /**
@@ -86,6 +115,8 @@ public abstract class Operation {
      * Executes the client operation
      * @return
      */
-    public abstract boolean execute();
+    public abstract void execute();
+
+    public abstract void visit(ClientVisitor visitor);
 
 }

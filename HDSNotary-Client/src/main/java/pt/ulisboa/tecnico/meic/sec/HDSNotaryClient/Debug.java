@@ -1,6 +1,4 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
-
-import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 
@@ -19,13 +17,17 @@ public class Debug extends Operation {
     }
 
     @Override
-    public boolean execute() {
+    public void execute() {
         try {
             notaryInterface.doPrint();
-            return true;
+            setStatus(Status.SUCCESS);
         } catch (RemoteException e) {
-            new BoxUI(NOTARY_CONN_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
-            return false;
+            setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
         }
+    }
+
+    @Override
+    public void visit(ClientVisitor visitor) {
+        visitor.accept(this);
     }
 }

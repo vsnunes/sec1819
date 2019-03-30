@@ -32,7 +32,7 @@ public class IntentionToSell extends Operation {
     }
 
     @Override
-    public boolean execute() {
+    public void execute() {
         Interaction response;
 
         int good = (int)args.get(0);
@@ -70,26 +70,29 @@ public class IntentionToSell extends Operation {
                 throw new HDSSecurityException(NOTARY_REPORT_DUP_MSG);
             }
 
-            if (response.getResponse() == true) {
-                new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
-            }
-            else {
-                new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD_BRIGHT);
-            }
-            return response.getResponse();
+            setStatus(response.getResponse());
         }
         catch(GoodException e) {
-            new BoxUI(NOTARY_REPORT_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
+            return;
         }
         catch (RemoteException e) {
-            new BoxUI(NOTARY_CONN_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
+            return;
+
         } catch (NoSuchAlgorithmException e) {
-            new BoxUI(CLIENT_DIGEST_PROBELM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_DIGEST, e.getMessage());
+            return;
+
         } catch (HDSSecurityException e) {
-            new BoxUI(CLIENT_SECURITY_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_SECURITY, e.getMessage());
+            return;
         }
 
-        /**/
-        return false;
+    }
+
+    @Override
+    public void visit(ClientVisitor visitor) {
+        visitor.accept(this);
     }
 }

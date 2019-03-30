@@ -34,7 +34,7 @@ public class BuyGood extends Operation {
     }
 
     @Override
-    public boolean execute() {
+    public void execute() {
         ClientInterface anotherClient;
         boolean response;
 
@@ -46,15 +46,15 @@ public class BuyGood extends Operation {
 
 
         } catch (NotBoundException e) {
-            new BoxUI(CLIENT_NOTBOUND_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
-            return false;
+            setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
+            return;
 
         } catch (MalformedURLException e) {
-            new BoxUI(CLIENT_MALFOURL_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
-            return false;
+            setStatus(Status.FAILURE_MAL_FORM_URL, e.getMessage());
+            return;
         } catch (Exception e) {
-            new BoxUI(CLIENT_CONNLOST_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
-            return false;
+            setStatus(Status.FAILURE_CONN_LOST, e.getMessage());
+            return;
         }
 
         try {
@@ -72,19 +72,29 @@ public class BuyGood extends Operation {
             request.setUserClock(notaryInterface.getClock(ClientService.userID));
 
             response = anotherClient.buyGood(request);
-            return response;
+            setStatus(response);
+
         } catch (RemoteException e) {
-            new BoxUI(CLIENT_CONNLOST_PROBLEM).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
+            return;
+
         } catch (NoSuchAlgorithmException e) {
-            new BoxUI(CLIENT_NO_ALGORITHM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_DIGEST, e.getMessage());
+            return;
+
         } catch (HDSSecurityException e) {
-            new BoxUI(CLIENT_SECURITY_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_SECURITY, e.getMessage());
+            return;
         }
 
         //DO NOT BLOCK THIS THREAD
         /*if (response == true) {
             new BoxUI("Successfully bought good!").show(BoxUI.GREEN_BOLD);
         } else new BoxUI("Seller didn't sell the good!").show(BoxUI.RED_BOLD);*/
-        return false;
+    }
+
+    @Override
+    public void visit(ClientVisitor visitor) {
+        visitor.accept(this);
     }
 }

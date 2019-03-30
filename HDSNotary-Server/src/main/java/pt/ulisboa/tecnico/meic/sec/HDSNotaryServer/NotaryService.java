@@ -103,6 +103,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 doWrite();
             }
 
+            request.setResponse(bool);
+
             return putHMAC(request);
         }
         else{

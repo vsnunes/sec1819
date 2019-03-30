@@ -1,6 +1,4 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
-
-import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
@@ -33,7 +31,7 @@ public class TransferGood extends Operation {
     }
 
     @Override
-    public boolean execute() {
+    public void execute() {
         Interaction response;
 
         int good = (int)args.get(0);
@@ -70,25 +68,30 @@ public class TransferGood extends Operation {
                 throw new HDSSecurityException(NOTARY_REPORT_DUP_MSG);
             }
 
-            if (response.getResponse() == true) {
-                new BoxUI(CLIENT_SUCCESS_TRANSFER).show(BoxUI.GREEN_BOLD);
-            } else new BoxUI(CLIENT_TRANSFER_PROBLEM).show(BoxUI.RED_BOLD);
-
-            return response.getResponse();
+            setStatus(response.getResponse());
 
         } catch(TransactionException e) {
-            new BoxUI(NOTARY_REPORT_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_TRANSACTION, e.getMessage());
+            return;
         }
         catch (RemoteException e) {
-            new BoxUI(NOTARY_CONN_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
+            return;
+
         } catch (NoSuchAlgorithmException e) {
-            new BoxUI(CLIENT_DIGEST_PROBELM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_DIGEST, e.getMessage());
+            return;
+
         } catch (HDSSecurityException e) {
-            new BoxUI(CLIENT_SECURITY_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            setStatus(Status.FAILURE_SECURITY, e.getMessage());
+            return;
         }
 
 
-        return false;
+    }
 
+    @Override
+    public void visit(ClientVisitor visitor) {
+        visitor.accept(this);
     }
 }
