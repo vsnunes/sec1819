@@ -33,8 +33,9 @@ public abstract class Operation {
     public static final String INFO_ITEM_FORSALE = "The item is now for sale!";
     public static final String INFO_ITEM_NOTFORSALE = "The item is now NOT for sale!";
 
-
-
+    /** Security problems verbose reports **/
+    public static final String NOTARY_REPORT_TAMPERING = "Tampering detected!";
+    public static final String NOTARY_REPORT_DUP_MSG = "Replay attack detected!!";
 
 
 

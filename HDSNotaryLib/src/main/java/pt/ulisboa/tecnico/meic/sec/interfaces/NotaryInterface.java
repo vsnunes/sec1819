@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.meic.sec.interfaces;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
+import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 
@@ -9,11 +10,11 @@ import java.rmi.RemoteException;
 
 public interface NotaryInterface extends Remote {
 
-    Interaction intentionToSell(Interaction request) throws RemoteException, GoodException;
+    Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException;
 
-    boolean getStateOfGood(Interaction request) throws RemoteException, GoodException;
+    Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException;
 
-    Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException;
+    Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException;
 
     int getClock(int userID) throws RemoteException;
 

@@ -33,7 +33,7 @@ public class IntentionToSell extends Operation {
 
     @Override
     public boolean execute() {
-        boolean response;
+        Interaction response;
 
         int good = (int)args.get(0);
         boolean intention = (boolean)args.get(1);
@@ -45,21 +45,38 @@ public class IntentionToSell extends Operation {
                     new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
 
             /*prepare request arguments*/
-            Interaction interaction = new Interaction();
-            interaction.setUserID(ClientService.userID);
-            interaction.setGoodID(good);
-            interaction.setResponse(intention);
-            interaction.setHmac(Digest.createDigest(interaction, cert));
-            interaction.setUserClock(notaryInterface.getClock(ClientService.userID));
+            Interaction request = new Interaction();
+            request.setUserID(ClientService.userID);
+            request.setGoodID(good);
+            request.setResponse(intention);
+            request.setUserClock(notaryInterface.getClock(ClientService.userID));
+            request.setHmac(Digest.createDigest(request, cert));
 
-            response = notaryInterface.intentionToSell(interaction).getResponse();
-            if (response == true) {
+
+            response = notaryInterface.intentionToSell(request);
+
+            VirtualCertificate notaryCert = new VirtualCertificate();
+            notaryCert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem").getAbsolutePath());
+
+
+            /*compare hmacs*/
+            if(Digest.verify(response, notaryCert) == false){
+                throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
+            }
+
+            /*check freshness*/
+            if(request.getUserClock() != response.getUserClock()){
+                throw new HDSSecurityException(NOTARY_REPORT_DUP_MSG);
+            }
+
+            if (response.getResponse() == true) {
                 new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
             }
             else {
                 new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD_BRIGHT);
             }
-            return response;
+            return response.getResponse();
         }
         catch(GoodException e) {
             new BoxUI(NOTARY_REPORT_PROBLEM + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);

@@ -32,7 +32,7 @@ public class GetStateOfGood extends Operation {
 
     @Override
     public boolean execute() {
-        boolean response;
+        Interaction response;
 
         int good = (int)args.get(0);
 
@@ -42,19 +42,30 @@ public class GetStateOfGood extends Operation {
             request.setGoodID(good);
 
             VirtualCertificate cert = new VirtualCertificate();
-            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
-                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
+            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
+                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem").getAbsolutePath());
 
 
             request.setHmac(Digest.createDigest(request, cert));
 
             response = notaryInterface.getStateOfGood(request);
 
-            if (response == true) {
+
+            /*compare hmacs*/
+            if(Digest.verify(response, cert) == false){
+                throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
+            }
+
+            /*check freshness*/
+            if(request.getUserClock() != response.getUserClock()){
+                throw new HDSSecurityException(NOTARY_REPORT_DUP_MSG);
+            }
+
+            if (response.getResponse() == true) {
                 new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
             } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
 
-            return response;
+            return response.getResponse();
 
         }
         catch(GoodException e) {

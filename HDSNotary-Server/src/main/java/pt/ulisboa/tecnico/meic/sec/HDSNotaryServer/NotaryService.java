@@ -68,7 +68,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException {
+    public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
         int userId = request.getUserID();
         boolean bool = request.getResponse();
@@ -83,17 +83,15 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         try {
             /*compare hmacs*/
-            if(!Digest.verify(request, cert)){
-                throw new GoodException("Tampering detected!");
+            if(Digest.verify(request, cert) == false){
+                throw new HDSSecurityException("Tampering detected!");
             }
             /*check freshness*/
             if(request.getUserClock() != getClock(userId)){
-                throw new GoodException("Replay attack detected!!");
+                throw new HDSSecurityException("Replay attack detected!!");
             }
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (HDSSecurityException e) {
-            e.printStackTrace();
+            throw new RemoteException(e.getMessage());
         }
 
         Good good = goods.get(goodId);
@@ -119,12 +117,14 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
 
     @Override
-    public boolean getStateOfGood(Interaction request) throws RemoteException, GoodException {
+    public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
+
 
         Good good = goods.get(goodId);
         if(good != null){
-            return good.isForSell();
+            request.setResponse(good.isForSell());
+            return putHMAC(request);
         }
         else{
             throw new GoodException("Good does not exist.");
@@ -133,7 +133,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     @Override
-    public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException {
+    public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
         int sellerId = request.getSellerID();
         int buyerId = request.getBuyerID();
@@ -202,6 +202,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             seller.getClock().increment();
             buyer.getClock().increment();
             doWrite();
+            request.setResponse(true);
             return putHMAC(request);
         }
         else {
