@@ -79,10 +79,9 @@ public class Client {
 
             menu.addEntry("To Notary: Intention to sell");
             menu.addEntry("To Notary: Get State of Good");
-            menu.addEntry("DEBUG -> To Notary: Transfer Good");
             menu.addEntry("To User  : Buy Good");
-            menu.addEntry("Exit");
             menu.addEntry("DEBUG -> System state");
+            menu.addEntry("Exit");
 
             option = menu.display();
 
@@ -115,9 +114,8 @@ public class Client {
         switch (option) {
             case 1: return new IntentionToSell(ci, ni);
             case 2: return new GetStateOfGood(ci, ni);
-            case 3: return new TransferGood(ci, ni);
-            case 4: return new BuyGood(ci, ni);
-            case 6: return new Debug(ci, ni);
+            case 3: return new BuyGood(ci, ni);
+            case 4: return new Debug(ci, ni);
         }
         return null;
     }

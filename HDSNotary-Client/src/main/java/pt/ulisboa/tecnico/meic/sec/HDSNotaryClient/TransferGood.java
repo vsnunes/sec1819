@@ -49,7 +49,7 @@ public class TransferGood extends Operation {
             cert.init("", new File(System.getProperty("project.user.private.path") +
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
-            request.setHmac(Digest.createDigest(request, cert));
+            request.setBuyerHMAC(Digest.createDigest(request, cert));
 
             response = notaryInterface.transferGood(request);
 
