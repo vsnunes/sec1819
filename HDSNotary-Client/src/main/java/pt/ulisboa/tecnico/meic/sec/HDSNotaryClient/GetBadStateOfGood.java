@@ -5,6 +5,7 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
+import pt.ulisboa.tecnico.meic.sec.util.Certification;
 import pt.ulisboa.tecnico.meic.sec.util.Digest;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
@@ -41,7 +42,7 @@ public class GetBadStateOfGood extends Operation {
             request.setUserID(ClientService.userID);
             request.setGoodID(good);
 
-            VirtualCertificate cert = new VirtualCertificate();
+            Certification cert = new VirtualCertificate();
             cert.init("", new File(System.getProperty("project.user.private.path") +
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
