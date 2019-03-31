@@ -85,11 +85,11 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
 
                 String data = "" + request.getGoodID() + request.getBuyerID() + request.getBuyerClock() + request.getSellerClock();
                 if(!Digest.verify(request.getBuyerHMAC(), data, cert)){
-                    throw new GoodException("Tampering detected in Buyer!");
+                    throw new GoodException("ClientService: Tampering detected in Buyer!");
                 }
                 /*check freshness*/
-                if(request.getBuyerClock() != notaryInterface.getClock(buyerId)){
-                    throw new GoodException("Replay attack detected in Buyer!!");
+                if(request.getBuyerClock() <= notaryInterface.getClock(buyerId)){
+                    throw new GoodException("ClientService: Replay attack detected in Buyer!!");
                 }
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
@@ -98,10 +98,7 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             }
 
             request.setSellerID(userID);
-            request.setBuyerID(buyerId);
-            request.setGoodID(goodId);
-            request.setSellerClock(notaryInterface.getClock(userID));
-            request.setBuyerClock(notaryInterface.getClock(buyerId));
+            request.setSellerClock(notaryInterface.getClock(userID) + 1);
 
             /*build seller hmac*/
             cert = new VirtualCertificate();
@@ -137,7 +134,7 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
                     new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
 
             data = "" + response.getSellerID() + response.getBuyerID() + response.getGoodID() + response.getSellerClock() + response.getBuyerClock();
-            request.setSellerHMAC(Digest.createDigest(data, cert));
+            response.setSellerHMAC(Digest.createDigest(data, cert));
 
             return response;
 
