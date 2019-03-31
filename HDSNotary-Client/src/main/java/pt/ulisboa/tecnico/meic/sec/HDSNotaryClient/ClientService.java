@@ -45,7 +45,6 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             notaryInterface = (NotaryInterface) Naming.lookup(NOTARY_URI);
         } catch (NotBoundException e) {
             new BoxUI(":( NotBound on Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-
         } catch (MalformedURLException e) {
             new BoxUI(":( Malform URL! Cannot find Notary Service!").show(BoxUI.RED_BOLD_BRIGHT);
         } catch (RemoteException e) {
@@ -115,11 +114,8 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
 
         } catch (RemoteException e) {
             new BoxUI("There were a problem in connecting to Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-
-
         } catch (TransactionException e) {
             new BoxUI("Notary report the following problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
-
         } catch (NoSuchAlgorithmException e) {
             new BoxUI("No such algorithm: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         } catch (HDSSecurityException e) {

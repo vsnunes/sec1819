@@ -83,7 +83,7 @@ public abstract class Operation {
 
 
     public void setStatus(boolean result) {
-        if (result == true)
+        if (result)
             this.status = Status.SUCCESS;
         else this.status = Status.FAILURE;
     }
@@ -95,7 +95,7 @@ public abstract class Operation {
 
 
     public void setStatus(boolean result, String statusVerbose) {
-        if (result == true)
+        if (result)
             this.status = Status.SUCCESS;
         else this.status = Status.FAILURE;
 
