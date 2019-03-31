@@ -69,23 +69,50 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
 
         //Call transferGood of Notary
         try {
+
+
+
+            /*verify answer from Buyer*/
+            VirtualCertificate cert = new VirtualCertificate();
+            try {
+                cert.init(new File(System.getProperty("project.users.cert.path") + buyerId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
+            } catch (HDSSecurityException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                /*compare hmacs*/
+
+                String data = "" + request.getGoodID() + request.getBuyerID() + request.getBuyerClock() + request.getSellerClock();
+                if(!Digest.verify(request.getBuyerHMAC(), data, cert)){
+                    throw new GoodException("Tampering detected in Buyer!");
+                }
+                /*check freshness*/
+                if(request.getBuyerClock() != notaryInterface.getClock(buyerId)){
+                    throw new GoodException("Replay attack detected in Buyer!!");
+                }
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (HDSSecurityException e) {
+                e.printStackTrace();
+            }
+
             request.setSellerID(userID);
             request.setBuyerID(buyerId);
             request.setGoodID(goodId);
-            request.setSellerClock(notaryInterface.getClock(userID)+1);
-            request.setBuyerClock(notaryInterface.getClock(buyerId)+1);
+            request.setSellerClock(notaryInterface.getClock(userID));
+            request.setBuyerClock(notaryInterface.getClock(buyerId));
 
-            VirtualCertificate cert = new VirtualCertificate();
-            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
-                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
+            /*build seller hmac*/
+            cert = new VirtualCertificate();
+            cert.init("", new File(System.getProperty("project.user.private.path") +
+                    ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
-            int sellerClock = request.getSellerClock() + 1;
-            int buyerClock = request.getBuyerClock() + 1;
-            //TODO verify buyer HMAC
-            String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + sellerClock + buyerClock;
+            String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
             request.setSellerHMAC(Digest.createDigest(data, cert));
 
             response = notaryInterface.transferGood(request);
+
             /*checks answer from notary*/
             cert = new VirtualCertificate();
             try {
@@ -100,7 +127,7 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             }
 
             /*check freshness*/
-            if(request.getSellerClock()+1 != response.getSellerClock()){
+            if(request.getSellerClock() != response.getSellerClock()){
                 throw new HDSSecurityException(NOTARY_REPORT_DUP_MSG);
             }
 
