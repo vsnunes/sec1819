@@ -76,15 +76,42 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             request.setSellerClock(notaryInterface.getClock(userID));
             request.setBuyerClock(notaryInterface.getClock(buyerId));
 
+
+            /*verify answer from Buyer*/
             VirtualCertificate cert = new VirtualCertificate();
+            try {
+                cert.init("", new File(System.getProperty("project.user.private.path") +
+                        buyerId + System.getProperty("project.user.private.ext")).getAbsolutePath());
+            } catch (HDSSecurityException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                /*compare hmacs*/
+                String data = "" + request.getGoodID() + request.getBuyerID() + request.getBuyerClock() + request.getSellerClock();
+                if(!Digest.verify(request.getBuyerHMAC(), data, cert)){
+                    throw new GoodException("Tampering detected in Buyer!");
+                }
+                /*check freshness*/
+                if(request.getBuyerClock() != notaryInterface.getClock(buyerId)){
+                    throw new GoodException("Replay attack detected in Buyer!!");
+                }
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (HDSSecurityException e) {
+                e.printStackTrace();
+            }
+
+            /*build seller hmac*/
+            cert = new VirtualCertificate();
             cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
                     new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
 
-            //TODO verify buyer HMAC
             String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
             request.setSellerHMAC(Digest.createDigest(data, cert));
 
             response = notaryInterface.transferGood(request);
+
             /*checks answer from notary*/
             cert = new VirtualCertificate();
             try {
