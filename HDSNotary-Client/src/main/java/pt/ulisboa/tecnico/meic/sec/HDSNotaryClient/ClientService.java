@@ -69,24 +69,20 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
 
         //Call transferGood of Notary
         try {
-            request.setSellerID(userID);
-            request.setBuyerID(buyerId);
-            request.setGoodID(goodId);
-            request.setSellerClock(notaryInterface.getClock(userID));
-            request.setBuyerClock(notaryInterface.getClock(buyerId));
+
 
 
             /*verify answer from Buyer*/
             VirtualCertificate cert = new VirtualCertificate();
             try {
-                cert.init("", new File(System.getProperty("project.user.private.path") +
-                        buyerId + System.getProperty("project.user.private.ext")).getAbsolutePath());
+                cert.init(new File(System.getProperty("project.users.cert.path") + buyerId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
             } catch (HDSSecurityException e) {
                 e.printStackTrace();
             }
 
             try {
                 /*compare hmacs*/
+
                 String data = "" + request.getGoodID() + request.getBuyerID() + request.getBuyerClock() + request.getSellerClock();
                 if(!Digest.verify(request.getBuyerHMAC(), data, cert)){
                     throw new GoodException("Tampering detected in Buyer!");
@@ -100,6 +96,12 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             } catch (HDSSecurityException e) {
                 e.printStackTrace();
             }
+
+            request.setSellerID(userID);
+            request.setBuyerID(buyerId);
+            request.setGoodID(goodId);
+            request.setSellerClock(notaryInterface.getClock(userID));
+            request.setBuyerClock(notaryInterface.getClock(buyerId));
 
             /*build seller hmac*/
             cert = new VirtualCertificate();
