@@ -6,6 +6,7 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
+import pt.ulisboa.tecnico.meic.sec.util.Certification;
 import pt.ulisboa.tecnico.meic.sec.util.Digest;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
@@ -111,15 +112,11 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             response = notaryInterface.transferGood(request);
 
             /*checks answer from notary*/
-            cert = new VirtualCertificate();
-            try {
-                cert.init(new File("../HDSNotaryLib/src/main/resources/certs/rootca.crt").getAbsolutePath(),
-                        new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem" ).getAbsolutePath());
-            } catch (HDSSecurityException e) {
-                e.printStackTrace();
-            }
+            Certification notaryCert = new VirtualCertificate();
+            notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
+
             /*compare hmacs*/
-            if(Digest.verify(response, cert) == false){
+            if(Digest.verify(response, notaryCert) == false){
                 throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
             }
 
@@ -130,8 +127,8 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
 
             /*build a new hmac*/
             cert = new VirtualCertificate();
-            cert.init(new File("../HDSNotaryLib/src/main/resources/certs/user" + ClientService.userID + ".crt").getAbsolutePath(),
-                    new File("../HDSNotaryLib/src/main/resources/certs/java_certs/private_user" + ClientService.userID + "_pkcs8.pem").getAbsolutePath());
+            cert.init("", new File(System.getProperty("project.user.private.path") +
+                    ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
             data = "" + response.getSellerID() + response.getBuyerID() + response.getGoodID() + response.getSellerClock() + response.getBuyerClock();
             response.setSellerHMAC(Digest.createDigest(data, cert));
