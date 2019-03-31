@@ -121,18 +121,4 @@ public class ClientBoxStats implements ClientVisitor {
 
     }
 
-    @Override
-    public void accept(GetBadStateOfGood operation){
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
-        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
-    }
-
-    @Override
-    public void accept(ReplayAttack operation){
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
-        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
-    }
-
 }

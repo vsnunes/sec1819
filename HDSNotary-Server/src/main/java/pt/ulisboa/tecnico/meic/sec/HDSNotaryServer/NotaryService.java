@@ -82,11 +82,11 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         try {
             /*compare hmacs*/
-            if(Digest.verify(request, cert) == false){
+            if(!Digest.verify(request, cert)){
                 throw new HDSSecurityException("Tampering detected!");
             }
             /*check freshness*/
-            if(request.getUserClock() != getClock(userId)){
+            if(request.getUserClock() <= getClock(userId)){
                 throw new HDSSecurityException("Replay attack detected!!");
             }
         } catch (NoSuchAlgorithmException e) {
@@ -100,11 +100,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             if (good.getOwner().getUserID() != userId) {
                 throw new GoodException("Good doesn't belong to you!");
             }
-            if(bool) {
-                good.setForSell(bool);
-                good.getOwner().getClock().increment();
-                doWrite();
-            }
+            good.setForSell(bool);
+            users.get(request.getUserID()).setClock(request.getUserClock());
+            doWrite();
 
             request.setResponse(bool);
 
@@ -133,50 +131,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     }
 
-
-    @Override
-    public Interaction replayAttack(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
-        int goodId = request.getGoodID();
-
-        Good good = goods.get(goodId);
-        if(good != null){
-            request.setUserClock(1000000);
-            request.setResponse(good.isForSell());
-            return putHMAC(request);
-        }
-        else{
-            throw new GoodException("Good does not exist.");
-        }
-    }
-
-    @Override
-    public Interaction getBadStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException{
-        int goodId = request.getGoodID();
-
-        Good good = goods.get(goodId);
-        if(good != null){
-            request.setResponse(good.isForSell());
-
-            Certification cert = new VirtualCertificate();
-            try {
-                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
-            } catch (HDSSecurityException e) {
-                e.printStackTrace();
-            }
-            try {
-                request.setHmac(Digest.createDigest("NOT THE REAL HMAC", cert));
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (HDSSecurityException e) {
-                e.printStackTrace();
-            }
-        }
-        else{
-            throw new GoodException("Good does not exist.");
-        }
-        return request;
-    }
-
     @Override
     public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
@@ -199,15 +153,13 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             /*compare hmacs*/
             String data = "" + request.getGoodID() + request.getBuyerID() + request.getBuyerClock() + request.getSellerClock();
             if(!Digest.verify(request.getBuyerHMAC(), data,  cert)){
-                throw new GoodException("Tampering detected in Buyer!");
+                throw new HDSSecurityException("Tampering detected in Buyer!");
             }
             /*check freshness*/
-            if(request.getBuyerClock() != getClock(buyerId)){
-                throw new GoodException("Replay attack detected in Buyer!!");
+            if(request.getBuyerClock() <= getClock(buyerId)){
+                throw new HDSSecurityException("Replay attack detected, transaction aborted!!");
             }
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (HDSSecurityException e) {
             e.printStackTrace();
         }
 
@@ -223,18 +175,15 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             /*compare hmacs*/
             String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
             if(!Digest.verify(request.getSellerHMAC(), data, cert)){
-                throw new GoodException("Tampering detected in Seller!");
+                throw new HDSSecurityException("Tampering detected in Seller!");
             }
             /*check freshness*/
-            if(request.getSellerClock() != getClock(sellerId)){
-                throw new GoodException("Replay attack detected in Seller!!");
+            if(request.getSellerClock() <= getClock(sellerId)){
+                throw new HDSSecurityException("Replay attack detected, transaction aborted!!");
             }
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
-        } catch (HDSSecurityException e) {
-            e.printStackTrace();
         }
-
 
         Transaction transaction = new Transaction(transactionCounter++, seller, buyer, good);
         doWriteTransaction(transaction);
@@ -242,8 +191,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         if (transaction.getTransactionStateDescription().equals("Approved")) {
             transaction.execute(); //change the ownership of the good
-            seller.getClock().increment();
-            buyer.getClock().increment();
+            seller.setClock(request.getSellerClock());
+            buyer.setClock(request.getBuyerClock());
             doWrite();
             request.setResponse(true);
             return putHMAC(request);
@@ -259,7 +208,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         while (iterator.hasNext()) {
             Integer key = (Integer) iterator.next();
             if(users.get(key).getUserID() == userID){
-                return users.get(key).getClock().getClockValue();
+                return users.get(key).getClock();
             }
         }
         return -1;
@@ -402,7 +351,10 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             System.out.println("=================================================================");
             while (iterator.hasNext()) {
                 Integer key = (Integer) iterator.next();
-                System.out.printf("Good: %d\tOwner: %d\tOwner clock: %d\tIs4Sale: %s\tOwner PubK OK?: %s\n", test.get(key).getGoodID(), test.get(key).getOwner().getUserID(), test.get(key).getOwner().getClock().getClockValue(), test.get(key).isForSell(), test.get(key).getOwner().getPublicKey() != null);
+                System.out.printf("Good: %d\tOwner: %d\tOwner clock: %d\tIs4Sale: %s\tOwner PubK OK?: %s\n",
+                        test.get(key).getGoodID(), test.get(key).getOwner().getUserID(),
+                        test.get(key).getOwner().getClock(), test.get(key).isForSell(),
+                        test.get(key).getOwner().getPublicKey() != null);
             }
             System.out.println("=================================================================");
             oi.close();

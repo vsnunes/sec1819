@@ -6,12 +6,12 @@ import java.security.PublicKey;
 public class User implements Serializable {
     private int userID;
     private PublicKey publicKey;
-    private LogicalClock clock;
+    private int clock;
 
     public User(int id, PublicKey pk){
         userID = id;
         publicKey = pk;
-        clock = new LogicalClock(userID,0);
+        clock = 0;
     }
 
     public int getUserID() {
@@ -30,11 +30,11 @@ public class User implements Serializable {
         this.publicKey = publicKey;
     }
 
-    public LogicalClock getClock() {
+    public int getClock() {
         return clock;
     }
 
-    public void setClock(LogicalClock clock) {
+    public void setClock(int clock) {
         this.clock = clock;
     }
 

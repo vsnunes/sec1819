@@ -14,11 +14,7 @@ public interface NotaryInterface extends Remote {
 
     Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException;
 
-    Interaction getBadStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException;
-
     Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException;
-
-    Interaction replayAttack(Interaction request) throws RemoteException, GoodException, HDSSecurityException;
 
     int getClock(int userID) throws RemoteException;
 

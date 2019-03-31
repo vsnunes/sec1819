@@ -13,6 +13,4 @@ public interface ClientVisitor {
     void accept(IntentionToSell operation);
     void accept(TransferGood operation);
     void accept(Debug operation);
-    void accept(GetBadStateOfGood operation);
-    void accept(ReplayAttack operation);
 }

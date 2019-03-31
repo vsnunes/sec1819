@@ -49,7 +49,7 @@ public class IntentionToSell extends Operation {
             request.setUserID(ClientService.userID);
             request.setGoodID(good);
             request.setResponse(intention);
-            request.setUserClock(notaryInterface.getClock(ClientService.userID));
+            request.setUserClock(notaryInterface.getClock(ClientService.userID)+1);
             request.setHmac(Digest.createDigest(request, cert));
 
 

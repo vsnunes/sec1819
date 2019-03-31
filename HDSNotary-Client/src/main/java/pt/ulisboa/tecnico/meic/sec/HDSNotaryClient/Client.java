@@ -80,13 +80,11 @@ public class Client {
             menu.addEntry("To Notary: Get State of Good");
             menu.addEntry("To User  : Buy Good");
             menu.addEntry("DEBUG -> System state");
-            menu.addEntry("TEST -> Altered HMAC on Get State of Good");
-            menu.addEntry("TEST -> Replay Attack");
             menu.addEntry("Exit");
 
             option = menu.display();
 
-            if (option == 7) break; //Exit case
+            if (option == 5) break; //Exit case
 
             Operation operation = parseOperation(option, clientInterface, notaryInterface);
 
@@ -156,8 +154,6 @@ public class Client {
             case 2: return new GetStateOfGood(ci, ni);
             case 3: return new BuyGood(ci, ni);
             case 4: return new Debug(ci, ni);
-            case 5: return new GetBadStateOfGood(ci, ni);
-            case 6: return new ReplayAttack(ci, ni);
         }
         return null;
     }

@@ -68,8 +68,8 @@ public class BuyGood extends Operation {
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
 
-            request.setBuyerClock(notaryInterface.getClock(ClientService.userID));
-            request.setSellerClock(notaryInterface.getClock(Integer.parseInt(clientID)));
+            request.setBuyerClock(notaryInterface.getClock(ClientService.userID)+1);
+            request.setSellerClock(notaryInterface.getClock(Integer.parseInt(clientID))+1);
 
             String data = "" + good + ClientService.userID + notaryInterface.getClock(ClientService.userID) + notaryInterface.getClock(Integer.parseInt(clientID));
             request.setBuyerHMAC(Digest.createDigest(data, cert));
