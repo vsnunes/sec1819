@@ -14,10 +14,10 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetStateOfGood extends Operation {
+public class ReplayAttack extends Operation {
 
-    public GetStateOfGood(ClientInterface ci, NotaryInterface ni) {
-        super("GetStateOfGood", ci, ni);
+    public ReplayAttack(ClientInterface ci, NotaryInterface ni) {
+        super("GetBadStateOfGood", ci, ni);
     }
 
     @Override
@@ -48,13 +48,13 @@ public class GetStateOfGood extends Operation {
 
             request.setHmac(Digest.createDigest(request, cert));
 
-            response = notaryInterface.getStateOfGood(request);
+            response = notaryInterface.replayAttack(request);
 
             VirtualCertificate notaryCert = new VirtualCertificate();
             notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
 
             /*compare hmacs*/
-            if(Digest.verify(response, notaryCert) == false){
+            if(!Digest.verify(response, notaryCert)){
                 throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
             }
 

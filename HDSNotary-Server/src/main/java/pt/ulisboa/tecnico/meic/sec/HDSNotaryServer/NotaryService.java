@@ -133,6 +133,50 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     }
 
+
+    @Override
+    public Interaction replayAttack(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
+        int goodId = request.getGoodID();
+
+        Good good = goods.get(goodId);
+        if(good != null){
+            request.setUserClock(1000000);
+            request.setResponse(good.isForSell());
+            return putHMAC(request);
+        }
+        else{
+            throw new GoodException("Good does not exist.");
+        }
+    }
+
+    @Override
+    public Interaction getBadStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException{
+        int goodId = request.getGoodID();
+
+        Good good = goods.get(goodId);
+        if(good != null){
+            request.setResponse(good.isForSell());
+
+            Certification cert = new VirtualCertificate();
+            try {
+                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+            } catch (HDSSecurityException e) {
+                e.printStackTrace();
+            }
+            try {
+                request.setHmac(Digest.createDigest("NOT THE REAL HMAC", cert));
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (HDSSecurityException e) {
+                e.printStackTrace();
+            }
+        }
+        else{
+            throw new GoodException("Good does not exist.");
+        }
+        return request;
+    }
+
     @Override
     public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
@@ -239,6 +283,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
 
+
     protected void createUser(){
         try {
             users.put(1, new User(1, readPublicKey(USERS_CERTS_FOLDER + "user1.crt")));
@@ -262,14 +307,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         goods.put(5,new Good(5, users.get(5)));
 
     }
-
-
-
-
-
-
-
-
 
     /*
     ********************************************************************************************************************

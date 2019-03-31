@@ -16,7 +16,7 @@ public class Good implements Serializable {
 
     private User owner;
 
-    /** Prevents the good from concurrent transactions **/
+    /** Prevents the good from having concurrent transactions **/
     private boolean inTransaction;
 
     Good(int goodID, User owner) throws GoodException {

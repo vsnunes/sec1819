@@ -35,6 +35,4 @@ public class Digest {
         return cert.verifyData(expected, hmac);
 
     }
-
-
 }

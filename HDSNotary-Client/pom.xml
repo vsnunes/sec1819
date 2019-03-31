@@ -11,6 +11,10 @@
         <!-- Location of Notary Certification -->
         <project.notary.cert.path>../HDSNotaryLib/src/main/resources/certs/rootca.crt</project.notary.cert.path>
 
+        <!-- Location of User certificates -->
+        <project.users.cert.path>../HDSNotaryLib/src/main/resources/certs/user</project.users.cert.path>
+        <project.users.cert.ext>.crt</project.users.cert.ext>
+
         <!-- Location of Users Private Key -->
         <project.user.private.path>../HDSNotaryLib/src/main/resources/certs/java_certs/private_user</project.user.private.path>
         <project.user.private.ext>_pkcs8.pem</project.user.private.ext>
@@ -32,6 +36,13 @@
             <groupId>pt.ulisboa.tecnico.meic.sec</groupId>
             <artifactId>HDSNotaryLib</artifactId>
             <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.jmockit/jmockit -->
+        <dependency>
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <version>1.45</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -68,6 +79,14 @@
                         <systemProperty>
                             <key>project.notary.cert.path</key>
                             <value>${project.notary.cert.path}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <key>project.users.cert.path</key>
+                            <value>${project.users.cert.path}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <key>project.users.cert.ext</key>
+                            <value>${project.users.cert.ext}</value>
                         </systemProperty>
                         <systemProperty>
                             <key>project.user.private.path</key>
