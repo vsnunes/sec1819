@@ -6,7 +6,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mainClass>pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.Client</mainClass>
+        <mainClass>pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient.Client</mainClass>
 
         <!-- Location of Notary Certification -->
         <project.notary.cert.path>../HDSNotaryLib/src/main/resources/certs/rootca.crt</project.notary.cert.path>
@@ -27,7 +27,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>HDSNotary-Client</artifactId>
+    <artifactId>HDSNotary-BadClient</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 

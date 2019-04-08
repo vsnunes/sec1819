@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
+package pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient;
 
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 
@@ -85,7 +85,7 @@ public class ClientBoxStats implements ClientVisitor {
     }
 
     @Override
-    public void accept(BuyGood operation) {
+    public void accept(BuyGoodTampered operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
         }
@@ -95,22 +95,38 @@ public class ClientBoxStats implements ClientVisitor {
     }
 
     @Override
-    public void accept(GetStateOfGood operation) {
+    public void accept(BuyGoodReplay operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
-        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
-
+            new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
+        }
+        else {
+            new BoxUI(CLIENT_BUYGOOD_NOTOK).show(BoxUI.RED_BOLD_BRIGHT);
+        }
     }
 
     @Override
-    public void accept(IntentionToSell operation) {
+    public void accept(IntentionToSellTampered operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
         } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);
     }
 
     @Override
-    public void accept(TransferGood operation) {
+    public void accept(IntentionToSellReplay operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
+        } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);
+    }
+
+    @Override
+    public void accept(TransferGoodTampered operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(CLIENT_SUCCESS_TRANSFER).show(BoxUI.GREEN_BOLD);
+        } else new BoxUI(CLIENT_TRANSFER_PROBLEM).show(BoxUI.RED_BOLD);
+    }
+
+    @Override
+    public void accept(TransferGoodReplay operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(CLIENT_SUCCESS_TRANSFER).show(BoxUI.GREEN_BOLD);
         } else new BoxUI(CLIENT_TRANSFER_PROBLEM).show(BoxUI.RED_BOLD);

@@ -16,10 +16,10 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class BuyGood extends Operation {
+public class BuyGoodTampered extends Operation {
     private String clientID;
-    public BuyGood(ClientInterface ci, NotaryInterface ni) {
-        super("BuyGood", ci, ni);
+    public BuyGoodTampered(ClientInterface ci, NotaryInterface ni) {
+        super("BuyGoodTampered", ci, ni);
     }
 
     @Override
@@ -69,6 +69,7 @@ public class BuyGood extends Operation {
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
 
+
             int buyerClock = notaryInterface.getClock(ClientService.userID);
             int sellerClock = notaryInterface.getClock(Integer.parseInt(clientID));
 
@@ -77,6 +78,7 @@ public class BuyGood extends Operation {
 
             String data = "" + good + ClientService.userID + request.getBuyerClock() + request.getSellerClock();
             request.setBuyerHMAC(Digest.createDigest(data, cert));
+            request.setGoodID(3);
 
             response = anotherClient.buyGood(request);
             if(response != null) {

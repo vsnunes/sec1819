@@ -14,9 +14,9 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class IntentionToSellTampered extends Operation {
+public class IntentionToSellReplay extends Operation {
 
-    public IntentionToSellTampered(ClientInterface ci, NotaryInterface ni) {
+    public IntentionToSellReplay(ClientInterface ci, NotaryInterface ni) {
         super("IntentionToSellTampered", ci, ni);
     }
 
@@ -50,7 +50,7 @@ public class IntentionToSellTampered extends Operation {
             request.setUserID(ClientService.userID);
             request.setGoodID(good);
             request.setResponse(intention);
-            request.setUserClock(notaryInterface.getClock(ClientService.userID)+1);
+            request.setUserClock(1);
             request.setHmac(Digest.createDigest(request, cert));
 
 

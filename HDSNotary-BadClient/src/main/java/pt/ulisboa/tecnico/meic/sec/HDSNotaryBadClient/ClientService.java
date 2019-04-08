@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
+package pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
@@ -20,8 +20,8 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
 
-import static pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.Operation.NOTARY_REPORT_DUP_MSG;
-import static pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.Operation.NOTARY_REPORT_TAMPERING;
+import static pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient.Operation.NOTARY_REPORT_DUP_MSG;
+import static pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient.Operation.NOTARY_REPORT_TAMPERING;
 
 public class ClientService extends UnicastRemoteObject implements ClientInterface, Serializable {
 
@@ -33,7 +33,7 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
     public static int userID = 1;
 
     /** Port for accepting clients connection to the service **/
-    public static int CLIENT_SERVICE_PORT = 10000 + userID;
+    public static int CLIENT_SERVICE_PORT = 9999;
     public static String CLIENT_SERVICE_NAME = "Client" + userID;
 
     /** Instance of ClientService the one will allow others client to connect to. **/

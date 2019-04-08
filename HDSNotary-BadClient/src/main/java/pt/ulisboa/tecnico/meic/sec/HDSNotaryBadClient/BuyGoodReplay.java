@@ -4,7 +4,6 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
-import pt.ulisboa.tecnico.meic.sec.util.Certification;
 import pt.ulisboa.tecnico.meic.sec.util.Digest;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
@@ -16,9 +15,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class BuyGoodTampered extends Operation {
+public class BuyGoodReplay extends Operation {
     private String clientID;
-    public BuyGoodTampered(ClientInterface ci, NotaryInterface ni) {
+    public BuyGoodReplay(ClientInterface ci, NotaryInterface ni) {
         super("BuyGoodTampered", ci, ni);
     }
 
@@ -68,12 +67,8 @@ public class BuyGoodTampered extends Operation {
             cert.init("", new File(System.getProperty("project.user.private.path") +
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
-
-            int buyerClock = notaryInterface.getClock(ClientService.userID);
-            int sellerClock = notaryInterface.getClock(Integer.parseInt(clientID));
-
-            request.setBuyerClock(buyerClock + 1);
-            request.setSellerClock(sellerClock + 1);
+            request.setBuyerClock(1);
+            request.setSellerClock(1);
 
             String data = "" + good + ClientService.userID + request.getBuyerClock() + request.getSellerClock();
             request.setBuyerHMAC(Digest.createDigest(data, cert));

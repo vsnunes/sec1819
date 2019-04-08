@@ -17,6 +17,7 @@
     <modules>
         <module>HDSNotary-Server</module>
         <module>HDSNotary-Client</module>
+        <module>HDSNotary-BadClient</module>
         <module>HDSNotaryLib</module>
     </modules>
 

@@ -13,10 +13,10 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class TransferGood extends Operation {
+public class TransferGoodTampered extends Operation {
 
-    public TransferGood(ClientInterface ci, NotaryInterface ni) {
-        super("TransferGood", ci, ni);
+    public TransferGoodTampered(ClientInterface ci, NotaryInterface ni) {
+        super("TransferGoodTampered", ci, ni);
     }
 
     @Override
@@ -50,6 +50,8 @@ public class TransferGood extends Operation {
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
             request.setBuyerHMAC(Digest.createDigest(request, cert));
+
+            request.setGoodID(65);
 
             response = notaryInterface.transferGood(request);
 

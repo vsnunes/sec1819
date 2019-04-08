@@ -14,10 +14,10 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class IntentionToSell extends Operation {
+public class IntentionToSellTampered extends Operation {
 
-    public IntentionToSell(ClientInterface ci, NotaryInterface ni) {
-        super("IntentionToSell", ci, ni);
+    public IntentionToSellTampered(ClientInterface ci, NotaryInterface ni) {
+        super("IntentionToSellTampered", ci, ni);
     }
 
     @Override
@@ -53,6 +53,7 @@ public class IntentionToSell extends Operation {
             request.setUserClock(notaryInterface.getClock(ClientService.userID)+1);
             request.setHmac(Digest.createDigest(request, cert));
 
+            request.setBuyerID(45);
 
             response = notaryInterface.intentionToSell(request);
 

@@ -1,7 +1,5 @@
-package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
+package pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient;
 
-import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
-import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.gui.MenuUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
@@ -29,7 +27,7 @@ public class Client {
             //maven args for client ID, which by default is 1
             if (args.length > 0) {
                 ClientService.userID = Integer.parseInt(args[0]);
-                ClientService.CLIENT_SERVICE_PORT = 10000 + ClientService.userID;
+                ClientService.CLIENT_SERVICE_PORT = 9999;
                 ClientService.CLIENT_SERVICE_NAME = "Client" + ClientService.userID;
 
                 if (args.length > 1)
@@ -49,6 +47,7 @@ public class Client {
             System.out.println(" Client Service Name: " + ClientService.CLIENT_SERVICE_NAME);
             System.out.println(" Client Service Port: " + ClientService.CLIENT_SERVICE_PORT);
             System.out.println(" Notary URL         : " + ClientService.NOTARY_URI);
+            System.out.println(" MALICIOUS CLIENT!");
             System.out.println(" ====================== DEBUG ============================= ");
             System.out.println("Press any key to dismiss ...");
 
@@ -59,7 +58,7 @@ public class Client {
             }
 
         } catch (RemoteException e) {
-            System.err.println("Cannot createDigest ClientServer singleton");
+            System.err.println("Cannot create Digest ClientServer singleton " + e.getMessage());
             return;
         }
 
@@ -76,15 +75,16 @@ public class Client {
         do {
             MenuUI menu = new MenuUI("User client");
 
-            menu.addEntry("To Notary: Intention to sell");
-            menu.addEntry("To Notary: Get State of Good");
-            menu.addEntry("To User  : Buy Good");
+            menu.addEntry("Tampering: To Notary: Intention to sell");
+            menu.addEntry("Replay Attack: To Notary: Intention to sell");
+            menu.addEntry("Tampering: To User  : Buy Good");
+            menu.addEntry("Replay Attack: To User  : Buy Good");
             menu.addEntry("DEBUG -> System state");
             menu.addEntry("Exit");
 
             option = menu.display();
 
-            if (option == 5) break; //Exit case
+            if (option == 6) break; //Exit case
 
             Operation operation = parseOperation(option, clientInterface, notaryInterface);
 
@@ -150,10 +150,11 @@ public class Client {
 
     public static Operation parseOperation(int option, ClientInterface ci, NotaryInterface ni) {
         switch (option) {
-            case 1: return new IntentionToSell(ci, ni);
-            case 2: return new GetStateOfGood(ci, ni);
-            case 3: return new BuyGood(ci, ni);
-            case 4: return new Debug(ci, ni);
+            case 1: return new IntentionToSellTampered(ci, ni);
+            case 2: return new IntentionToSellReplay(ci, ni);
+            case 3: return new BuyGoodTampered(ci, ni);
+            case 4: return new BuyGoodReplay(ci, ni);
+            case 5: return new Debug(ci, ni);
         }
         return null;
     }

@@ -13,9 +13,9 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class TransferGoodTampered extends Operation {
+public class TransferGoodReplay extends Operation {
 
-    public TransferGoodTampered(ClientInterface ci, NotaryInterface ni) {
+    public TransferGoodReplay(ClientInterface ci, NotaryInterface ni) {
         super("TransferGoodTampered", ci, ni);
     }
 
