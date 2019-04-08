@@ -10,6 +10,7 @@ public interface ClientVisitor {
 
     void accept(BuyGoodTampered operation);
     void accept(BuyGoodReplay operation);
+    void accept(IntentionToSellAlteredKey operation);
     void accept(IntentionToSellTampered operation);
     void accept(IntentionToSellReplay operation);
     void accept(TransferGoodTampered operation);

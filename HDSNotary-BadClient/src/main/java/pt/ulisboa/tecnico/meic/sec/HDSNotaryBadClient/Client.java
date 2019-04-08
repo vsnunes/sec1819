@@ -77,6 +77,7 @@ public class Client {
 
             menu.addEntry("Tampering: To Notary: Intention to sell");
             menu.addEntry("Replay Attack: To Notary: Intention to sell");
+            menu.addEntry("Altered Key: To Notary: Intention to sell");
             menu.addEntry("Tampering: To User  : Buy Good");
             menu.addEntry("Replay Attack: To User  : Buy Good");
             menu.addEntry("DEBUG -> System state");
@@ -84,7 +85,7 @@ public class Client {
 
             option = menu.display();
 
-            if (option == 6) break; //Exit case
+            if (option == 7) break; //Exit case
 
             Operation operation = parseOperation(option, clientInterface, notaryInterface);
 
@@ -152,9 +153,10 @@ public class Client {
         switch (option) {
             case 1: return new IntentionToSellTampered(ci, ni);
             case 2: return new IntentionToSellReplay(ci, ni);
-            case 3: return new BuyGoodTampered(ci, ni);
-            case 4: return new BuyGoodReplay(ci, ni);
-            case 5: return new Debug(ci, ni);
+            case 3: return new IntentionToSellAlteredKey(ci, ni);
+            case 4: return new BuyGoodTampered(ci, ni);
+            case 5: return new BuyGoodReplay(ci, ni);
+            case 6: return new Debug(ci, ni);
         }
         return null;
     }
