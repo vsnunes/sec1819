@@ -582,6 +582,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     }
 
+    /** debug purposes: clear server state**/
+    public void reset() {
+        this.users.clear();
+        this.goods.clear();
+        this.transactionCounter = 0;
+    }
 
 
 }

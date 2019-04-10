@@ -40,7 +40,7 @@ public class Client {
                         ClientService.NOTARY_USES_VIRTUAL = true;
                     }
                 }
-                else if (args.length > 2)
+                if (args.length > 2)
                     ClientService.NOTARY_URI = args[2];
             }
 

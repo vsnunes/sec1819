@@ -32,8 +32,6 @@ public class NotaryServiceTest {
     @Before
     public  void setUp(){
         request = new Interaction();
-
-
     }
 
     @Test
@@ -90,12 +88,12 @@ public class NotaryServiceTest {
         request.setUserID(1);
         request.setGoodID(1);
         request.setResponse(false);
-        request.setUserClock(0);
+        request.setUserClock(1);
         request.setHmac(Digest.createDigest(request, cert));
         Interaction reply = notary.getStateOfGood(request);
         Assert.assertEquals(reply.getGoodID(), 1);
         Assert.assertEquals(reply.getUserID(), 1);
-        Assert.assertEquals(reply.getUserClock(),0);
+        Assert.assertEquals(reply.getUserClock(),1);
         Assert.assertFalse(reply.getResponse());
     }
 
