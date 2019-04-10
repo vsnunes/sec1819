@@ -15,6 +15,9 @@
 
         <!-- Location of Notary Private Key -->
         <project.notary.private>../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem</project.notary.private>
+
+        <!-- Java PTEID JAR Location -->
+        <project.pteidjar.location>C:/Program Files/Portugal Identity Card/sdk/Java/pteidlibj.jar</project.pteidjar.location>
     </properties>
 
 
@@ -62,6 +65,9 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>${project.pteidjar.location}</additionalClasspathElement>
+                    </additionalClasspathElements>
                     <executable>java</executable>
                     <mainClass>${mainClass}</mainClass>
                     <includePluginDependencies>true</includePluginDependencies>

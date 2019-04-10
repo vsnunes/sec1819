@@ -3,10 +3,7 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
-import pt.ulisboa.tecnico.meic.sec.util.Certification;
-import pt.ulisboa.tecnico.meic.sec.util.Digest;
-import pt.ulisboa.tecnico.meic.sec.util.Interaction;
-import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
+import pt.ulisboa.tecnico.meic.sec.util.*;
 
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDER;
 import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
@@ -63,10 +60,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         return instance;
     }
 
-    private void verifyFreshnessAndTampering(){
-
-    }
-
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
@@ -90,6 +83,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 throw new HDSSecurityException("Replay attack detected!!");
             }
         } catch (NoSuchAlgorithmException e) {
+            System.err.println("Intention2Sell NoSuchAlgorithm");
             throw new RemoteException(e.getMessage());
         }
 
@@ -105,7 +99,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             doWrite();
 
             request.setResponse(bool);
-
+            System.out.println("Sh*t became real");
             return putHMAC(request);
         }
         else{
@@ -214,20 +208,24 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         return -1;
     }
 
-    private Interaction putHMAC(Interaction request){
+    private Interaction putHMAC(Interaction request) throws HDSSecurityException {
         Certification cert = new VirtualCertificate();
         try {
             cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
         } catch (HDSSecurityException e) {
             e.printStackTrace();
         }
+
+        /*CCSmartCard cert = new CCSmartCard();
         try {
+            cert.init();
             request.setHmac(Digest.createDigest(request, cert));
+            cert.stop();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (HDSSecurityException e) {
             e.printStackTrace();
-        }
+        }*/
         return request;
     }
 
