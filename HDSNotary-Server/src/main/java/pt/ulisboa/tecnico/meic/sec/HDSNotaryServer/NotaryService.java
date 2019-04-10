@@ -32,6 +32,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     private static NotaryService instance;
 
+    /** By default Notary uses virtual certificates **/
+    private boolean usingVirtualCerts = true;
+
     private NotaryService() throws RemoteException, GoodException {
         super();
         if (!doRead()) {
@@ -51,6 +54,14 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             }
         }
         instance = this;
+    }
+
+    public boolean isUsingVirtualCerts() {
+        return usingVirtualCerts;
+    }
+
+    public void setUsingVirtualCerts(boolean usingVirtualCerts) {
+        this.usingVirtualCerts = usingVirtualCerts;
     }
 
     public static NotaryService getInstance() throws RemoteException, GoodException {
@@ -83,7 +94,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 throw new HDSSecurityException("Replay attack detected!!");
             }
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("Intention2Sell NoSuchAlgorithm");
             throw new RemoteException(e.getMessage());
         }
 
@@ -99,7 +109,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             doWrite();
 
             request.setResponse(bool);
-            System.out.println("Sh*t became real");
             return putHMAC(request);
         }
         else{
@@ -209,23 +218,32 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     private Interaction putHMAC(Interaction request) throws HDSSecurityException {
-        Certification cert = new VirtualCertificate();
-        try {
-            cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
-        } catch (HDSSecurityException e) {
-            e.printStackTrace();
+        //HMAC using virtual certificates
+        if (usingVirtualCerts) {
+            Certification cert = new VirtualCertificate();
+            try {
+                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+                request.setHmac(Digest.createDigest(request, cert));
+                cert.stop();
+            } catch (HDSSecurityException e) {
+                e.printStackTrace();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+        }
+        else { //HMAC using CCSmartCard
+            CCSmartCard cert = new CCSmartCard();
+            try {
+                cert.init();
+                request.setHmac(Digest.createDigest(request, cert));
+                cert.stop();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (HDSSecurityException e) {
+                e.printStackTrace();
+            }
         }
 
-        /*CCSmartCard cert = new CCSmartCard();
-        try {
-            cert.init();
-            request.setHmac(Digest.createDigest(request, cert));
-            cert.stop();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (HDSSecurityException e) {
-            e.printStackTrace();
-        }*/
         return request;
     }
 

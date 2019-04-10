@@ -1,6 +1,8 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
+import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
+
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -24,6 +26,15 @@ public class Main {
         NotaryService service = NotaryService.getInstance();
         //service.createUser();
         //service.createGood();
+
+        if (args.length > 1) {
+            if (args[0].equals("CCSmartCard"))
+                service.setUsingVirtualCerts(false);
+        }
+
+        if (service.isUsingVirtualCerts())
+            new BoxUI("Notary is using VIRTUAL CERTS!").show(BoxUI.WHITE_BOLD_BRIGHT);
+        else new BoxUI("Notary is using Cartao do Cidadao!").show(BoxUI.WHITE_BOLD_BRIGHT);
 
         Registry reg = LocateRegistry.createRegistry(NOTARY_SERVICE_PORT);
         reg.rebind(NOTARY_SERVICE_NAME, service);
