@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
+package pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
@@ -14,9 +14,9 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetStateOfGood extends Operation {
+public class GetStateOfGoodReplay extends Operation {
 
-    public GetStateOfGood(ClientInterface ci, NotaryInterface ni) {
+    public GetStateOfGoodReplay(ClientInterface ci, NotaryInterface ni) {
         super("GetStateOfGood", ci, ni);
     }
 
@@ -41,7 +41,7 @@ public class GetStateOfGood extends Operation {
             Interaction request = new Interaction();
             request.setUserID(ClientService.userID);
             request.setGoodID(good);
-            request.setUserClock(notaryInterface.getClock(ClientService.userID)+1);
+            request.setUserClock(0);
 
             Certification cert = new VirtualCertificate();
             cert.init("", new File(System.getProperty("project.user.private.path") +
