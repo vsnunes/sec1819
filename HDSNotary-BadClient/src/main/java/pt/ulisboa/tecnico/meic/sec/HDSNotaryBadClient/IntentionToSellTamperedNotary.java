@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
+package pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
@@ -14,16 +14,17 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetStateOfGood extends Operation {
+public class IntentionToSellTamperedNotary extends Operation {
 
-    public GetStateOfGood(ClientInterface ci, NotaryInterface ni) {
-        super("GetStateOfGood", ci, ni);
+    public IntentionToSellTamperedNotary(ClientInterface ci, NotaryInterface ni) {
+        super("IntentionToSellTampered", ci, ni);
     }
 
     @Override
     public boolean getAndCheckArgs() {
         try {
             args.add(Integer.parseInt(new BoxUI(REQUEST_GOODID).showAndGet()));
+            args.add(Boolean.parseBoolean(new BoxUI(REQUEST_TOSELL).showAndGet()));
 
             return true;
         } catch(NumberFormatException e) {
@@ -36,23 +37,29 @@ public class GetStateOfGood extends Operation {
         Interaction response;
 
         int good = (int)args.get(0);
+        boolean intention = (boolean)args.get(1);
 
         try {
-            Interaction request = new Interaction();
-            request.setUserID(ClientService.userID);
-            request.setGoodID(good);
-            request.setUserClock(notaryInterface.getClock(ClientService.userID)+1);
 
             Certification cert = new VirtualCertificate();
             cert.init("", new File(System.getProperty("project.user.private.path") +
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
+            /*prepare request arguments*/
+            Interaction request = new Interaction();
+            request.setUserID(ClientService.userID);
+            request.setGoodID(good);
+            request.setResponse(intention);
+            request.setUserClock(notaryInterface.getClock(ClientService.userID)+1);
             request.setHmac(Digest.createDigest(request, cert));
 
-            response = notaryInterface.getStateOfGood(request);
+
+            response = notaryInterface.intentionToSell(request);
 
             VirtualCertificate notaryCert = new VirtualCertificate();
             notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
+
+            response.setBuyerID(45);
 
             /*compare hmacs*/
             if(Digest.verify(response, notaryCert) == false){
@@ -65,7 +72,6 @@ public class GetStateOfGood extends Operation {
             }
 
             setStatus(response.getResponse());
-
         }
         catch(GoodException e) {
             setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
@@ -79,6 +85,7 @@ public class GetStateOfGood extends Operation {
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
         }
+
     }
 
     @Override

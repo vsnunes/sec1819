@@ -95,6 +95,58 @@ public class ClientBoxStats implements ClientVisitor {
     }
 
     @Override
+    public void accept(BuyGoodTamperedNotary operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
+        }
+        else {
+            new BoxUI(CLIENT_BUYGOOD_NOTOK).show(BoxUI.RED_BOLD_BRIGHT);
+        }
+    }
+
+    @Override
+    public void accept(GetStateOfGoodReplay operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
+        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
+
+    }
+
+    @Override
+    public void accept(GetStateOfGoodReplayNotary operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
+        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
+
+    }
+
+    @Override
+    public void accept(GetStateOfGoodTampering operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
+        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
+
+    }
+
+    @Override
+    public void accept(GetStateOfGoodTamperingNotary operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
+        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
+
+    }
+
+    @Override
+    public void accept(BuyGoodReplayNotary operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
+        }
+        else {
+            new BoxUI(CLIENT_BUYGOOD_NOTOK).show(BoxUI.RED_BOLD_BRIGHT);
+        }
+    }
+
+    @Override
     public void accept(BuyGoodReplay operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
@@ -112,7 +164,21 @@ public class ClientBoxStats implements ClientVisitor {
     }
 
     @Override
+    public void accept(IntentionToSellTamperedNotary operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
+        } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);
+    }
+
+    @Override
     public void accept(IntentionToSellReplay operation) {
+        if (operation.getStatus() == Operation.Status.SUCCESS) {
+            new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
+        } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);
+    }
+
+    @Override
+    public void accept(IntentionToSellReplayNotary operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
         } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);

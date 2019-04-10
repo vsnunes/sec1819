@@ -121,6 +121,27 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
+        int userId = request.getUserID();
+
+        Certification cert = new VirtualCertificate();
+        try {
+            cert.init(new File(System.getProperty("project.users.cert.path") + userId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
+        } catch (HDSSecurityException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            /*compare hmacs*/
+            if(!Digest.verify(request, cert)){
+                throw new HDSSecurityException("Tampering detected!");
+            }
+            /*check freshness*/
+            if(request.getUserClock() <= getClock(userId)){
+                throw new HDSSecurityException("Replay attack detected!!");
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new RemoteException(e.getMessage());
+        }
 
 
         Good good = goods.get(goodId);

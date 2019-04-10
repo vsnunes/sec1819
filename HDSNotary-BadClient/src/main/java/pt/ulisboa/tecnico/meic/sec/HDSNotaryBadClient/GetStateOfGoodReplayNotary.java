@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
+package pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
@@ -14,9 +14,9 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetStateOfGood extends Operation {
+public class GetStateOfGoodReplayNotary extends Operation {
 
-    public GetStateOfGood(ClientInterface ci, NotaryInterface ni) {
+    public GetStateOfGoodReplayNotary(ClientInterface ci, NotaryInterface ni) {
         super("GetStateOfGood", ci, ni);
     }
 
@@ -58,6 +58,8 @@ public class GetStateOfGood extends Operation {
             if(Digest.verify(response, notaryCert) == false){
                 throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
             }
+
+            response.setUserClock(0);
 
             /*check freshness*/
             if(request.getUserClock() != response.getUserClock()){

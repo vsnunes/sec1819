@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
+package pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient;
 
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
@@ -14,9 +14,9 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetStateOfGood extends Operation {
+public class GetStateOfGoodTampering extends Operation {
 
-    public GetStateOfGood(ClientInterface ci, NotaryInterface ni) {
+    public GetStateOfGoodTampering(ClientInterface ci, NotaryInterface ni) {
         super("GetStateOfGood", ci, ni);
     }
 
@@ -48,6 +48,8 @@ public class GetStateOfGood extends Operation {
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
             request.setHmac(Digest.createDigest(request, cert));
+
+            request.setBuyerID(2);
 
             response = notaryInterface.getStateOfGood(request);
 

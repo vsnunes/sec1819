@@ -75,17 +75,25 @@ public class Client {
         do {
             MenuUI menu = new MenuUI("User client");
 
-            menu.addEntry("Tampering: To Notary: Intention to sell");
-            menu.addEntry("Replay Attack: To Notary: Intention to sell");
-            menu.addEntry("Altered Key: To Notary: Intention to sell");
-            menu.addEntry("Tampering: To User  : Buy Good");
-            menu.addEntry("Replay Attack: To User  : Buy Good");
+            menu.addEntry("Tampering: Intention to sell");
+            menu.addEntry("Tampering Response: Intention to sell");
+            menu.addEntry("Replay Attack: Intention to sell");
+            menu.addEntry("Replay Attack Response: Intention to sell");
+            menu.addEntry("Altered Key: Intention to sell");
+            menu.addEntry("Tampering: Get State of Good");
+            menu.addEntry("Tampering Response: Get State of Good");
+            menu.addEntry("Replay Attack: Get State of Good");
+            menu.addEntry("Replay Attack Response: Get State of Good");
+            menu.addEntry("Tampering: Buy Good");
+            menu.addEntry("Tampering Response: Buy Good");
+            menu.addEntry("Replay Attack: Buy Good");
+            menu.addEntry("Replay Attack Response: Buy Good");
             menu.addEntry("DEBUG -> System state");
             menu.addEntry("Exit");
 
             option = menu.display();
 
-            if (option == 7) break; //Exit case
+            if (option == 15) break; //Exit case
 
             Operation operation = parseOperation(option, clientInterface, notaryInterface);
 
@@ -152,11 +160,19 @@ public class Client {
     public static Operation parseOperation(int option, ClientInterface ci, NotaryInterface ni) {
         switch (option) {
             case 1: return new IntentionToSellTampered(ci, ni);
-            case 2: return new IntentionToSellReplay(ci, ni);
-            case 3: return new IntentionToSellAlteredKey(ci, ni);
-            case 4: return new BuyGoodTampered(ci, ni);
-            case 5: return new BuyGoodReplay(ci, ni);
-            case 6: return new Debug(ci, ni);
+            case 2: return new IntentionToSellTamperedNotary(ci, ni);
+            case 3: return new IntentionToSellReplay(ci, ni);
+            case 4: return new IntentionToSellReplayNotary(ci, ni);
+            case 5: return new IntentionToSellAlteredKey(ci, ni);
+            case 6: return new GetStateOfGoodTampering(ci, ni);
+            case 7: return new GetStateOfGoodTamperingNotary(ci, ni);
+            case 8: return new GetStateOfGoodReplay(ci,ni);
+            case 9: return new GetStateOfGoodReplayNotary(ci, ni);
+            case 10: return new BuyGoodTampered(ci, ni);
+            case 11: return new BuyGoodTamperedNotary(ci, ni);
+            case 12: return new BuyGoodReplay(ci, ni);
+            case 13: return new BuyGoodReplayNotary(ci, ni);
+            case 14: return new Debug(ci, ni);
         }
         return null;
     }
