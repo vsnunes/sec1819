@@ -9,6 +9,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mainClass>pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main</mainClass>
 
+        <project.pteidlib.config>../HDSNotaryLib/src/main/resources/CitizenCard.cfg</project.pteidlib.config>
+
         <!-- Location of User certificates -->
         <project.users.cert.path>../HDSNotaryLib/src/main/resources/certs/user</project.users.cert.path>
         <project.users.cert.ext>.crt</project.users.cert.ext>
@@ -72,6 +74,10 @@
                     <mainClass>${mainClass}</mainClass>
                     <includePluginDependencies>true</includePluginDependencies>
                     <systemProperties>
+                        <systemProperty>
+                            <key>project.pteidlib.config</key>
+                            <value>${project.pteidlib.config}</value>
+                        </systemProperty>
                         <systemProperty>
                             <key>project.users.cert.path</key>
                             <value>${project.users.cert.path}</value>

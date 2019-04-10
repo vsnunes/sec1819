@@ -1,7 +1,5 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
-import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
-import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.gui.MenuUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
@@ -32,8 +30,18 @@ public class Client {
                 ClientService.CLIENT_SERVICE_PORT = 10000 + ClientService.userID;
                 ClientService.CLIENT_SERVICE_NAME = "Client" + ClientService.userID;
 
-                if (args.length > 1)
-                    ClientService.NOTARY_URI = args[1];
+                if (args.length > 1) {
+                    if (args[1].equals("CCSmartCard")) {
+                        ClientService.NOTARY_USES_VIRTUAL = false;
+
+                        //Sets the notary cert path CC Certificate and not the virtual one
+                        System.setProperty("project.notary.cert.path", System.getProperty("project.notary.certCC.path"));
+                    } else {
+                        ClientService.NOTARY_USES_VIRTUAL = true;
+                    }
+                }
+                else if (args.length > 2)
+                    ClientService.NOTARY_URI = args[2];
             }
 
             notaryInterface = ClientService.notaryInterface;
@@ -49,6 +57,7 @@ public class Client {
             System.out.println(" Client Service Name: " + ClientService.CLIENT_SERVICE_NAME);
             System.out.println(" Client Service Port: " + ClientService.CLIENT_SERVICE_PORT);
             System.out.println(" Notary URL         : " + ClientService.NOTARY_URI);
+            System.out.println(" Notary is using    : " + ((ClientService.NOTARY_USES_VIRTUAL) ? "Virtual Certificates" : "Cartao do Cidadao"));
             System.out.println(" ====================== DEBUG ============================= ");
             System.out.println("Press any key to dismiss ...");
 

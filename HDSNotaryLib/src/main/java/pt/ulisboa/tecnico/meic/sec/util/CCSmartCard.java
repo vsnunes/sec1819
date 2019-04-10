@@ -11,12 +11,13 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.xml.bind.DatatypeConverter;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -102,8 +103,13 @@ public class CCSmartCard implements Certification {
 
         try {
 
+            String f;
+            if (System.getProperty("project.pteidlib.config") == null) {
+                f = "src/main/resources/CitizenCard.cfg";
+            } else {
+                f = System.getProperty("project.pteidlib.config");
+            }
 
-            String f = "src/main/resources/CitizenCard.cfg";
             Provider p = new sun.security.pkcs11.SunPKCS11( f );
             Security.addProvider( p );
 
@@ -236,6 +242,30 @@ public class CCSmartCard implements Certification {
 
         } catch(CertificateException e) {
             throw new HDSSecurityException("Cannot get Citizen Cert: " + e.getMessage());
+        }
+    }
+
+    public void writeCitizenAuthCertToFile(String pathFile) throws HDSSecurityException {
+        try {
+            X509Certificate cert = getCitizenAuthCert();
+            String cert_begin = "-----BEGIN CERTIFICATE-----\n";
+            String end_cert = "-----END CERTIFICATE-----";
+
+            byte[] derCert = cert.getEncoded();
+            String content = cert_begin + DatatypeConverter.printBase64Binary(derCert) + end_cert;
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(pathFile));
+            writer.write(content);
+
+            writer.close();
+
+
+        } catch (CertificateEncodingException e) {
+            throw new HDSSecurityException("Failed to write cert to file: " + e.getMessage());
+        } catch (FileNotFoundException e) {
+            throw new HDSSecurityException("Failed to write cert to file (File Not Found): " + e.getMessage());
+        } catch (IOException e) {
+            throw new HDSSecurityException("Failed to write cert to file (IO Problem): " + e.getMessage());
         }
     }
 

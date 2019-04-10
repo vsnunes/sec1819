@@ -223,5 +223,6 @@ public class BoxUI {
 
     public void stopWait() {
         this.waitingThread.interrupt();
+        System.out.flush();
     }
 }

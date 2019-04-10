@@ -11,6 +11,7 @@
     </parent>
 
     <properties>
+        <project.pteidlib.config>src/main/resources/CitizenCard.cfg</project.pteidlib.config>
         <project.pteidlib.location>/usr/local/lib/pteid_jni</project.pteidlib.location>
         <project.pteidlib.location.windows>C:/Program Files/Portugal Identity Card/sdk/Java</project.pteidlib.location.windows>
     </properties>

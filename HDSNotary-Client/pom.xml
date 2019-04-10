@@ -8,8 +8,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mainClass>pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.Client</mainClass>
 
-        <!-- Location of Notary Certification -->
+        <!-- Location of Notary Virtual Certification -->
         <project.notary.cert.path>../HDSNotaryLib/src/main/resources/certs/rootca.crt</project.notary.cert.path>
+        <project.notary.certCC.path>../HDSNotaryLib/src/main/resources/certs/rootcaCC.crt</project.notary.certCC.path>
 
         <!-- Location of User certificates -->
         <project.users.cert.path>../HDSNotaryLib/src/main/resources/certs/user</project.users.cert.path>
@@ -79,6 +80,10 @@
                         <systemProperty>
                             <key>project.notary.cert.path</key>
                             <value>${project.notary.cert.path}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <key>project.notary.certCC.path</key>
+                            <value>${project.notary.certCC.path}</value>
                         </systemProperty>
                         <systemProperty>
                             <key>project.users.cert.path</key>

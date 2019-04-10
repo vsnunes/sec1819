@@ -28,6 +28,9 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
     /** URI Of Notary **/
     public static String NOTARY_URI = "//localhost:10000/HDSNotary";
 
+    /** Certification Method used by Notary **/
+    public static boolean NOTARY_USES_VIRTUAL = true;
+
     public static NotaryInterface notaryInterface;
 
     public static int userID = 1;

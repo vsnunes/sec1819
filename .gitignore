@@ -3,6 +3,7 @@
 .idea/
 HDSNotary-Client/target/
 HDSNotary-Server/target/
+HDSNotaryLib/src/main/resources/certs/rootcaCC.crt
 HDSNotaryLib/target/
 target/
 .classpath

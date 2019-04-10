@@ -1,7 +1,5 @@
 package pt.ulisboa.tecnico.meic.sec.util;
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -15,7 +13,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.Certificate;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
