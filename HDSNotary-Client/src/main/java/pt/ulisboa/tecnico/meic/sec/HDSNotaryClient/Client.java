@@ -22,7 +22,7 @@ public class Client {
         NotaryInterface notaryInterface;
 
         try {
-            clientInterface = ClientService.getInstance();
+
 
             //maven args for client ID, which by default is 1
             if (args.length > 0) {
@@ -43,7 +43,7 @@ public class Client {
                 if (args.length > 2)
                     ClientService.NOTARY_URI = args[2];
             }
-
+            clientInterface = ClientService.getInstance();
             notaryInterface = ClientService.notaryInterface;
 
             Registry reg = LocateRegistry.createRegistry(ClientService.CLIENT_SERVICE_PORT);
