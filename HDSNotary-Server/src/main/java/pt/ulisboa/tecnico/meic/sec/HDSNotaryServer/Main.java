@@ -34,7 +34,7 @@ public class Main {
         }
 
         if (service.isUsingVirtualCerts())
-            new BoxUI("Notary is using VIRTUAL CERTS!").show(BoxUI.WHITE_BOLD_BRIGHT);
+            new BoxUI("Notary is using VIRTUAL CERTS!").showAndGo(BoxUI.WHITE_BOLD_BRIGHT);
         else {
 
             BoxUI box = new BoxUI("Notary is using Cartao do Cidadao!");
@@ -49,7 +49,7 @@ public class Main {
                 card.writeCitizenAuthCertToFile(USERS_CERTS_FOLDER + "rootcaCC.crt");
                 card.stop();
                 box.stopWait();
-                box.show(BoxUI.WHITE_BOLD_BRIGHT);
+                box.showAndGo(BoxUI.WHITE_BOLD_BRIGHT);
             } catch (HDSSecurityException e) {
                 new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
                 return;
