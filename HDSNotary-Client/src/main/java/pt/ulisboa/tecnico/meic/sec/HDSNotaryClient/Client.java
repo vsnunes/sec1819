@@ -27,6 +27,10 @@ public class Client {
             //maven args for client ID, which by default is 1
             if (args.length > 0) {
                 ClientService.userID = Integer.parseInt(args[0]);
+                if(ClientService.userID < 1 || ClientService.userID > 5){
+                    new BoxUI("user not found").show(BoxUI.RED_BOLD_BRIGHT);
+                    return;
+                }
                 ClientService.CLIENT_SERVICE_PORT = 10000 + ClientService.userID;
                 ClientService.CLIENT_SERVICE_NAME = "Client" + ClientService.userID;
 
