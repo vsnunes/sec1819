@@ -42,9 +42,9 @@ If the Notary uses the Portuguese Citizen Card then the client should be launche
     
 It is also possible to change the URL to the Notary Service:
 
-    mvn exec:java -Dexec.args="1 VirtualCertificates \\ServerIP:Port/HDSNotary"
+    mvn exec:java -Dexec.args="1 VirtualCertificates //ServerIP:Port/HDSNotary"
     OR
-    mvn exec:java -Dexec.args="1 CCSmartCard \\ServerIP:Port/HDSNotary"
+    mvn exec:java -Dexec.args="1 CCSmartCard //ServerIP:Port/HDSNotary"
         
    
 ## Bad-Client
