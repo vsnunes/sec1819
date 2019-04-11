@@ -98,7 +98,7 @@ public class BoxUI {
         this.question = question;
     }
 
-    public void show() {
+    public void showAndGo() {
         System.out.println();
         System.out.print(BOX_UPPER_RIGHT);
 
@@ -112,6 +112,30 @@ public class BoxUI {
         for (int i = 0; i < question.length(); i++)
             System.out.print(BOX_HORIZ);
         System.out.println(BOX_BOTTOM_LEFT);
+
+        System.out.flush();
+    }
+
+    public void showAndGo(String format) {
+        System.out.println();
+        System.out.print(BOX_UPPER_RIGHT);
+
+        for (int i = 0; i < question.length(); i++)
+            System.out.print(BOX_HORIZ);
+        System.out.println(BOX_UPPER_LEFT);
+
+        System.out.println(format + " " + question + RESET);
+
+        System.out.print(BOX_BOTTOM_RIGHT);
+        for (int i = 0; i < question.length(); i++)
+            System.out.print(BOX_HORIZ);
+        System.out.println(BOX_BOTTOM_LEFT);
+
+        System.out.flush();
+    }
+
+    public void show() {
+        showAndGo();
 
         System.out.println(WHITE_BOLD + "Press any key to continue..." + RESET);
 
@@ -127,19 +151,7 @@ public class BoxUI {
     }
 
     public void show(String format) {
-        System.out.println();
-        System.out.print(BOX_UPPER_RIGHT);
-
-        for (int i = 0; i < question.length(); i++)
-            System.out.print(BOX_HORIZ);
-        System.out.println(BOX_UPPER_LEFT);
-
-        System.out.println(format + " " + question + RESET);
-
-        System.out.print(BOX_BOTTOM_RIGHT);
-        for (int i = 0; i < question.length(); i++)
-            System.out.print(BOX_HORIZ);
-        System.out.println(BOX_BOTTOM_LEFT);
+        showAndGo(format);
 
         System.out.println(WHITE_BOLD + "Press any key to continue..." + RESET);
 
