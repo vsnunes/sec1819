@@ -78,11 +78,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         boolean bool = request.getResponse();
 
         Certification cert = new VirtualCertificate();
-        try {
-            cert.init(new File(System.getProperty("project.users.cert.path") + userId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
-        } catch (HDSSecurityException e) {
-            e.printStackTrace();
-        }
+
+        cert.init(new File(System.getProperty("project.users.cert.path") + userId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
+
 
         try {
             /*compare hmacs*/
@@ -124,11 +122,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         int userId = request.getUserID();
 
         Certification cert = new VirtualCertificate();
-        try {
-            cert.init(new File(System.getProperty("project.users.cert.path") + userId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
-        } catch (HDSSecurityException e) {
-            e.printStackTrace();
-        }
+
+        cert.init(new File(System.getProperty("project.users.cert.path") + userId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
+
 
         try {
             /*compare hmacs*/
@@ -167,11 +163,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
        /*verificar para o buyer*/
         Certification cert = new VirtualCertificate();
-        try {
-            cert.init(new File(System.getProperty("project.users.cert.path") + buyerId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
-        } catch (HDSSecurityException e) {
-            e.printStackTrace();
-        }
+
+        cert.init(new File(System.getProperty("project.users.cert.path") + buyerId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
+
 
         try {
             /*compare hmacs*/
@@ -189,11 +183,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         /*verificar para o seller*/
         cert = new VirtualCertificate();
-        try {
-            cert.init(new File(System.getProperty("project.users.cert.path") + sellerId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
-        } catch (HDSSecurityException e) {
-            e.printStackTrace();
-        }
+
+        cert.init(new File(System.getProperty("project.users.cert.path") + sellerId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
 
         try {
             /*compare hmacs*/
@@ -246,8 +237,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
                 request.setHmac(Digest.createDigest(request, cert));
                 cert.stop();
-            } catch (HDSSecurityException e) {
-                e.printStackTrace();
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
@@ -259,8 +248,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 request.setHmac(Digest.createDigest(request, cert));
                 cert.stop();
             } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (HDSSecurityException e) {
                 e.printStackTrace();
             }
         }

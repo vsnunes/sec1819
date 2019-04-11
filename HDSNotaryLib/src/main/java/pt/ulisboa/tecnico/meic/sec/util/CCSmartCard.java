@@ -208,12 +208,12 @@ public class CCSmartCard implements Certification {
         byte[] certificate_bytes = null;
         try {
             PTEID_Certif[] certs = pteid.GetCertificates();
-            System.out.println("Number of certs found: " + certs.length);
+            //System.out.println("Number of certs found: " + certs.length);
             int i = 0;
-            for (PTEID_Certif cert : certs) {
+            /*for (PTEID_Certif cert : certs) {
                 System.out.println("-------------------------------\nCertificate #"+(i++));
                 System.out.println(cert.certifLabel);
-            }
+            }*/
 
             certificate_bytes = certs[n].certif; //gets the byte[] with the n-th certif
 

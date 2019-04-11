@@ -24,7 +24,7 @@ public class Main {
 
 
 
-    public static void main(String[] args) throws RemoteException, GoodException{
+    public static void main(String[] args) throws RemoteException, GoodException, HDSSecurityException {
 
         NotaryService service = NotaryService.getInstance();
 
@@ -51,8 +51,9 @@ public class Main {
                 box.stopWait();
                 box.showAndGo(BoxUI.WHITE_BOLD_BRIGHT);
             } catch (HDSSecurityException e) {
-                new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
-                return;
+                card.stop();
+                new BoxUI(e.getMessage()).showAndGo(BoxUI.RED_BOLD_BRIGHT);
+                System.exit(1);
             }
 
         }
