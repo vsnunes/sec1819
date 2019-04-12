@@ -49,7 +49,7 @@ An alternative way is to use the Portuguese Citizen Card:
 
     cd HDSNotary-Server
     mvn exec:java -Dexec.args="CCSmartCard"
-    
+
 ## Client
 To run Clients:
 
@@ -60,7 +60,7 @@ By default the client uses ID = 1, but it is possible to change this:
     
     mvn exec:java -Dexec.args="2"
 
-**Recall** that the client ID is any number between [1; 5]
+**Recall** that the client ID is any number between [1; 5] and in order to perform a buy good operation both clients involved in the transaction must be on. 
     
 If the Notary uses the Portuguese Citizen Card then the client should be launched
 with the flag:
@@ -77,4 +77,26 @@ It is also possible to change the URL to the Notary Service:
 ## Bad-Client
 The Bad-Client is a special client designed for testing the security requirements.
 
-This clients accepts all arguments as a regular client.
+This clients accepts all arguments as a regular client and it's only available on the VirtualCertificares mode to simplify testing.
+
+There are 14 options which try to break our security measures. Every normal operation has 4 variants:
+Attack on the Message from Client to Notary:
+* Replay Attack
+* Tampering
+
+Attack on the Message from the Notary to the Client:
+* Replay Attack 
+* Tampering
+
+Aditionannaly there's also an example of the wrong key being used.
+
+## Testing Security Measures
+From root folder:
+
+    cd HDSNotary-Server
+    mvn exec:java
+    cd HDSNotary-BadClient
+    mvn exec:java -Dargs="1"
+    mvn exec:java -Dargs="2"
+
+You just need to select the operation you want to test, it's not necessary to prepary anything for replay attacks and tampering attacks to work. You should see the error message on the client. In the buy good operation after sending the replayed and the tampered message you need to press Enter on the second client for him to send the message back to the first one.
