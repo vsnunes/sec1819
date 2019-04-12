@@ -95,7 +95,7 @@ From root folder:
 
     cd HDSNotary-Server
     mvn exec:java
-    cd HDSNotary-Client
+    cd HDSNotary-BadClient
     mvn exec:java -Dargs="1"
     mvn exec:java -Dargs="2"
 
