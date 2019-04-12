@@ -6,7 +6,7 @@ Group 1 - Alameda
 [83567 - Tiago Gonçalves](mailto:tiago.miguel.c.g@tecnico.ulisboa.pt)
 [83576 - Vítor Nunes](mailto:vitor.sobrinho.nunes@tecnico.ulisboa.pt)
 
-## Dependences
+## Dependencies
 In order to build and run the project you need:
 * apache-maven
 * Java 1.8
