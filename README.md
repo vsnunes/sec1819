@@ -95,8 +95,9 @@ From root folder:
 
     cd HDSNotary-Server
     mvn exec:java
-    cd HDSNotary-BadClient
+    cd ../HDSNotary-Client
     mvn exec:java -Dargs="1"
+    cd ../HDSNotary-BadClient
     mvn exec:java -Dargs="2"
 
-You just need to select the operation you want to test, it's not necessary to prepary anything for replay attacks and tampering attacks to work. You should see the error message on the client. In the buy good operation after sending the replayed and the tampered message you need to press Enter on the second client for him to send the message back to the first one.
+You just need to select the operation you want to test on the bad client, it's not necessary to prepare anything for the replay attacks and tampering attacks to work. You should see the error message on the client. In the buy good operation after sending the replayed and the tampered message you need to press Enter on the good client client for him to send the message back to the bad one.
