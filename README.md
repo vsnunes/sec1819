@@ -12,6 +12,11 @@ In order to build and run the project you need:
 * Java 1.8
 * Portuguese Citizen Card Driver
 
+In some system you may need to export the following variable in order
+to find the pteid library:
+
+    export LD_LIBRARY_PATH=/usr/local/lib
+
 ## Configurations for different OSs
 It is possible to build and run this project on Linux or Windows.
 
