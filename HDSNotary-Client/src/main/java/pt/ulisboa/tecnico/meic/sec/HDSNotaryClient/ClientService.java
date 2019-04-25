@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.exceptions.NotaryMiddlewareException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
@@ -12,6 +13,7 @@ import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -42,21 +44,15 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
     /** Instance of ClientService the one will allow others client to connect to. **/
     private static ClientService instance;
 
-    protected ClientService() throws RemoteException {
+    protected ClientService() throws RemoteException, NotaryMiddlewareException, IOException {
         super();
 
-        try {
-            notaryInterface = (NotaryInterface) Naming.lookup(NOTARY_URI);
-        } catch (NotBoundException e) {
-            new BoxUI(":( NotBound on Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-        } catch (MalformedURLException e) {
-            new BoxUI(":( Malform URL! Cannot find Notary Service!").show(BoxUI.RED_BOLD_BRIGHT);
-        } catch (RemoteException e) {
-            new BoxUI(":( It looks like I miss the connection with Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-        }
+
+        notaryInterface = new NotaryMiddleware(System.getProperty("project.nameserver.config"));
+
     }
 
-    public static ClientService getInstance() throws RemoteException {
+    public static ClientService getInstance() throws RemoteException, NotaryMiddlewareException, IOException {
         if(instance == null){
             return new ClientService();
         }

@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.exceptions.NotaryMiddlewareException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.gui.MenuUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
@@ -73,6 +74,12 @@ public class Client {
 
         } catch (RemoteException e) {
             System.err.println("Cannot createDigest ClientServer singleton");
+            return;
+        } catch (NotaryMiddlewareException e) {
+            new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            return;
+        } catch (IOException e) {
+            new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
             return;
         }
 
