@@ -44,7 +44,9 @@ command on **root folder** to install all dependencies:
 To run the Notary, change to folder **HDSNotary-Server** and execute:
 
     cd HDSNotary-Server
-    mvn exec:java
+    mvn exec:java -Dexec.args="1"
+    
+Where 1 is the ID of the server.
     
 ### Using different certifications processes
 By default the Notary and Clients uses **Virtual Certificates** to sign message 
@@ -53,7 +55,7 @@ digests.
 An alternative way is to use the Portuguese Citizen Card:
 
     cd HDSNotary-Server
-    mvn exec:java -Dexec.args="CCSmartCard"
+    mvn exec:java -Dexec.args="1 CCSmartCard"
 
 ## Client
 To run Clients:
@@ -72,11 +74,14 @@ with the flag:
 
     mvn exec:java -Dexec.args="1 CCSmartCard"
     
-It is also possible to change the URL to the Notary Service:
+**Deprecated and Removed** Since we use file `Servers.cfg` under the `HDSNotaryLib/src/main/resources/` this
+feature is no longer available.
 
-    mvn exec:java -Dexec.args="1 VirtualCertificates //ServerIP:Port/HDSNotary"
-    OR
-    mvn exec:java -Dexec.args="1 CCSmartCard //ServerIP:Port/HDSNotary"
+~~It is also possible to change the URL to the Notary Service: ~~
+
+    ~~mvn exec:java -Dexec.args="1 VirtualCertificates //ServerIP:Port/HDSNotary"~~
+    ~~OR~~
+    ~~mvn exec:java -Dexec.args="1 CCSmartCard //ServerIP:Port/HDSNotary"~~
         
    
 ## Bad-Client
