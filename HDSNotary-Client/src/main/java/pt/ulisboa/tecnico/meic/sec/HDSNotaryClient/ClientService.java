@@ -28,7 +28,6 @@ import static pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.Operation.NOTARY_REPOR
 public class ClientService extends UnicastRemoteObject implements ClientInterface, Serializable {
 
     /** URI Of Notary **/
-    public static String NOTARY_URI = "//localhost:10000/HDSNotary";
 
     /** Certification Method used by Notary **/
     public static boolean NOTARY_USES_VIRTUAL = true;
@@ -38,7 +37,7 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
     public static int userID = 1;
 
     /** Port for accepting clients connection to the service **/
-    public static int CLIENT_SERVICE_PORT = 10000 + userID;
+    public static int CLIENT_SERVICE_PORT = 10010 + userID;
     public static String CLIENT_SERVICE_NAME = "Client" + userID;
 
     /** Instance of ClientService the one will allow others client to connect to. **/

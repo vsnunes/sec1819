@@ -16,6 +16,10 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Middleware for Notary operations
@@ -41,6 +45,9 @@ public class NotaryMiddleware implements NotaryInterface {
     /** The list of remote objects of the servers **/
     private List<NotaryInterface> servers;
 
+    /** Thread pool for servers tasks **/
+    private ThreadPoolExecutor poolExecutor;
+
     public NotaryMiddleware(String pathToServersCfg) throws IOException, NotaryMiddlewareException {
 
         if (!(BYZANTINE_F < (REPLICAS_N / 3))) {
@@ -54,7 +61,6 @@ public class NotaryMiddleware implements NotaryInterface {
         for (String url : urls) {
             try {
                 servers.add((NotaryInterface) Naming.lookup(url));
-
             } catch (NotBoundException e) {
                 throw new NotaryMiddlewareException(":( NotBound on Notary at " + url);
             } catch (MalformedURLException e) {
@@ -63,39 +69,59 @@ public class NotaryMiddleware implements NotaryInterface {
                 throw new NotaryMiddlewareException(":( It looks like I miss the connection with Notary at " + url);
             }
         }
+
+        poolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     }
 
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
-        Interaction response = null;
+        Future<Interaction> response = null;
 
         for (NotaryInterface notaryInterface : servers) {
-            response = notaryInterface.intentionToSell(request);
+            response = poolExecutor.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
         }
 
-        return response;
+        try {
+            return response.get();
+        } catch (InterruptedException e) {
+            throw new RemoteException(e.getMessage());
+        } catch (ExecutionException e) {
+            throw new RemoteException(e.getMessage());
+        }
     }
 
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
-        Interaction response = null;
+        Future<Interaction> response = null;
 
         for (NotaryInterface notaryInterface : servers) {
-            response = notaryInterface.getStateOfGood(request);
+            response = poolExecutor.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.GETSTATEOFGOOD, request));
         }
 
-        return response;
+        try {
+            return response.get();
+        } catch (InterruptedException e) {
+            throw new RemoteException(e.getMessage());
+        } catch (ExecutionException e) {
+            throw new RemoteException(e.getMessage());
+        }
     }
 
     @Override
     public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException {
-        Interaction response = null;
+        Future<Interaction> response = null;
 
         for (NotaryInterface notaryInterface : servers) {
-            response = notaryInterface.transferGood(request);
+            response = poolExecutor.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.TRANSFERGOOD, request));
         }
 
-        return response;
+        try {
+            return response.get();
+        } catch (InterruptedException e) {
+            throw new RemoteException(e.getMessage());
+        } catch (ExecutionException e) {
+            throw new RemoteException(e.getMessage());
+        }
     }
 
     @Override
@@ -133,7 +159,15 @@ public class NotaryMiddleware implements NotaryInterface {
         for (int i = 1; (url = bufferedReader.readLine()) != null; i++) {
             if ((url != "") && ((REPLICAS_N == 0) || (i <= REPLICAS_N))) urls.add(url);
         }
-
+        System.out.println(String.format("** NotaryMiddleware: Found %d url(s) of servers!", urls.size()));
         return urls;
+    }
+
+    /**
+     * Terminates the Middleware
+     */
+    @Override
+    public void shutdown() {
+        poolExecutor.shutdown();
     }
 }
