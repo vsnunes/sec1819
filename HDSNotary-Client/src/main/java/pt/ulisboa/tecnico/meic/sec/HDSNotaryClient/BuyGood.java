@@ -26,7 +26,7 @@ public class BuyGood extends Operation {
     public boolean getAndCheckArgs() {
         try {
             clientID = new BoxUI("What is the client ID?").showAndGet();
-            args.add("//localhost:1000" + clientID + "/Client" + clientID);
+            args.add("//localhost:1001" + clientID + "/Client" + clientID);
             args.add(Integer.parseInt(new BoxUI("What is the good ID to buy?").showAndGet()));
             return true;
         } catch(NumberFormatException e) {

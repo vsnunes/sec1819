@@ -25,6 +25,7 @@ public class Main {
 
 
     public static void main(String[] args) throws RemoteException, GoodException, HDSSecurityException {
+        CCSmartCard card = null;
 
         if (args.length > 0) {
             NOTARY_SERVICE_PORT = 10000 + Integer.parseInt(args[0]);
@@ -47,7 +48,7 @@ public class Main {
 
             box.displayWait();
 
-            CCSmartCard card = new CCSmartCard();
+            card = new CCSmartCard();
 
             try {
                 card.init();
@@ -78,6 +79,10 @@ public class Main {
             e.printStackTrace();
         }
 
+        //if using CC smart card release the SDK!
+        if (!service.isUsingVirtualCerts()) {
+            card.stop();
+        }
 
         System.exit(0);
 
