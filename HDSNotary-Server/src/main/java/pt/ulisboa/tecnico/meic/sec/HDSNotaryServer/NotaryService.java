@@ -307,7 +307,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private void doWrite(){
         System.out.println("Writing GoodsUser...");
         try {
-            File file = new File("UsersGoods.bin");
+            File file = new File("UsersGoodsTMP.bin");
             file.createNewFile();
             FileOutputStream f = new FileOutputStream(file, false);
             ObjectOutputStream o = new ObjectOutputStream(f);
@@ -317,6 +317,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             //System.out.println("The Object users was succesfully written to a file");
 
             o.close();
+            swapFiles("UsersGoods.bin","UsersGoodsTMP.bin");
         }
         catch (IOException e) {
             System.out.println("Error initializing stream");
@@ -505,11 +506,28 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     }
 
+    private void swapFiles(String original, String tmp) {
+        System.out.println("Performing the swap of " + tmp + " ...");
+        File originalFile= new File(original);
+        try {
+            System.out.println(originalFile.createNewFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        File tmpFile= new File(tmp);
+
+        System.out.println(originalFile.renameTo(new File("dummy.bin")));
+        System.out.println(tmpFile.renameTo(new File(original)));
+        File dummy = new File("dummy.bin");
+        System.out.println(dummy.delete());
+
+    }
+
     /*called when transaction starts*/
     private void doWriteTransaction(Transaction transaction){
         System.out.println("Writing Transaction...");
         try {
-            File file = new File("Transaction.bin");
+            File file = new File("TransactionTMP.bin");
             file.createNewFile();
             FileOutputStream f = new FileOutputStream(file, true);
             ObjectOutputStream o = new ObjectOutputStream(f);
@@ -522,6 +540,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             o.writeObject(transaction.getGood().getOwner());
             o.writeObject(transaction.getState());
             o.close();
+            swapFiles("Transaction.bin","TransactionTMP.bin");
         }
         catch (IOException e) {
             System.out.println("Error initializing stream");
@@ -531,7 +550,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     protected void doDeleteTransaction(Transaction transaction){
         System.out.println("Deleting transaction...");
         ArrayList<Transaction> transactions = doReadTransactions();
-        Transaction test = new Transaction(25, users.get(1), users.get(2), goods.get(1));
         ArrayList<Transaction> tmp = transactions;
         if(transactions != null){
             for(Transaction t:transactions){
