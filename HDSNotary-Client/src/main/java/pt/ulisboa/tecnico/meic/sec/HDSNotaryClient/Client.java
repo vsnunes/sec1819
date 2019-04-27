@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.exceptions.NotaryMiddlewareException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.gui.MenuUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
@@ -31,7 +32,7 @@ public class Client {
                     new BoxUI("user not found").show(BoxUI.RED_BOLD_BRIGHT);
                     return;
                 }
-                ClientService.CLIENT_SERVICE_PORT = 10000 + ClientService.userID;
+                ClientService.CLIENT_SERVICE_PORT = 10010 + ClientService.userID;
                 ClientService.CLIENT_SERVICE_NAME = "Client" + ClientService.userID;
 
                 if (args.length > 1) {
@@ -44,8 +45,6 @@ public class Client {
                         ClientService.NOTARY_USES_VIRTUAL = true;
                     }
                 }
-                if (args.length > 2)
-                    ClientService.NOTARY_URI = args[2];
             }
             clientInterface = ClientService.getInstance();
             notaryInterface = ClientService.notaryInterface;
@@ -60,8 +59,7 @@ public class Client {
             System.out.println(" ClientID           : " + ClientService.userID);
             System.out.println(" Client Service Name: " + ClientService.CLIENT_SERVICE_NAME);
             System.out.println(" Client Service Port: " + ClientService.CLIENT_SERVICE_PORT);
-            System.out.println(" Notary URL         : " + ClientService.NOTARY_URI);
-            System.out.println(" Notary is using    : " + ((ClientService.NOTARY_USES_VIRTUAL) ? "Virtual Certificates" : "Cartao do Cidadao"));
+            System.out.println(" Authentication     : " + ((ClientService.NOTARY_USES_VIRTUAL) ? "Virtual Certificates" : "Cartao do Cidadao"));
             System.out.println(" ====================== DEBUG ============================= ");
             System.out.println("Press any key to dismiss ...");
 
@@ -72,19 +70,16 @@ public class Client {
             }
 
         } catch (RemoteException e) {
-            System.err.println("Cannot createDigest ClientServer singleton");
+            System.err.println("** Client: Remoting problem: " + e.getMessage());
+            return;
+        } catch (NotaryMiddlewareException e) {
+            new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            return;
+        } catch (IOException e) {
+            new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
             return;
         }
 
-        try {
-            notaryInterface = (NotaryInterface) Naming.lookup(ClientService.NOTARY_URI);
-        } catch (NotBoundException e) {
-            new BoxUI(":( NotBound on Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-        } catch (MalformedURLException e) {
-            new BoxUI(":( Malform URL! Cannot find Notary Service!").show(BoxUI.RED_BOLD_BRIGHT);
-        } catch (RemoteException e) {
-            new BoxUI(":( It looks like I miss the connection with Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-        }
 
         do {
             MenuUI menu = new MenuUI("User client");
@@ -97,7 +92,15 @@ public class Client {
 
             option = menu.display();
 
-            if (option == 5) break; //Exit case
+            if (option == 5) {
+                try {
+                    notaryInterface.shutdown();
+
+                } catch (RemoteException e) {
+                    new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+                }
+                break; //Exit case
+            }
 
             Operation operation = parseOperation(option, clientInterface, notaryInterface);
 

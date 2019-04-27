@@ -10,6 +10,6 @@ target/
 .project
 .settings/
 bin/
-HDSNotary-Server/Transaction.bin
-HDSNotary-Server/UsersGoods.bin
+HDSNotary-Server/Transaction*.bin
+HDSNotary-Server/UsersGoods*.bin
 .directory

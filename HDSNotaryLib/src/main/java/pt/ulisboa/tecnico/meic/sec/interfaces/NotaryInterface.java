@@ -51,4 +51,10 @@ public interface NotaryInterface extends Remote {
 
     /* debug only */
     void doPrint() throws RemoteException;
+
+    /**
+     * Performs some logic when server shuts down
+     * @throws RemoteException
+     */
+    void shutdown() throws RemoteException;
 }

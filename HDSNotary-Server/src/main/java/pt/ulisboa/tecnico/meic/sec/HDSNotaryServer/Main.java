@@ -16,7 +16,7 @@ public class Main {
     private static final long serialVersionUID = 1L;
 
     /** Port for accepting clients connection to the service **/
-    public static final int NOTARY_SERVICE_PORT = 10000;
+    public static int NOTARY_SERVICE_PORT = 10000;
     public static final String NOTARY_SERVICE_NAME = "HDSNotary";
 
     /** User's certificates folder location. BE AWARE it must end with slash (/) ! **/
@@ -25,11 +25,17 @@ public class Main {
 
 
     public static void main(String[] args) throws RemoteException, GoodException, HDSSecurityException {
+        CCSmartCard card = null;
+
+        if (args.length > 0) {
+            NOTARY_SERVICE_PORT = 10000 + Integer.parseInt(args[0]);
+        }
+        new BoxUI("Notary is running on port " + NOTARY_SERVICE_PORT).showAndGo(BoxUI.WHITE_BOLD_BRIGHT);
 
         NotaryService service = NotaryService.getInstance();
 
-        if (args.length > 0) {
-            if (args[0].equals("CCSmartCard"))
+        if (args.length > 1) {
+            if (args[1].equals("CCSmartCard"))
                 service.setUsingVirtualCerts(false);
         }
 
@@ -42,7 +48,7 @@ public class Main {
 
             box.displayWait();
 
-            CCSmartCard card = new CCSmartCard();
+            card = new CCSmartCard();
 
             try {
                 card.init();
@@ -73,6 +79,10 @@ public class Main {
             e.printStackTrace();
         }
 
+        //if using CC smart card release the SDK!
+        if (!service.isUsingVirtualCerts()) {
+            card.stop();
+        }
 
         System.exit(0);
 

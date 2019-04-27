@@ -5,6 +5,7 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.*;
 
+import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.NOTARY_SERVICE_PORT;
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDER;
 import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
 
@@ -35,8 +36,19 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     /** By default Notary uses virtual certificates **/
     private boolean usingVirtualCerts = true;
 
+    private static String USERSGOODS_FILE;
+    private static String TRANSACTIONS_FILE;
+    private static String USERSGOODSTMP_FILE;
+    private static String TRANSACTIONSTMP_FILE;
+
     private NotaryService() throws RemoteException, GoodException {
         super();
+
+        USERSGOODS_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + ".bin";
+        USERSGOODSTMP_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + "TMP.bin";
+        TRANSACTIONS_FILE = "Transaction" + NOTARY_SERVICE_PORT + ".bin";
+        TRANSACTIONSTMP_FILE = "Transaction" + NOTARY_SERVICE_PORT + "TMP.bin";
+
         if (!doRead()) {
             System.out.println("No data found, initializing...");
             users = new HashMap<>();
@@ -307,7 +319,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private void doWrite(){
         System.out.println("Writing GoodsUser...");
         try {
-            File file = new File("UsersGoodsTMP.bin");
+
+            File file = new File(USERSGOODSTMP_FILE);
             file.createNewFile();
             FileOutputStream f = new FileOutputStream(file, false);
             ObjectOutputStream o = new ObjectOutputStream(f);
@@ -317,7 +330,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             //System.out.println("The Object users was succesfully written to a file");
 
             o.close();
-            swapFiles("UsersGoods.bin","UsersGoodsTMP.bin");
+            swapFiles(USERSGOODS_FILE,USERSGOODSTMP_FILE);
         }
         catch (IOException e) {
             System.out.println("Error initializing stream");
@@ -330,9 +343,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private boolean doRead() {
         System.out.println("Reading GoodsUser...");
         try {
-            File file = new File("UsersGoods.bin");
+            File file = new File(USERSGOODS_FILE);
             if(!file.exists()){
-                System.out.println("File UsersGoods.bin does not exists");
+                System.out.println("File " + USERSGOODS_FILE + " does not exists");
                 return false;
             }
             FileInputStream fi = new FileInputStream(file);
@@ -346,7 +359,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             return true;
         }
         catch (FileNotFoundException e) {
-            System.out.println("File UsersGoods.bin not found");
+            System.out.println("File " + USERSGOODS_FILE + " not found");
         } catch (IOException e) {
             System.out.println("Error initializing stream");
             e.printStackTrace();
@@ -361,9 +374,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         try {
             //path to be defined
 
-            File file = new File("UsersGoods.bin");
+            File file = new File(USERSGOODS_FILE);
             if(!file.exists()){
-                System.out.println("File UsersGoods.bin does not exists");
+                System.out.println("File " + USERSGOODS_FILE + " does not exists");
                 return;
             }
             FileInputStream fi = new FileInputStream(file);
@@ -398,9 +411,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         ObjectInputStream oi = null;
         try {
             //path to be defined
-            File file = new File("Transaction.bin");
+            File file = new File(TRANSACTIONS_FILE);
             if(!file.exists()){
-                System.out.println("File Transaction.bin does not exists");
+                System.out.println("File " + TRANSACTIONS_FILE +" does not exists");
                 return;
             }
             FileInputStream fi = new FileInputStream(file);
@@ -426,7 +439,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         }
         catch (FileNotFoundException e) {
-            System.out.println("File Transaction.bin not found");
+            System.out.println("File " + TRANSACTIONS_FILE +" not found");
         } catch (IOException e) {
             if(transactions.size() == 0) {
                 System.out.println("Error initializing stream");
@@ -452,9 +465,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         ObjectInputStream oi = null;
         try {
             //path to be defined
-            File file = new File("Transaction.bin");
+            File file = new File(TRANSACTIONS_FILE);
             if(!file.exists()){
-                System.out.println("File Transaction.bin does not exists");
+                System.out.println("File " + TRANSACTIONS_FILE + " does not exists");
                 return null;
             }
             FileInputStream fi = new FileInputStream(file);
@@ -485,7 +498,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         }
         catch (FileNotFoundException e) {
-            System.out.println("File Transaction.bin not found");
+            System.out.println("File " + TRANSACTIONS_FILE + " not found");
         } catch (IOException e) {
             if(transactions.size() == 0) {
                 System.out.println("Error initializing stream");
@@ -527,7 +540,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private void doWriteTransaction(Transaction transaction){
         System.out.println("Writing Transaction...");
         try {
-            File file = new File("TransactionTMP.bin");
+            File file = new File(TRANSACTIONSTMP_FILE);
             file.createNewFile();
             FileOutputStream f = new FileOutputStream(file, true);
             ObjectOutputStream o = new ObjectOutputStream(f);
@@ -540,7 +553,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             o.writeObject(transaction.getGood().getOwner());
             o.writeObject(transaction.getState());
             o.close();
-            swapFiles("Transaction.bin","TransactionTMP.bin");
+            swapFiles(TRANSACTIONS_FILE,TRANSACTIONSTMP_FILE);
         }
         catch (IOException e) {
             System.out.println("Error initializing stream");
@@ -556,7 +569,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 if(t.getTransactionID() == transaction.getTransactionID()){
                     System.out.println("Removig transaction with id " + t.getTransactionID());
                     tmp.remove(t);
-                    File file = new File("Transaction.bin");
+                    File file = new File(TRANSACTIONS_FILE);
                     if(file.delete()) {
                         System.out.println(file.getName() + " is deleted!");
                     }
@@ -592,6 +605,11 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         this.users.clear();
         this.goods.clear();
         this.transactionCounter = 0;
+    }
+
+    @Override
+    public void shutdown() throws RemoteException {
+        //server dont need to do any post execution operations
     }
 
 
