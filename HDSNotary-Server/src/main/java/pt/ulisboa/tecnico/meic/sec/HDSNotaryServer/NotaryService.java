@@ -2,7 +2,7 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
-import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryByzantineService;
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.interfaces.NotaryByzantineService;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.*;
 
@@ -346,54 +346,56 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     boolean broadcastWriteTransfer(int ownerID, int buyerID) throws RemoteException {
-        Future<Boolean> response = null;
+        Future<Good> response = null;
 
         for (NotaryByzantineService notaryByzantineService : servers) {
             response = poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
                     NotaryByzantineTask.Operation.TRANSFERGOOD, ownerID,buyerID));
         }
-
-        try {
+        return false;
+        /*try {
             return response.get();
         } catch (InterruptedException e) {
             throw new RemoteException(e.getMessage());
         } catch (ExecutionException e) {
             throw new RemoteException(e.getMessage());
-        }
+        }*/
 
     }
 
     boolean broadcastWriteIntention(boolean state, int goodID) throws RemoteException {
-        Future<Boolean> response = null;
+        Future<Good> response = null;
 
         for (NotaryByzantineService notaryByzantineService : servers) {
             response = poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
                     NotaryByzantineTask.Operation.INTENTION2SELL, state,goodID));
         }
-
-        try {
+        return false;
+        /*try {
             return response.get();
         } catch (InterruptedException e) {
             throw new RemoteException(e.getMessage());
         } catch (ExecutionException e) {
             throw new RemoteException(e.getMessage());
-        }    }
+        }    */
+    }
 
     boolean broadcastReadGetState(int goodID) throws RemoteException {
-        Future<Boolean> response = null;
+        Future<Good> response = null;
 
         for (NotaryByzantineService notaryByzantineService : servers) {
             response = poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
                     NotaryByzantineTask.Operation.GETSTATEOFGOOD, goodID));
         }
-
-        try {
-            return response.get();
+        return false;
+        /*try {
+            return response.get().isForSell();
         } catch (InterruptedException e) {
             throw new RemoteException(e.getMessage());
         } catch (ExecutionException e) {
             throw new RemoteException(e.getMessage());
-        }    }
+        }    */
+    }
 
 
 
