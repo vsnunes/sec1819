@@ -1,11 +1,10 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
-import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryByzantineService;
-import pt.ulisboa.tecnico.meic.sec.util.Interaction;
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.interfaces.NotaryByzantineService;
 
 import java.util.concurrent.Callable;
 
-public class NotaryByzantineTask implements Callable<Boolean> {
+public class NotaryByzantineTask implements Callable<Good> {
     public enum Operation {INTENTION2SELL, GETSTATEOFGOOD, TRANSFERGOOD}
 
     private NotaryByzantineService notaryByzantineService;
@@ -39,7 +38,7 @@ public class NotaryByzantineTask implements Callable<Boolean> {
     }
 
     @Override
-    public Boolean call() throws Exception {
+    public Good call() throws Exception {
         switch (operation) {
             case INTENTION2SELL: return notaryByzantineService.receiveWriteIntention(state,goodID);
             case GETSTATEOFGOOD: return notaryByzantineService.receiveReadGetState(goodID);
