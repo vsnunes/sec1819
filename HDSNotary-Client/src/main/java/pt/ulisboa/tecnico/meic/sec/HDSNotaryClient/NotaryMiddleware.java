@@ -5,6 +5,7 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
+import pt.ulisboa.tecnico.meic.sec.util.CFGHelper;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 
 import java.io.BufferedReader;
@@ -56,7 +57,7 @@ public class NotaryMiddleware implements NotaryInterface {
 
         servers = new ArrayList<>();
 
-        List<String> urls = fetchURLsFromCfg(pathToServersCfg);
+        List<String> urls = CFGHelper.fetchURLsFromCfg(pathToServersCfg,REPLICAS_N);
 
         for (String url : urls) {
             try {
@@ -142,25 +143,6 @@ public class NotaryMiddleware implements NotaryInterface {
             notaryInterface.doPrint();
         }
 
-    }
-
-    /**
-     * Given a path to the Servers.cfg returns a list of servers URLs
-     * @param pathToServersCfg path to Servers.cfg
-     * @return list of urls containing the servers URLs.
-     */
-    private List<String> fetchURLsFromCfg(String pathToServersCfg) throws IOException {
-        FileReader fileReader = new FileReader(pathToServersCfg);
-        BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-        List<String> urls = new ArrayList<>();
-        String url;
-
-        for (int i = 1; (url = bufferedReader.readLine()) != null; i++) {
-            if ((url != "") && ((REPLICAS_N == 0) || (i <= REPLICAS_N))) urls.add(url);
-        }
-        System.out.println(String.format("** NotaryMiddleware: Found %d url(s) of servers!", urls.size()));
-        return urls;
     }
 
     /**

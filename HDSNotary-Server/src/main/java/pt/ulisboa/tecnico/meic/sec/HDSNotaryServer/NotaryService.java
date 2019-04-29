@@ -11,6 +11,8 @@ import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDE
 import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
 
 import java.io.*;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
@@ -18,6 +20,11 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * A Class for implementing NotaryInterface on Server
@@ -41,6 +48,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private static String TRANSACTIONS_FILE;
     private static String USERSGOODSTMP_FILE;
     private static String TRANSACTIONSTMP_FILE;
+
+    /** The list of remote objects of the servers **/
+    private List<NotaryByzantineService> servers;
+
+    /** Thread pool for servers tasks **/
+    private ThreadPoolExecutor poolExecutor;
 
     private NotaryService() throws RemoteException, GoodException {
         super();
@@ -298,12 +311,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     /*Byzantine service*/
-
-    @Override
-    public void initialize() throws RemoteException {
-        
-    }
-
     @Override
     public boolean receiveWriteTransfer(int ownerID, int buyerID) throws RemoteException {
         return false;
@@ -318,6 +325,77 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     public boolean receiveReadGetState(int goodID) throws RemoteException {
         return false;
     }
+
+    public void initialization() {
+        try {
+            List<String> urls = CFGHelper.fetchURLsFromCfg(System.getProperty("project.nameserver.config"),0);
+            for (String url : urls) {
+                try {
+                    servers.add((NotaryByzantineService) Naming.lookup(url));
+                } catch (NotBoundException e) {
+                    e.printStackTrace();
+                }  catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            poolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    boolean broadcastWriteTransfer(int ownerID, int buyerID) throws RemoteException {
+        Future<Boolean> response = null;
+
+        for (NotaryByzantineService notaryByzantineService : servers) {
+            response = poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
+                    NotaryByzantineTask.Operation.TRANSFERGOOD, ownerID,buyerID));
+        }
+
+        try {
+            return response.get();
+        } catch (InterruptedException e) {
+            throw new RemoteException(e.getMessage());
+        } catch (ExecutionException e) {
+            throw new RemoteException(e.getMessage());
+        }
+
+    }
+
+    boolean broadcastWriteIntention(boolean state, int goodID) throws RemoteException {
+        Future<Boolean> response = null;
+
+        for (NotaryByzantineService notaryByzantineService : servers) {
+            response = poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
+                    NotaryByzantineTask.Operation.INTENTION2SELL, state,goodID));
+        }
+
+        try {
+            return response.get();
+        } catch (InterruptedException e) {
+            throw new RemoteException(e.getMessage());
+        } catch (ExecutionException e) {
+            throw new RemoteException(e.getMessage());
+        }    }
+
+    boolean broadcastReadGetState(int goodID) throws RemoteException {
+        Future<Boolean> response = null;
+
+        for (NotaryByzantineService notaryByzantineService : servers) {
+            response = poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
+                    NotaryByzantineTask.Operation.GETSTATEOFGOOD, goodID));
+        }
+
+        try {
+            return response.get();
+        } catch (InterruptedException e) {
+            throw new RemoteException(e.getMessage());
+        } catch (ExecutionException e) {
+            throw new RemoteException(e.getMessage());
+        }    }
+
+
 
     /*
     ********************************************************************************************************************

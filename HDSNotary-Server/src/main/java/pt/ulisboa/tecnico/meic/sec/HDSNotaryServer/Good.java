@@ -1,8 +1,10 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+import javafx.util.Pair;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * A class for describing Good items
@@ -16,6 +18,14 @@ public class Good implements Serializable {
 
     private User owner;
 
+    private int timeStamp;
+
+    private int writeTimeStamp;
+
+    private ArrayList<Pair<Integer,Boolean>> readList;
+
+    private byte[] sigma;
+
     /** Prevents the good from having concurrent transactions **/
     private boolean inTransaction;
 
@@ -25,6 +35,7 @@ public class Good implements Serializable {
         this.forSell = false;
         this.owner = owner;
         this.inTransaction = false;
+        this.initialize();
     }
 
     Good(int goodID, User owner, boolean forSell) throws GoodException {
@@ -33,6 +44,7 @@ public class Good implements Serializable {
         this.forSell = forSell;
         this.owner = owner;
         this.inTransaction = false;
+        this.initialize();
     }
 
     public void setGoodID(int goodID) throws GoodException{
@@ -72,5 +84,44 @@ public class Good implements Serializable {
         if (goodID < 0) {
             throw new GoodException("GoodID must be a non-negative value!");
         }
+    }
+
+    public int getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(int timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    public int getWriteTimeStamp() {
+        return writeTimeStamp;
+    }
+
+    public void setWriteTimeStamp(int writeTimeStamp) {
+        this.writeTimeStamp = writeTimeStamp;
+    }
+
+    public ArrayList<Pair<Integer, Boolean>> getReadList() {
+        return readList;
+    }
+
+    public void setReadList(ArrayList<Pair<Integer, Boolean>> readList) {
+        this.readList = readList;
+    }
+
+    public byte[] getSigma() {
+        return sigma;
+    }
+
+    public void setSigma(byte[] sigma) {
+        this.sigma = sigma;
+    }
+
+    public void initialize() {
+        timeStamp = 0;
+        writeTimeStamp = 0;
+        readList = new ArrayList<>();
+        sigma = null;
     }
 }
