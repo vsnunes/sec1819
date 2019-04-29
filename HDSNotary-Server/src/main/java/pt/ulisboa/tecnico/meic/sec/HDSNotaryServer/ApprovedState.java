@@ -18,6 +18,7 @@ public class ApprovedState extends TransactionState {
         Good good = transaction.getGood();
 
         synchronized (this) {
+            //write(good.getOwner().getUserID(), transaction.getBuyer().getUserID())
             good.setOwner(transaction.getBuyer());
 
             //item is now NOT for sell

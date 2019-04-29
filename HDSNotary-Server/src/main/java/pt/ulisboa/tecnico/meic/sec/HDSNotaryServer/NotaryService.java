@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
+import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryByzantineService;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.*;
 
@@ -22,7 +23,7 @@ import java.util.Iterator;
  * A Class for implementing NotaryInterface on Server
  */
 
-public class NotaryService extends UnicastRemoteObject implements NotaryInterface,Serializable {
+public class NotaryService extends UnicastRemoteObject implements NotaryInterface,Serializable, NotaryByzantineService {
 
     /** HashMap for match the ID with the object even though the object has an ID**/
     private HashMap<Integer, User> users;
@@ -114,6 +115,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             if (good.getOwner().getUserID() != userId) {
                 throw new GoodException("Good doesn't belong to you!");
             }
+
+            //write(bool, goodID)
             good.setForSell(bool);
             users.get(request.getUserID()).setClock(request.getUserClock());
             doWrite();
@@ -154,6 +157,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         Good good = goods.get(goodId);
         if(good != null){
+            //readResponse = read(goodId)
             request.setResponse(good.isForSell());
             return putHMAC(request);
         }
@@ -291,6 +295,28 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         goods.put(4,new Good(4, users.get(4)));
         goods.put(5,new Good(5, users.get(5)));
 
+    }
+
+    /*Byzantine service*/
+
+    @Override
+    public void initialize() throws RemoteException {
+        
+    }
+
+    @Override
+    public boolean receiveWriteTransfer(int ownerID, int buyerID) throws RemoteException {
+        return false;
+    }
+
+    @Override
+    public boolean receiveWriteIntention(boolean state, int goodID) throws RemoteException {
+        return false;
+    }
+
+    @Override
+    public boolean receiveReadGetState(int goodID) throws RemoteException {
+        return false;
     }
 
     /*
