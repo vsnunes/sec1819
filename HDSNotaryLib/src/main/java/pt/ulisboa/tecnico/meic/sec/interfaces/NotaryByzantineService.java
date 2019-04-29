@@ -5,12 +5,6 @@ import java.rmi.RemoteException;
 
 public interface NotaryByzantineService extends Remote {
 
-    /**
-     * initialize needed structures
-     * @throws RemoteException
-     */
-    void initialize() throws RemoteException;
-
     //void broadcastWriteTransfer(int ownerID, int buyerID) throws RemoteException;
 
     /**

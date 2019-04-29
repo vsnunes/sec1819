@@ -11,6 +11,9 @@
 
         <project.pteidlib.config>../HDSNotaryLib/src/main/resources/CitizenCard.cfg</project.pteidlib.config>
 
+        <!-- The Servers URLs -->
+        <project.nameserver.config>../HDSNotaryLib/src/main/resources/Servers.cfg</project.nameserver.config>
+
         <!-- Location of User certificates -->
         <project.users.cert.path>../HDSNotaryLib/src/main/resources/certs/user</project.users.cert.path>
         <project.users.cert.ext>.crt</project.users.cert.ext>
@@ -89,6 +92,10 @@
                         <systemProperty>
                             <key>project.notary.private</key>
                             <value>${project.notary.private}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <key>project.nameserver.config</key>
+                            <value>${project.nameserver.config}</value>
                         </systemProperty>
                     </systemProperties>
                 </configuration>
