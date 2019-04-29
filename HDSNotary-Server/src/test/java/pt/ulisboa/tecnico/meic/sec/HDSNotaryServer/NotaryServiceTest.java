@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +20,7 @@ import static org.junit.Assert.*;
 public class NotaryServiceTest {
 
     private Interaction request;
-    private NotaryService notary = NotaryService.getInstance();
+    private NotaryService notary;
 
     public NotaryServiceTest() throws RemoteException, GoodException {
         System.setProperty("project.users.cert.path","../HDSNotaryLib/src/main/resources/certs/user");
@@ -30,14 +31,15 @@ public class NotaryServiceTest {
     }
 
     @Before
-    public  void setUp(){
+    public  void setUp() throws RemoteException, GoodException {
         request = new Interaction();
+        notary = NotaryService.getInstance();
+        notary.createUser();
+        notary.createGood();
     }
 
     @Test
     public void intentionToSellTestTrue() throws GoodException, RemoteException, HDSSecurityException, NoSuchAlgorithmException {
-        notary.createGood();
-        notary.createUser();
 
         VirtualCertificate cert = new VirtualCertificate();
         cert.init("", new File(System.getProperty("project.user.private.path") +
@@ -57,8 +59,6 @@ public class NotaryServiceTest {
 
     @Test
     public void intentionToSellTestFalse() throws GoodException, RemoteException, HDSSecurityException, NoSuchAlgorithmException {
-        notary.createGood();
-        notary.createUser();
 
         VirtualCertificate cert = new VirtualCertificate();
         cert.init("", new File(System.getProperty("project.user.private.path") +
@@ -78,8 +78,6 @@ public class NotaryServiceTest {
 
     @Test
     public void getStateOfGoodTest() throws GoodException, RemoteException, HDSSecurityException, NoSuchAlgorithmException {
-        notary.createGood();
-        notary.createUser();
 
         VirtualCertificate cert = new VirtualCertificate();
         cert.init("", new File(System.getProperty("project.user.private.path") +
@@ -99,8 +97,6 @@ public class NotaryServiceTest {
 
     @Test
     public void transferGoodTest() throws HDSSecurityException, NoSuchAlgorithmException, RemoteException, GoodException, TransactionException {
-        notary.createGood();
-        notary.createUser();
         VirtualCertificate cert = new VirtualCertificate();
         cert.init("", new File(System.getProperty("project.user.private.path") +
                 1 + System.getProperty("project.user.private.ext")).getAbsolutePath());
@@ -129,8 +125,6 @@ public class NotaryServiceTest {
 
     @Test(expected = HDSSecurityException.class)
     public void replayAttackIntentionToSell() throws GoodException, RemoteException, HDSSecurityException, NoSuchAlgorithmException {
-        notary.createGood();
-        notary.createUser();
         VirtualCertificate cert = new VirtualCertificate();
         cert.init("", new File(System.getProperty("project.user.private.path") +
                 1 + System.getProperty("project.user.private.ext")).getAbsolutePath());
@@ -153,8 +147,6 @@ public class NotaryServiceTest {
 
     @Test(expected = HDSSecurityException.class)
     public void replayAttackTransferGoods() throws GoodException, RemoteException, HDSSecurityException, NoSuchAlgorithmException, TransactionException {
-        notary.createGood();
-        notary.createUser();
         VirtualCertificate cert = new VirtualCertificate();
         cert.init("", new File(System.getProperty("project.user.private.path") +
                 1 + System.getProperty("project.user.private.ext")).getAbsolutePath());
@@ -195,6 +187,11 @@ public class NotaryServiceTest {
         notary.transferGood(buyerRequest);
         notary.transferGood(secondRequest);
 
+    }
+
+    @After
+    public void tearDown() {
+        notary.reset();
     }
 
 }

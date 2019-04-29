@@ -8,8 +8,8 @@ import static org.junit.Assert.*;
 
 public class TransactionTest {
 
-    private User seller = new User(12, null);
-    private User buyer = new User(14,null);
+    private User seller;
+    private User buyer;
     private Good good;
     private Transaction transaction;
 
@@ -20,6 +20,8 @@ public class TransactionTest {
 
     @Before
     public void setUp() throws  GoodException{
+        seller = new User(12, null);
+        buyer = new User(14,null);
         good = new Good(1, seller, true);
         transaction = new Transaction(1, seller, buyer, good);
     }
