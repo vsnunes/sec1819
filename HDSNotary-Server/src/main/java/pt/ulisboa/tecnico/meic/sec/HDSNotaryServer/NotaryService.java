@@ -17,10 +17,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -55,9 +52,16 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     /** Thread pool for servers tasks **/
     private ThreadPoolExecutor poolExecutor;
 
+    /** Number of replicas*/
+    private final int REPLICAS_N = 3;
+    /** Maximum number of byzantine faults*/
+    private final int BYZANTINE_F = 0;
+    /** byzantine quorum*/
+    private int pre_byzantine_quorum;
+
     private NotaryService() throws RemoteException, GoodException {
         super();
-
+        initialization();
         USERSGOODS_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + ".bin";
         USERSGOODSTMP_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + "TMP.bin";
         TRANSACTIONS_FILE = "Transaction" + NOTARY_SERVICE_PORT + ".bin";
@@ -80,6 +84,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             }
         }
         instance = this;
+        pre_byzantine_quorum = (REPLICAS_N + BYZANTINE_F)/2;
     }
 
     public boolean isUsingVirtualCerts() {
@@ -171,6 +176,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         Good good = goods.get(goodId);
         if(good != null){
             //readResponse = read(goodId)
+            broadcastReadGetState(goodId);
             request.setResponse(good.isForSell());
             return putHMAC(request);
         }
@@ -312,18 +318,18 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     /*Byzantine service*/
     @Override
-    public boolean receiveWriteTransfer(int ownerID, int buyerID) throws RemoteException {
-        return false;
+    public Good receiveWriteTransfer(int ownerID, int buyerID) throws RemoteException {
+        return null;
     }
 
     @Override
-    public boolean receiveWriteIntention(boolean state, int goodID) throws RemoteException {
-        return false;
+    public Good receiveWriteIntention(boolean state, int goodID) throws RemoteException {
+        return null;
     }
 
     @Override
-    public boolean receiveReadGetState(int goodID) throws RemoteException {
-        return false;
+    public Good receiveReadGetState(int goodID) throws RemoteException {
+        return null;
     }
 
     public void initialization() {
@@ -381,11 +387,26 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     boolean broadcastReadGetState(int goodID) throws RemoteException {
-        Future<Good> response = null;
+        List responses = Collections.synchronizedList(new ArrayList<Future<Good>>());
 
         for (NotaryByzantineService notaryByzantineService : servers) {
-            response = poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
-                    NotaryByzantineTask.Operation.GETSTATEOFGOOD, goodID));
+            responses.add(poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
+                    NotaryByzantineTask.Operation.GETSTATEOFGOOD, goodID)));
+        }
+
+        while(true) {
+            if(responses.size() > pre_byzantine_quorum) {
+                System.out.println("out " + responses.size());
+                break;
+            }
+            else {
+                System.out.println("not yet " + responses.size());
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return false;
         /*try {
