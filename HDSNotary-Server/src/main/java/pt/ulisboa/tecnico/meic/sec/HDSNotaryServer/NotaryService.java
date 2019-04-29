@@ -37,7 +37,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private int transactionCounter = 0;
 
     private static NotaryService instance;
-    private static boolean forTest = false;
 
     /** By default Notary uses virtual certificates **/
     private boolean usingVirtualCerts = true;
@@ -59,11 +58,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private final int BYZANTINE_F = 0;
     /** byzantine quorum*/
     private int pre_byzantine_quorum;
+    /** initialize when first operation started */
+    private boolean isFirst = false;
 
     private NotaryService() throws RemoteException, GoodException {
         super();
-        if (!forTest) //only do init when not on test
-            initialization();
+        servers = new ArrayList<>();
         USERSGOODS_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + ".bin";
         USERSGOODSTMP_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + "TMP.bin";
         TRANSACTIONS_FILE = "Transaction" + NOTARY_SERVICE_PORT + ".bin";
@@ -103,14 +103,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         }
         return instance;
     }
-
-    /**
-     * Set this instance to be test only
-     * @param val
-     */
-    public static void setForTest(boolean val) {
-        forTest = val;
-    }
+    
 
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
@@ -161,6 +154,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
+        if(!isFirst) {
+            initialization();
+        }
         int goodId = request.getGoodID();
         int userId = request.getUserID();
 
@@ -186,7 +182,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         Good good = goods.get(goodId);
         if(good != null){
             //readResponse = read(goodId)
-            //broadcastReadGetState(goodId);
+            broadcastReadGetState(goodId);
             request.setResponse(good.isForSell());
             return putHMAC(request);
         }

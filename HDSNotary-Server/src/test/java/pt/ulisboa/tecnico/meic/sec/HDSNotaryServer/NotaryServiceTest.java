@@ -34,7 +34,6 @@ public class NotaryServiceTest {
     @Before
     public  void setUp() throws RemoteException, GoodException {
         request = new Interaction();
-        NotaryService.setForTest(true); //do not init real connections to servers
         notary = NotaryService.getInstance();
         notary.createUser();
         notary.createGood();
