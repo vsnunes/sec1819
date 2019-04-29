@@ -37,6 +37,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private int transactionCounter = 0;
 
     private static NotaryService instance;
+    private static boolean forTest = false;
 
     /** By default Notary uses virtual certificates **/
     private boolean usingVirtualCerts = true;
@@ -61,7 +62,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     private NotaryService() throws RemoteException, GoodException {
         super();
-        initialization();
+        if (!forTest) //only do init when not on test
+            initialization();
         USERSGOODS_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + ".bin";
         USERSGOODSTMP_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + "TMP.bin";
         TRANSACTIONS_FILE = "Transaction" + NOTARY_SERVICE_PORT + ".bin";
@@ -100,6 +102,14 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             return new NotaryService();
         }
         return instance;
+    }
+
+    /**
+     * Set this instance to be test only
+     * @param val
+     */
+    public static void setForTest(boolean val) {
+        forTest = val;
     }
 
     @Override
@@ -176,7 +186,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         Good good = goods.get(goodId);
         if(good != null){
             //readResponse = read(goodId)
-            broadcastReadGetState(goodId);
+            //broadcastReadGetState(goodId);
             request.setResponse(good.isForSell());
             return putHMAC(request);
         }

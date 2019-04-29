@@ -28,11 +28,13 @@ public class NotaryServiceTest {
         System.setProperty("project.notary.private","../HDSNotaryLib/src/main/resources/certs/java_certs/private_rootca_pkcs8.pem");
         System.setProperty("project.user.private.path", "../HDSNotaryLib/src/main/resources/certs/java_certs/private_user");
         System.setProperty("project.user.private.ext", "_pkcs8.pem");
+        System.setProperty("project.nameserver.config", "../HDSNotaryLib/src/main/resources/Servers.cfg");
     }
 
     @Before
     public  void setUp() throws RemoteException, GoodException {
         request = new Interaction();
+        NotaryService.setForTest(true); //do not init real connections to servers
         notary = NotaryService.getInstance();
         notary.createUser();
         notary.createGood();
