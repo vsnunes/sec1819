@@ -2,7 +2,7 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
-import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.interfaces.NotaryByzantineService;
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.interfaces.NotaryByzantineInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.*;
 
@@ -18,7 +18,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -27,7 +26,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * A Class for implementing NotaryInterface on Server
  */
 
-public class NotaryService extends UnicastRemoteObject implements NotaryInterface,Serializable, NotaryByzantineService {
+public class NotaryService extends UnicastRemoteObject implements NotaryInterface,Serializable {
 
     /** HashMap for match the ID with the object even though the object has an ID**/
     private HashMap<Integer, User> users;
@@ -46,24 +45,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private static String USERSGOODSTMP_FILE;
     private static String TRANSACTIONSTMP_FILE;
 
-    /** The list of remote objects of the servers **/
-    private List<NotaryByzantineService> servers;
-
-    /** Thread pool for servers tasks **/
-    private ThreadPoolExecutor poolExecutor;
-
-    /** Number of replicas*/
-    private final int REPLICAS_N = 3;
-    /** Maximum number of byzantine faults*/
-    private final int BYZANTINE_F = 0;
-    /** byzantine quorum*/
-    private int pre_byzantine_quorum;
-    /** initialize when first operation started */
-    private boolean isFirst = false;
-
     private NotaryService() throws RemoteException, GoodException {
         super();
-        servers = new ArrayList<>();
         USERSGOODS_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + ".bin";
         USERSGOODSTMP_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + "TMP.bin";
         TRANSACTIONS_FILE = "Transaction" + NOTARY_SERVICE_PORT + ".bin";
@@ -86,7 +69,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             }
         }
         instance = this;
-        pre_byzantine_quorum = (REPLICAS_N + BYZANTINE_F)/2;
     }
 
     public boolean isUsingVirtualCerts() {
@@ -154,9 +136,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
-        if(!isFirst) {
-            initialization();
-        }
         int goodId = request.getGoodID();
         int userId = request.getUserID();
 
@@ -182,7 +161,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         Good good = goods.get(goodId);
         if(good != null){
             //readResponse = read(goodId)
-            broadcastReadGetState(goodId);
             request.setResponse(good.isForSell());
             return putHMAC(request);
         }
@@ -321,109 +299,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         goods.put(5,new Good(5, users.get(5)));
 
     }
-
-    /*Byzantine service*/
-    @Override
-    public Good receiveWriteTransfer(int ownerID, int buyerID) throws RemoteException {
-        return null;
-    }
-
-    @Override
-    public Good receiveWriteIntention(boolean state, int goodID) throws RemoteException {
-        return null;
-    }
-
-    @Override
-    public Good receiveReadGetState(int goodID) throws RemoteException {
-        return null;
-    }
-
-    public void initialization() {
-        try {
-            List<String> urls = CFGHelper.fetchURLsFromCfg(System.getProperty("project.nameserver.config"),0);
-            for (String url : urls) {
-                try {
-                    servers.add((NotaryByzantineService) Naming.lookup(url));
-                } catch (NotBoundException e) {
-                    e.printStackTrace();
-                }  catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            poolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    boolean broadcastWriteTransfer(int ownerID, int buyerID) throws RemoteException {
-        Future<Good> response = null;
-
-        for (NotaryByzantineService notaryByzantineService : servers) {
-            response = poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
-                    NotaryByzantineTask.Operation.TRANSFERGOOD, ownerID,buyerID));
-        }
-        return false;
-        /*try {
-            return response.get();
-        } catch (InterruptedException e) {
-            throw new RemoteException(e.getMessage());
-        } catch (ExecutionException e) {
-            throw new RemoteException(e.getMessage());
-        }*/
-
-    }
-
-    boolean broadcastWriteIntention(boolean state, int goodID) throws RemoteException {
-        Future<Good> response = null;
-
-        for (NotaryByzantineService notaryByzantineService : servers) {
-            response = poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
-                    NotaryByzantineTask.Operation.INTENTION2SELL, state,goodID));
-        }
-        return false;
-        /*try {
-            return response.get();
-        } catch (InterruptedException e) {
-            throw new RemoteException(e.getMessage());
-        } catch (ExecutionException e) {
-            throw new RemoteException(e.getMessage());
-        }    */
-    }
-
-    boolean broadcastReadGetState(int goodID) throws RemoteException {
-        List responses = Collections.synchronizedList(new ArrayList<Future<Good>>());
-
-        for (NotaryByzantineService notaryByzantineService : servers) {
-            responses.add(poolExecutor.submit(new NotaryByzantineTask(notaryByzantineService,
-                    NotaryByzantineTask.Operation.GETSTATEOFGOOD, goodID)));
-        }
-
-        while(true) {
-            if(responses.size() > pre_byzantine_quorum) {
-                System.out.println("out " + responses.size());
-                break;
-            }
-            else {
-                System.out.println("not yet " + responses.size());
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return false;
-        /*try {
-            return response.get().isForSell();
-        } catch (InterruptedException e) {
-            throw new RemoteException(e.getMessage());
-        } catch (ExecutionException e) {
-            throw new RemoteException(e.getMessage());
-        }    */
-    }
-
 
 
     /*

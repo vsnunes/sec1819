@@ -5,7 +5,7 @@ import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Good;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface NotaryByzantineService extends Remote {
+public interface NotaryByzantineInterface extends Remote {
 
     //void broadcastWriteTransfer(int ownerID, int buyerID) throws RemoteException;
 
