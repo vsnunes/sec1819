@@ -1,6 +1,9 @@
 package pt.ulisboa.tecnico.meic.sec.util;
 
+import javafx.util.Pair;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * A Class for describing interaction between entities (Notary <-> User) or (User <-> User)
@@ -18,6 +21,12 @@ public class Interaction implements Serializable {
     private int userClock;
     private int buyerClock;
     private int sellerClock;
+
+    private int rid;
+    private int wts;
+
+
+    private byte[] sigma;
 
 
     public Interaction(){
@@ -124,6 +133,22 @@ public class Interaction implements Serializable {
 
     public void setSellerClock(int sellerClock) {
         this.sellerClock = sellerClock;
+    }
+
+    public int getRid() {
+        return rid;
+    }
+
+    public void setRid(int rid) {
+        this.rid = rid;
+    }
+
+    public int getWts() {
+        return wts;
+    }
+
+    public void setWts(int wts) {
+        this.wts = wts;
     }
 
     @Override

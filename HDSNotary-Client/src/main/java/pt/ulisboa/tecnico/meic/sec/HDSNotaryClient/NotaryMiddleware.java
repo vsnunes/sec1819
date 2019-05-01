@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 
+import javafx.util.Pair;
 import pt.ulisboa.tecnico.meic.sec.HDSNotaryClient.exceptions.NotaryMiddlewareException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
@@ -16,11 +17,9 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 
 /**
  * Middleware for Notary operations
@@ -36,18 +35,30 @@ public class NotaryMiddleware implements NotaryInterface {
      * If the file contain more urls than this value then they will ignored!
      * 0 value means to considered all replicas from the Servers.cfg file
      */
-    private static final int REPLICAS_N = 3;
+    private static final int REPLICAS_N = 4;
 
     /** Maximum number of Byzantine faults
      * the maximum number of faults that may occur while preserving the correctness of the HDS Notary system
      **/
     private static final int BYZANTINE_F = 0;
 
+    private int byzantine_quorum = ((REPLICAS_N+BYZANTINE_F)/2) + 1;
+
     /** The list of remote objects of the servers **/
     private List<NotaryInterface> servers;
 
     /** Thread pool for servers tasks **/
     private ThreadPoolExecutor poolExecutor;
+
+    /** read id */
+    private int rid = 0;
+
+    /** write timeStamp */
+    private int wts = 0;
+
+    /** list o tuples interactions, but the important information is the tuple <wts, value> */
+    private ArrayList<Interaction> readList;
+
 
     public NotaryMiddleware(String pathToServersCfg) throws IOException, NotaryMiddlewareException {
 
@@ -71,7 +82,7 @@ public class NotaryMiddleware implements NotaryInterface {
             }
         }
 
-        poolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+        poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(REPLICAS_N);
     }
 
     @Override
@@ -93,19 +104,59 @@ public class NotaryMiddleware implements NotaryInterface {
 
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
-        Future<Interaction> response = null;
+        /** create readList */
+        readList = new ArrayList<Interaction>();
+        CompletionService<Interaction> completionService =
+                new ExecutorCompletionService<Interaction>(poolExecutor);
 
+        /** increment id of current read operation*/
+        this.rid++;
         for (NotaryInterface notaryInterface : servers) {
-            response = poolExecutor.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.GETSTATEOFGOOD, request));
+            completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.GETSTATEOFGOOD, request));
         }
 
-        try {
-            return response.get();
-        } catch (InterruptedException e) {
-            throw new RemoteException(e.getMessage());
-        } catch (ExecutionException e) {
-            throw new RemoteException(e.getMessage());
+        int received = 0;
+        boolean errors = false;
+
+        while(received < byzantine_quorum && !errors) {
+            Future<Interaction> resultFuture = null;
+            try {
+                resultFuture = completionService.take(); //blocks if none available
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                Interaction result = resultFuture.get();
+                /** signature must be verified, if not valid continue */
+                readList.add(result);
+                received ++;
+            }
+            catch(Exception e) {
+                //log
+                errors = true;
+                e.printStackTrace();
+            }
         }
+
+        /** here we choose the value with the highest wts from readlist and then clean readList*/
+        /*if(!errors) {
+            return this.getHighestTS();
+        }
+
+        else {
+            return null;
+        }*/
+
+
+        System.out.println("received: "+received);
+
+        return readList.get(0);
+
+    }
+    /** iterate readList and retrieve interaction with highest TS */
+    private Interaction getHighestTS() {
+        return null;
     }
 
     @Override

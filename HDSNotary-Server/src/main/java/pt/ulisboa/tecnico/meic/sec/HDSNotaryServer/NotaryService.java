@@ -537,9 +537,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         }
         File tmpFile= new File(tmp);
 
-        System.out.println(originalFile.renameTo(new File("dummy.bin")));
+        System.out.println(originalFile.renameTo(new File("dummy" + tmp)));
         System.out.println(tmpFile.renameTo(new File(original)));
-        File dummy = new File("dummy.bin");
+        File dummy = new File("dummy"+tmp);
         System.out.println(dummy.delete());
 
     }
