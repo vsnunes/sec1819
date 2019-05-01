@@ -22,7 +22,6 @@ public class Interaction implements Serializable {
     private int buyerClock;
     private int sellerClock;
 
-    private int rid;
     private int wts;
 
 
@@ -40,6 +39,7 @@ public class Interaction implements Serializable {
         userClock = 0;
         buyerClock = 0;
         sellerClock = 0;
+        wts = 20;
     }
 
     public byte[] getHmac() {
@@ -132,14 +132,6 @@ public class Interaction implements Serializable {
 
     public void setSellerClock(int sellerClock) {
         this.sellerClock = sellerClock;
-    }
-
-    public int getRid() {
-        return rid;
-    }
-
-    public void setRid(int rid) {
-        this.rid = rid;
     }
 
     public int getWts() {

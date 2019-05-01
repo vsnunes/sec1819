@@ -6,16 +6,17 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
-import pt.ulisboa.tecnico.meic.sec.util.CFGHelper;
-import pt.ulisboa.tecnico.meic.sec.util.Interaction;
+import pt.ulisboa.tecnico.meic.sec.util.*;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,11 +51,11 @@ public class NotaryMiddleware implements NotaryInterface {
     /** Thread pool for servers tasks **/
     private ThreadPoolExecutor poolExecutor;
 
-    /** read id */
-    private int rid = 0;
-
     /** write timeStamp */
     private int wts = 0;
+
+    /** sign requests */
+    private byte[] sigma;
 
 
     public NotaryMiddleware(String pathToServersCfg) throws IOException, NotaryMiddlewareException {
@@ -93,46 +94,71 @@ public class NotaryMiddleware implements NotaryInterface {
         this.wts++;
         request.setWts(this.wts);
         /** sign here */
-        for (NotaryInterface notaryInterface : servers) {
-            completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
-        }
+        Certification cert = new VirtualCertificate();
+        cert.init("", new File(System.getProperty("project.user.private.path") +
+                ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
-        int received = 0;
-        boolean errors = false;
+        /*prepare request arguments*/
+        try {
+                System.out.println("zé assinado: " + ""+request.getWts()+request.getResponse());
+                sigma = Digest.createDigest(""+request.getWts()+request.getResponse(), cert);
 
-        while(received < byzantine_quorum && !errors) {
-            Future<Interaction> resultFuture = null;
-            try {
-                resultFuture = completionService.take(); //blocks if none available
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            for (NotaryInterface notaryInterface : servers) {
+                completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
             }
-            try {
-                Interaction result = resultFuture.get();
-                /** signature must be verified, if not valid continue */
-                writeList.add(result);
-                received ++;
+
+            int received = 0;
+            boolean errors = false;
+
+            while(received < byzantine_quorum && !errors) {
+                Future<Interaction> resultFuture = null;
+                try {
+                    resultFuture = completionService.take(); //blocks if none available
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    Interaction result = resultFuture.get();
+                    /** signature must be verified, if not valid continue */
+                    writeList.add(result);
+                    received ++;
+                }
+                catch(Exception e) {
+                    //log
+                    errors = true;
+                    e.printStackTrace();
+                }
             }
-            catch(Exception e) {
-                //log
-                errors = true;
-                e.printStackTrace();
+
+            /** here we choose the value with the highest wts from writeList and then clean writeList*/
+            if(!errors) {
+                System.out.println("received: "+received);
+                return this.getHighestTS(writeList);
+            }
+
+            else {
+                return null;
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    /** iterate readList and retrieve interaction with highest TS */
+    private Interaction getHighestTS(ArrayList<Interaction> list) {
+        Interaction fresherOne = null;
+        for(Interaction interaction:list) {
+            if(fresherOne == null) {
+                fresherOne = interaction;
+            }
+            else {
+                if(interaction.getWts() > fresherOne.getWts()) {
+                    fresherOne = interaction;
+                }
             }
         }
-
-        /** here we choose the value with the highest wts from writeList and then clean writeList*/
-        /*if(!errors) {
-            return this.getHighestTS();
-        }
-
-        else {
-            return null;
-        }*/
-
-        System.out.println("received: "+received);
-
-        return writeList.get(0);
+        return fresherOne;
     }
 
     @Override
@@ -142,9 +168,6 @@ public class NotaryMiddleware implements NotaryInterface {
         CompletionService<Interaction> completionService =
                 new ExecutorCompletionService<Interaction>(poolExecutor);
 
-        /** increment id of current read operation*/
-        this.rid++;
-        request.setRid(this.rid);
         for (NotaryInterface notaryInterface : servers) {
             completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.GETSTATEOFGOOD, request));
         }
@@ -162,7 +185,17 @@ public class NotaryMiddleware implements NotaryInterface {
             }
             try {
                 Interaction result = resultFuture.get();
-                /** signature must be verified, if not valid continue */
+                VirtualCertificate clientCert = new VirtualCertificate();
+                clientCert.init(new File(System.getProperty("project.users.cert.path") + ClientService.userID + System.getProperty("project.users.cert.ext")).getAbsolutePath());
+
+                /*compare hmacs*/
+                if(Digest.verify(sigma,""+result.getWts()+result.getResponse(), clientCert) == false) {
+                    System.out.println("zé assinado: " + ""+result.getWts()+result.getResponse());
+                    System.out.println("zé bizantino!");
+                    continue;
+                }
+
+
                 readList.add(result);
                 received ++;
             }
@@ -174,24 +207,17 @@ public class NotaryMiddleware implements NotaryInterface {
         }
 
         /** here we choose the value with the highest wts from readlist and then clean readList*/
-        /*if(!errors) {
-            return this.getHighestTS();
+        if(!errors) {
+            return this.getHighestTS(readList);
         }
 
         else {
             return null;
-        }*/
+        }
 
-
-        System.out.println("received: "+received);
-
-        return readList.get(0);
 
     }
-    /** iterate readList and retrieve interaction with highest TS */
-    private Interaction getHighestTS() {
-        return null;
-    }
+
 
     @Override
     public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException {
@@ -204,46 +230,55 @@ public class NotaryMiddleware implements NotaryInterface {
         this.wts++;
         request.setWts(this.wts);
         /** sign here */
-        for (NotaryInterface notaryInterface : servers) {
-            completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.TRANSFERGOOD, request));
-        }
+        Certification cert = new VirtualCertificate();
+        cert.init("", new File(System.getProperty("project.user.private.path") +
+                ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
-        int received = 0;
-        boolean errors = false;
+        /*prepare request arguments*/
+        try {
+            sigma = Digest.createDigest(""+wts+request.getResponse(), cert);
 
-        while(received < byzantine_quorum && !errors) {
-            Future<Interaction> resultFuture = null;
-            try {
-                resultFuture = completionService.take(); //blocks if none available
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            for (NotaryInterface notaryInterface : servers) {
+                completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.TRANSFERGOOD, request));
             }
-            try {
-                Interaction result = resultFuture.get();
-                /** signature must be verified, if not valid continue */
-                writeList.add(result);
-                received ++;
+
+            int received = 0;
+            boolean errors = false;
+
+            while(received < byzantine_quorum && !errors) {
+                Future<Interaction> resultFuture = null;
+                try {
+                    resultFuture = completionService.take(); //blocks if none available
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    Interaction result = resultFuture.get();
+                    /** signature must be verified, if not valid continue */
+                    writeList.add(result);
+                    received ++;
+                }
+                catch(Exception e) {
+                    //log
+                    errors = true;
+                    e.printStackTrace();
+                }
             }
-            catch(Exception e) {
-                //log
-                errors = true;
-                e.printStackTrace();
+
+            /** here we choose the value with the highest wts from writeList and then clean writeList*/
+            if(!errors) {
+                System.out.println("received: "+received);
+                return this.getHighestTS(writeList);
             }
+
+            else {
+                return null;
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
-
-        /** here we choose the value with the highest wts from writeList and then clean writeList*/
-        /*if(!errors) {
-            return this.getHighestTS();
-        }
-
-        else {
-            return null;
-        }*/
-
-        System.out.println("received: "+received);
-
-        return writeList.get(0);
+        return null;
     }
 
     @Override
