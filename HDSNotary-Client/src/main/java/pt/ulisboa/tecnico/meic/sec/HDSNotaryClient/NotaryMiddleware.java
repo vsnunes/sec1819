@@ -56,9 +56,6 @@ public class NotaryMiddleware implements NotaryInterface {
     /** write timeStamp */
     private int wts = 0;
 
-    /** list o tuples interactions, but the important information is the tuple <wts, value> */
-    private ArrayList<Interaction> readList;
-
 
     public NotaryMiddleware(String pathToServersCfg) throws IOException, NotaryMiddlewareException {
 
@@ -87,30 +84,67 @@ public class NotaryMiddleware implements NotaryInterface {
 
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
-        Future<Interaction> response = null;
+        /** create writeList */
+        ArrayList<Interaction> writeList = new ArrayList<Interaction>();
+        CompletionService<Interaction> completionService =
+                new ExecutorCompletionService<Interaction>(poolExecutor);
 
+        /** increment id of current read operation*/
+        this.wts++;
+        request.setWts(this.wts);
+        /** sign here */
         for (NotaryInterface notaryInterface : servers) {
-            response = poolExecutor.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
+            completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
         }
 
-        try {
-            return response.get();
-        } catch (InterruptedException e) {
-            throw new RemoteException(e.getMessage());
-        } catch (ExecutionException e) {
-            throw new RemoteException(e.getMessage());
+        int received = 0;
+        boolean errors = false;
+
+        while(received < byzantine_quorum && !errors) {
+            Future<Interaction> resultFuture = null;
+            try {
+                resultFuture = completionService.take(); //blocks if none available
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                Interaction result = resultFuture.get();
+                /** signature must be verified, if not valid continue */
+                writeList.add(result);
+                received ++;
+            }
+            catch(Exception e) {
+                //log
+                errors = true;
+                e.printStackTrace();
+            }
         }
+
+        /** here we choose the value with the highest wts from writeList and then clean writeList*/
+        /*if(!errors) {
+            return this.getHighestTS();
+        }
+
+        else {
+            return null;
+        }*/
+
+        System.out.println("received: "+received);
+
+        return writeList.get(0);
     }
 
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
         /** create readList */
-        readList = new ArrayList<Interaction>();
+        ArrayList<Interaction> readList = new ArrayList<Interaction>();
         CompletionService<Interaction> completionService =
                 new ExecutorCompletionService<Interaction>(poolExecutor);
 
         /** increment id of current read operation*/
         this.rid++;
+        request.setRid(this.rid);
         for (NotaryInterface notaryInterface : servers) {
             completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.GETSTATEOFGOOD, request));
         }
@@ -161,19 +195,55 @@ public class NotaryMiddleware implements NotaryInterface {
 
     @Override
     public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException {
-        Future<Interaction> response = null;
+        /** create writeList */
+        ArrayList<Interaction> writeList = new ArrayList<Interaction>();
+        CompletionService<Interaction> completionService =
+                new ExecutorCompletionService<Interaction>(poolExecutor);
 
+        /** increment id of current read operation*/
+        this.wts++;
+        request.setWts(this.wts);
+        /** sign here */
         for (NotaryInterface notaryInterface : servers) {
-            response = poolExecutor.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.TRANSFERGOOD, request));
+            completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.TRANSFERGOOD, request));
         }
 
-        try {
-            return response.get();
-        } catch (InterruptedException e) {
-            throw new RemoteException(e.getMessage());
-        } catch (ExecutionException e) {
-            throw new RemoteException(e.getMessage());
+        int received = 0;
+        boolean errors = false;
+
+        while(received < byzantine_quorum && !errors) {
+            Future<Interaction> resultFuture = null;
+            try {
+                resultFuture = completionService.take(); //blocks if none available
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                Interaction result = resultFuture.get();
+                /** signature must be verified, if not valid continue */
+                writeList.add(result);
+                received ++;
+            }
+            catch(Exception e) {
+                //log
+                errors = true;
+                e.printStackTrace();
+            }
         }
+
+        /** here we choose the value with the highest wts from writeList and then clean writeList*/
+        /*if(!errors) {
+            return this.getHighestTS();
+        }
+
+        else {
+            return null;
+        }*/
+
+        System.out.println("received: "+received);
+
+        return writeList.get(0);
     }
 
     @Override

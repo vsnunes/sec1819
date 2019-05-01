@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryClient;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 
+import java.util.Random;
 import java.util.concurrent.Callable;
 
 /**
@@ -24,7 +25,9 @@ public class NotaryTask implements Callable<Interaction> {
 
     @Override
     public Interaction call() throws Exception {
-        Thread.sleep(10000);
+        Random random = new Random();
+        int randomNumber = random.nextInt(100);
+        Thread.sleep(randomNumber*10);
         switch (operation) {
             case INTENTION2SELL: return notaryInterface.intentionToSell(params);
             case GETSTATEOFGOOD: return notaryInterface.getStateOfGood(params);

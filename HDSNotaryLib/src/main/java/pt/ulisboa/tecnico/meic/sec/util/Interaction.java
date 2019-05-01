@@ -26,7 +26,6 @@ public class Interaction implements Serializable {
     private int wts;
 
 
-    private byte[] sigma;
 
 
     public Interaction(){
