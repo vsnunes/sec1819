@@ -120,7 +120,6 @@ public class NotaryMiddleware implements NotaryInterface {
                 }
                 try {
                     Interaction result = resultFuture.get();
-                    /** signature must be verified, if not valid continue */
                     writeList.add(result);
                     received ++;
                 }
@@ -268,7 +267,6 @@ public class NotaryMiddleware implements NotaryInterface {
                 }
                 try {
                     Interaction result = resultFuture.get();
-                    /** signature must be verified, if not valid continue */
                     writeList.add(result);
                     received ++;
                 }

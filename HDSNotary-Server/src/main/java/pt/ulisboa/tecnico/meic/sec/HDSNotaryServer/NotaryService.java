@@ -178,6 +178,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         int goodId = request.getGoodID();
         int sellerId = request.getSellerID();
         int buyerId = request.getBuyerID();
+        int wts = request.getWts();
 
         Good good = goods.get(goodId);
         User seller = users.get(sellerId);
@@ -230,6 +231,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             transaction.execute(); //change the ownership of the good
             seller.setClock(request.getSellerClock());
             buyer.setClock(request.getBuyerClock());
+            good.setWts(wts);
             doWrite();
             request.setResponse(true);
             return putHMAC(request);
