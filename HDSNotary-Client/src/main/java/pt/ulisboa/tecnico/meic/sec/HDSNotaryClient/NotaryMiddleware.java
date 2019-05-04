@@ -57,6 +57,9 @@ public class NotaryMiddleware implements NotaryInterface {
     /** sign requests */
     private byte[] sigma;
 
+    /**timeout for responses waiting */
+    private final int TIMEOUT = 5;
+
 
     public NotaryMiddleware(String pathToServersCfg) throws IOException, NotaryMiddlewareException {
 
@@ -113,8 +116,10 @@ public class NotaryMiddleware implements NotaryInterface {
             while(received < byzantine_quorum && !errors) {
                 Future<Interaction> resultFuture = null;
                 try {
-                    resultFuture = completionService.take(); //blocks if none available
-
+                    resultFuture = completionService.poll(TIMEOUT,TimeUnit.SECONDS); //blocks if none available
+                    if(resultFuture == null) {
+                        throw new GoodException("Byzantine quorum not achieved :(");
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -177,7 +182,10 @@ public class NotaryMiddleware implements NotaryInterface {
         while(received < byzantine_quorum && !errors) {
             Future<Interaction> resultFuture = null;
             try {
-                resultFuture = completionService.take(); //blocks if none available
+                resultFuture = completionService.poll(TIMEOUT, TimeUnit.SECONDS); //blocks if none available
+                if(resultFuture == null) {
+                    throw new GoodException("Byzantine quorum not achieved :(");
+                }
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -260,8 +268,10 @@ public class NotaryMiddleware implements NotaryInterface {
             while(received < byzantine_quorum && !errors) {
                 Future<Interaction> resultFuture = null;
                 try {
-                    resultFuture = completionService.take(); //blocks if none available
-
+                    resultFuture = completionService.poll(TIMEOUT, TimeUnit.SECONDS); //blocks if none available
+                    if(resultFuture == null) {
+                        return null;
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

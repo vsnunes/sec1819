@@ -108,6 +108,9 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             request.setSellerHMAC(Digest.createDigest(data, cert));
 
             response = notaryInterface.transferGood(request);
+            if(response == null) {
+                throw new GoodException("Byzantine quorum not achieved :(");
+            }
 
             /*checks answer from notary*/
             Certification notaryCert = new VirtualCertificate();
