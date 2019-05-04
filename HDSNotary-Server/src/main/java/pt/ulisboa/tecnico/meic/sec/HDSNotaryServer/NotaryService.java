@@ -92,6 +92,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         int goodId = request.getGoodID();
         int userId = request.getUserID();
         boolean bool = request.getResponse();
+        int wts = request.getWts();
 
         Certification cert = new VirtualCertificate();
 
@@ -121,6 +122,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
             //write(bool, goodID)
             good.setForSell(bool);
+            good.setWts(wts);
             users.get(request.getUserID()).setClock(request.getUserClock());
             doWrite();
 
@@ -162,6 +164,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         if(good != null){
             //readResponse = read(goodId)
             request.setResponse(good.isForSell());
+            request.setWts(goods.get(goodId).getWts());
             return putHMAC(request);
         }
         else{

@@ -18,6 +18,8 @@ public class Good implements Serializable {
 
     private User owner;
 
+    private int wts;
+
 
 
     /** Prevents the good from having concurrent transactions **/
@@ -70,6 +72,14 @@ public class Good implements Serializable {
 
     public void setInTransaction(boolean inTransaction) {
         this.inTransaction = inTransaction;
+    }
+
+    public int getWts() {
+        return wts;
+    }
+
+    public void setWts(int wts) {
+        this.wts = wts;
     }
 
     private void checkArguments(int goodID, User owner) throws GoodException {

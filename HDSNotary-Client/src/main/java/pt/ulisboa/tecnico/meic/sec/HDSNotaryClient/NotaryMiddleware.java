@@ -188,8 +188,10 @@ public class NotaryMiddleware implements NotaryInterface {
                 VirtualCertificate clientCert = new VirtualCertificate();
                 clientCert.init(new File(System.getProperty("project.users.cert.path") + ClientService.userID + System.getProperty("project.users.cert.ext")).getAbsolutePath());
 
-                /*compare hmacs*/
-                if(Digest.verify(sigma,""+result.getWts()+result.getResponse(), clientCert) == false) {
+                if(sigma==null) {
+                    throw new GoodException("To read you need to write something first");
+                }
+                else if(Digest.verify(sigma,""+result.getWts()+result.getResponse(), clientCert) == false) {
                     System.out.println("zé assinado: " + ""+result.getWts()+result.getResponse());
                     System.out.println("zé bizantino!");
                     continue;
@@ -199,7 +201,17 @@ public class NotaryMiddleware implements NotaryInterface {
                 readList.add(result);
                 received ++;
             }
-            catch(Exception e) {
+            catch(InterruptedException e) {
+                //log
+                errors = true;
+                e.printStackTrace();
+            }
+            catch(ExecutionException e) {
+                //log
+                errors = true;
+                e.printStackTrace();
+            }
+            catch(NoSuchAlgorithmException e) {
                 //log
                 errors = true;
                 e.printStackTrace();
@@ -208,6 +220,7 @@ public class NotaryMiddleware implements NotaryInterface {
 
         /** here we choose the value with the highest wts from readlist and then clean readList*/
         if(!errors) {
+            System.out.println("received: "+received);
             return this.getHighestTS(readList);
         }
 
