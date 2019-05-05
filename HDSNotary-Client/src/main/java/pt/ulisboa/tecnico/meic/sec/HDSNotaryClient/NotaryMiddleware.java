@@ -51,12 +51,6 @@ public class NotaryMiddleware implements NotaryInterface {
     /** Thread pool for servers tasks **/
     private ThreadPoolExecutor poolExecutor;
 
-    /** write timeStamp */
-    private int wts = 0;
-
-    /** sign requests */
-    private byte[] sigma;
-
     /**timeout for responses waiting */
     private final int TIMEOUT = 5;
 
@@ -94,8 +88,7 @@ public class NotaryMiddleware implements NotaryInterface {
                 new ExecutorCompletionService<Interaction>(poolExecutor);
 
         /** increment id of current read operation*/
-        this.wts++;
-        request.setWts(this.wts);
+        request.setWts(request.getWts()+1);
         /** sign here */
         Certification cert = new VirtualCertificate();
         cert.init("", new File(System.getProperty("project.user.private.path") +
@@ -104,7 +97,7 @@ public class NotaryMiddleware implements NotaryInterface {
         /*prepare request arguments*/
         try {
                 System.out.println("zé assinado: " + ""+request.getWts()+request.getResponse());
-                sigma = Digest.createDigest(""+request.getWts()+request.getResponse(), cert);
+                request.setSigma(Digest.createDigest(""+request.getWts()+request.getResponse(), cert));
 
             for (NotaryInterface notaryInterface : servers) {
                 completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
@@ -193,15 +186,18 @@ public class NotaryMiddleware implements NotaryInterface {
             try {
                 Interaction result = resultFuture.get();
                 VirtualCertificate clientCert = new VirtualCertificate();
-                clientCert.init(new File(System.getProperty("project.users.cert.path") + ClientService.userID + System.getProperty("project.users.cert.ext")).getAbsolutePath());
 
-                if(sigma==null) {
+                if(result.getSigma()==null) {
                     throw new GoodException("To read you need to write something first");
                 }
-                else if(Digest.verify(sigma,""+result.getWts()+result.getResponse(), clientCert) == false) {
-                    System.out.println("zé assinado: " + ""+result.getWts()+result.getResponse());
-                    System.out.println("zé bizantino!");
-                    continue;
+                else {
+                    System.out.println("owner: " + result.getOwnerID());
+                    clientCert.init(new File(System.getProperty("project.users.cert.path") + result.getOwnerID() + System.getProperty("project.users.cert.ext")).getAbsolutePath());
+                    if(Digest.verify(result.getSigma(),""+result.getWts()+result.getResponse(), clientCert) == false) {
+                        System.out.println("zé assinado: " + "" + result.getWts() + result.getResponse());
+                        System.out.println("zé bizantino!");
+                        continue;
+                    }
                 }
 
 
@@ -245,61 +241,48 @@ public class NotaryMiddleware implements NotaryInterface {
         ArrayList<Interaction> writeList = new ArrayList<Interaction>();
         CompletionService<Interaction> completionService =
                 new ExecutorCompletionService<Interaction>(poolExecutor);
-
-        /** increment id of current read operation*/
-        this.wts++;
-        request.setWts(this.wts);
-        /** sign here */
-        Certification cert = new VirtualCertificate();
-        cert.init("", new File(System.getProperty("project.user.private.path") +
-                ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
-
+        
         /*prepare request arguments*/
-        try {
-            sigma = Digest.createDigest(""+wts+request.getResponse(), cert);
 
-            for (NotaryInterface notaryInterface : servers) {
-                completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.TRANSFERGOOD, request));
-            }
-
-            int received = 0;
-            boolean errors = false;
-
-            while(received < byzantine_quorum && !errors) {
-                Future<Interaction> resultFuture = null;
-                try {
-                    resultFuture = completionService.poll(TIMEOUT, TimeUnit.SECONDS); //blocks if none available
-                    if(resultFuture == null) {
-                        return null;
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    Interaction result = resultFuture.get();
-                    writeList.add(result);
-                    received ++;
-                }
-                catch(Exception e) {
-                    //log
-                    errors = true;
-                    e.printStackTrace();
-                }
-            }
-
-            /** here we choose the value with the highest wts from writeList and then clean writeList*/
-            if(!errors) {
-                System.out.println("received: "+received);
-                return this.getHighestTS(writeList);
-            }
-
-            else {
-                return null;
-            }
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        for (NotaryInterface notaryInterface : servers) {
+            completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.TRANSFERGOOD, request));
         }
-        return null;
+
+        int received = 0;
+        boolean errors = false;
+
+        while(received < byzantine_quorum && !errors) {
+            Future<Interaction> resultFuture = null;
+            try {
+                resultFuture = completionService.poll(TIMEOUT, TimeUnit.SECONDS); //blocks if none available
+                if(resultFuture == null) {
+                    return null;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                Interaction result = resultFuture.get();
+                writeList.add(result);
+                received ++;
+            }
+            catch(Exception e) {
+                //log
+                errors = true;
+                e.printStackTrace();
+            }
+        }
+
+        /** here we choose the value with the highest wts from writeList and then clean writeList*/
+        if(!errors) {
+            System.out.println("received: "+received);
+            return this.getHighestTS(writeList);
+        }
+
+        else {
+            return null;
+        }
+
     }
 
     @Override

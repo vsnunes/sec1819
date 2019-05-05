@@ -77,6 +77,11 @@ public class BuyGood extends Operation {
 
             String data = "" + good + ClientService.userID + request.getBuyerClock() + request.getSellerClock();
             request.setBuyerHMAC(Digest.createDigest(data, cert));
+            /** increment id of current read operation*/
+            request.setWts(request.getWts()+1);
+            /** this signature is used to check byzantine things */
+            request.setSigma(Digest.createDigest(""+request.getWts()+request.getResponse(), cert));
+
 
             response = anotherClient.buyGood(request);
             if(response != null) {

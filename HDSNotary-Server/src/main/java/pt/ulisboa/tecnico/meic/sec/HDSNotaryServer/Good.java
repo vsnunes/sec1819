@@ -20,6 +20,8 @@ public class Good implements Serializable {
 
     private int wts;
 
+    private byte[] sigma;
+
 
 
     /** Prevents the good from having concurrent transactions **/
@@ -80,6 +82,14 @@ public class Good implements Serializable {
 
     public void setWts(int wts) {
         this.wts = wts;
+    }
+
+    public byte[] getSigma() {
+        return sigma;
+    }
+
+    public void setSigma(byte[] sigma) {
+        this.sigma = sigma;
     }
 
     private void checkArguments(int goodID, User owner) throws GoodException {

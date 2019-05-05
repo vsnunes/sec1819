@@ -23,7 +23,8 @@ public class Interaction implements Serializable {
     private int sellerClock;
 
     private int wts;
-
+    private byte[] sigma;
+    private int ownerID;
 
 
 
@@ -39,7 +40,7 @@ public class Interaction implements Serializable {
         userClock = 0;
         buyerClock = 0;
         sellerClock = 0;
-        wts = 20;
+        wts = 0;
     }
 
     public byte[] getHmac() {
@@ -140,6 +141,22 @@ public class Interaction implements Serializable {
 
     public void setWts(int wts) {
         this.wts = wts;
+    }
+
+    public byte[] getSigma() {
+        return sigma;
+    }
+
+    public void setSigma(byte[] sigma) {
+        this.sigma = sigma;
+    }
+
+    public int getOwnerID() {
+        return ownerID;
+    }
+
+    public void setOwnerID(int ownerID) {
+        this.ownerID = ownerID;
     }
 
     @Override

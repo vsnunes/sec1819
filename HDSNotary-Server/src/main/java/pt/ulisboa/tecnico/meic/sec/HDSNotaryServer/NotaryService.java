@@ -93,6 +93,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         int userId = request.getUserID();
         boolean bool = request.getResponse();
         int wts = request.getWts();
+        byte[] sigma = request.getSigma();
 
         Certification cert = new VirtualCertificate();
 
@@ -123,6 +124,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             //write(bool, goodID)
             good.setForSell(bool);
             good.setWts(wts);
+            good.setSigma(sigma);
             users.get(request.getUserID()).setClock(request.getUserClock());
             doWrite();
 
@@ -162,9 +164,10 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         Good good = goods.get(goodId);
         if(good != null){
-            //readResponse = read(goodId)
             request.setResponse(good.isForSell());
-            request.setWts(goods.get(goodId).getWts());
+            request.setWts(good.getWts());
+            request.setSigma(good.getSigma());
+            request.setOwnerID(good.getOwner().getUserID());
             return putHMAC(request);
         }
         else{
@@ -179,6 +182,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         int sellerId = request.getSellerID();
         int buyerId = request.getBuyerID();
         int wts = request.getWts();
+        byte[] sigma = request.getSigma();
 
         Good good = goods.get(goodId);
         User seller = users.get(sellerId);
@@ -232,6 +236,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             seller.setClock(request.getSellerClock());
             buyer.setClock(request.getBuyerClock());
             good.setWts(wts);
+            good.setSigma(sigma);
             doWrite();
             request.setResponse(true);
             return putHMAC(request);
