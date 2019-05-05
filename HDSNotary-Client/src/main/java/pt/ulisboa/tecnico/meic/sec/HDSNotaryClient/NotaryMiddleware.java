@@ -121,7 +121,12 @@ public class NotaryMiddleware implements NotaryInterface {
                     writeList.add(result);
                     received ++;
                 }
-                catch(Exception e) {
+                catch(ExecutionException e) {
+                    //log
+                    errors = true;
+                    e.printStackTrace();
+                }
+                catch(InterruptedException e) {
                     //log
                     errors = true;
                     e.printStackTrace();
@@ -224,9 +229,33 @@ public class NotaryMiddleware implements NotaryInterface {
         /** here we choose the value with the highest wts from readlist and then clean readList*/
         if(!errors) {
             System.out.println("received: "+received);
-            return this.getHighestTS(readList);
-        }
+            Interaction mostRecent = this.getHighestTS(readList);
 
+            if(mostRecent.getOwnerID() == ClientService.userID) {
+                Certification cert = new VirtualCertificate();
+                cert.init("", new File(System.getProperty("project.user.private.path") +
+                        ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
+
+                /*prepare request arguments*/
+                Interaction newRequest = new Interaction();
+                newRequest.setUserID(ClientService.userID);
+                newRequest.setGoodID(mostRecent.getGoodID());
+                newRequest.setResponse(mostRecent.getResponse());
+                newRequest.setUserClock(mostRecent.getUserClock());
+                try {
+                    newRequest.setHmac(Digest.createDigest(newRequest, cert));
+                    newRequest.setWts(mostRecent.getWts());
+                    newRequest.setSigma(mostRecent.getSigma());
+                    return this.intentionToSell(newRequest);
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+            else {
+                return mostRecent;
+            }
+        }
         else {
             return null;
         }
@@ -241,7 +270,7 @@ public class NotaryMiddleware implements NotaryInterface {
         ArrayList<Interaction> writeList = new ArrayList<Interaction>();
         CompletionService<Interaction> completionService =
                 new ExecutorCompletionService<Interaction>(poolExecutor);
-        
+
         /*prepare request arguments*/
 
         for (NotaryInterface notaryInterface : servers) {
