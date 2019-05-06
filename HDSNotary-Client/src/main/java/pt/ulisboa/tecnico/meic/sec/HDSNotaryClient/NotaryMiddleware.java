@@ -231,30 +231,29 @@ public class NotaryMiddleware implements NotaryInterface {
             System.out.println("received: "+received);
             Interaction mostRecent = this.getHighestTS(readList);
 
-            if(mostRecent.getOwnerID() == ClientService.userID) {
-                Certification cert = new VirtualCertificate();
-                cert.init("", new File(System.getProperty("project.user.private.path") +
-                        ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
-                /*prepare request arguments*/
-                Interaction newRequest = new Interaction();
-                newRequest.setUserID(ClientService.userID);
-                newRequest.setGoodID(mostRecent.getGoodID());
-                newRequest.setResponse(mostRecent.getResponse());
-                newRequest.setUserClock(mostRecent.getUserClock());
-                try {
-                    newRequest.setHmac(Digest.createDigest(newRequest, cert));
-                    newRequest.setWts(mostRecent.getWts());
-                    newRequest.setSigma(mostRecent.getSigma());
-                    return this.intentionToSell(newRequest);
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-            else {
+            Certification cert = new VirtualCertificate();
+            cert.init("", new File(System.getProperty("project.user.private.path") +
+                    mostRecent.getOwnerID() + System.getProperty("project.user.private.ext")).getAbsolutePath());
+
+            /*prepare request arguments*/
+            Interaction newRequest = new Interaction();
+            newRequest.setUserID(mostRecent.getOwnerID());
+            newRequest.setGoodID(mostRecent.getGoodID());
+            newRequest.setResponse(mostRecent.getResponse());
+            newRequest.setUserClock(mostRecent.getOwnerClock()+1);
+            try {
+                newRequest.setHmac(Digest.createDigest(newRequest, cert));
+                newRequest.setWts(mostRecent.getWts());
+                newRequest.setSigma(mostRecent.getSigma());
+                /** perform the write */
+                this.intentionToSell(newRequest);
                 return mostRecent;
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                return null;
             }
+
         }
         else {
             return null;

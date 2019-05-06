@@ -168,6 +168,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             request.setWts(good.getWts());
             request.setSigma(good.getSigma());
             request.setOwnerID(good.getOwner().getUserID());
+            request.setOwnerClock(good.getOwner().getClock());
             return putHMAC(request);
         }
         else{

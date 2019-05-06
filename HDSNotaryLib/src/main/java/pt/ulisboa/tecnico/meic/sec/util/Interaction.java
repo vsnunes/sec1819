@@ -25,6 +25,7 @@ public class Interaction implements Serializable {
     private int wts;
     private byte[] sigma;
     private int ownerID;
+    private int ownerClock;
 
 
 
@@ -157,6 +158,14 @@ public class Interaction implements Serializable {
 
     public void setOwnerID(int ownerID) {
         this.ownerID = ownerID;
+    }
+
+    public int getOwnerClock() {
+        return ownerClock;
+    }
+
+    public void setOwnerClock(int ownerClock) {
+        this.ownerClock = ownerClock;
     }
 
     @Override
