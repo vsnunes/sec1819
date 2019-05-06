@@ -126,10 +126,14 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             good.setWts(wts);
             good.setSigma(sigma);
             users.get(request.getUserID()).setClock(request.getUserClock());
-            doWrite();
-
             request.setResponse(bool);
-            return putHMAC(request);
+            request.setOwnerID(good.getOwner().getUserID());
+
+            good.setLastChangeHMAC(request.getHmac());
+            doWrite();
+            return putHMAC(request, true);
+
+            
         }
         else{
             throw new GoodException("Good does not exist.");
@@ -169,7 +173,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             request.setSigma(good.getSigma());
             request.setOwnerID(good.getOwner().getUserID());
             request.setOwnerClock(good.getOwner().getClock());
-            return putHMAC(request);
+            request.setLastChangeHMAC(good.getLastChangeHMAC());
+            return putHMAC(request, false);
         }
         else{
             throw new GoodException("Good does not exist.");
@@ -238,9 +243,13 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             buyer.setClock(request.getBuyerClock());
             good.setWts(wts);
             good.setSigma(sigma);
-            doWrite();
             request.setResponse(true);
-            return putHMAC(request);
+            request.setOwnerID(good.getOwner().getUserID());
+            good.setLastChangeHMAC(request.getBuyerHMAC());
+            doWrite();
+            return putHMAC(request, true);
+            
+
         }
         else {
             throw new TransactionException(transaction.getState().getObs());
@@ -259,13 +268,19 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         return -1;
     }
 
-    private Interaction putHMAC(Interaction request) throws HDSSecurityException {
+    private Interaction putHMAC(Interaction request, boolean write) throws HDSSecurityException {
         //HMAC using virtual certificates
         if (usingVirtualCerts) {
             Certification cert = new VirtualCertificate();
             try {
                 cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+                if(write) {
+                    request.setLastChangeHMAC(request.getHmac());
+                }
+
                 request.setHmac(Digest.createDigest(request, cert));
+                
+                
                 cert.stop();
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();

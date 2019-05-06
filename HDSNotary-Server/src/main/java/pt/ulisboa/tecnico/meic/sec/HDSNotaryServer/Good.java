@@ -22,6 +22,8 @@ public class Good implements Serializable {
 
     private byte[] sigma;
 
+    private byte[] lastChangeHMAC;
+
 
 
     /** Prevents the good from having concurrent transactions **/
@@ -90,6 +92,14 @@ public class Good implements Serializable {
 
     public void setSigma(byte[] sigma) {
         this.sigma = sigma;
+    }
+
+    public byte[] getLastChangeHMAC() {
+        return lastChangeHMAC;
+    }
+
+    public void setLastChangeHMAC(byte[] lastChangeHMAC) {
+        this.lastChangeHMAC = lastChangeHMAC;
     }
 
     private void checkArguments(int goodID, User owner) throws GoodException {

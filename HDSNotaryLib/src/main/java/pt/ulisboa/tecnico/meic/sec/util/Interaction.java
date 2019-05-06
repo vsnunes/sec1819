@@ -27,6 +27,8 @@ public class Interaction implements Serializable {
     private int ownerID;
     private int ownerClock;
 
+    private byte[] lastChangeHMAC;
+
 
 
     public Interaction(){
@@ -166,6 +168,14 @@ public class Interaction implements Serializable {
 
     public void setOwnerClock(int ownerClock) {
         this.ownerClock = ownerClock;
+    }
+
+    public byte[] getLastChangeHMAC() {
+        return lastChangeHMAC;
+    }
+
+    public void setLastChangeHMAC(byte[] lastChangeHMAC) {
+        this.lastChangeHMAC = lastChangeHMAC;
     }
 
     @Override
