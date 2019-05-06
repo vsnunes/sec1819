@@ -231,19 +231,41 @@ public class NotaryMiddleware implements NotaryInterface {
         if(!errors) {
             System.out.println("received: "+received);
             Interaction mostRecent = this.getHighestTS(readList);
-
-            /*prepare request arguments*/
-            Interaction newRequest = new Interaction();
-            newRequest.setUserID(mostRecent.getOwnerID());
-            newRequest.setGoodID(mostRecent.getGoodID());
-            newRequest.setResponse(mostRecent.getResponse());
-            newRequest.setUserClock(mostRecent.getOwnerClock());
-            newRequest.setHmac(mostRecent.getLastChangeHMAC());
-            newRequest.setWts(mostRecent.getWts());
-            newRequest.setSigma(mostRecent.getSigma());
             
-            /** perform the write */
-            this.intentionToSell(newRequest);
+            Interaction newRequest = new Interaction();
+
+            if (mostRecent.getType() == Interaction.Type.INTENTION2SELL) {
+                /*prepare request arguments*/
+                newRequest.setUserID(mostRecent.getOwnerID());
+                newRequest.setGoodID(mostRecent.getGoodID());
+                newRequest.setResponse(mostRecent.getResponse());
+                newRequest.setUserClock(mostRecent.getOwnerClock());
+                newRequest.setHmac(mostRecent.getLastChangeHMAC());
+                newRequest.setWts(mostRecent.getWts());
+                newRequest.setSigma(mostRecent.getSigma());
+                
+                /** perform the write */
+                this.intentionToSell(newRequest);
+            } else if (mostRecent.getType() == Interaction.Type.TRANSFERGOOD) {
+
+                newRequest.setBuyerID(mostRecent.getBuyerID());
+                newRequest.setSellerID(mostRecent.getSellerID());
+                newRequest.setSellerClock(mostRecent.getSellerClock());
+                newRequest.setBuyerClock(mostRecent.getBuyerClock());
+
+                newRequest.setGoodID(mostRecent.getGoodID());
+                newRequest.setResponse(mostRecent.getResponse());
+
+                newRequest.setBuyerHMAC(mostRecent.getLastChangeHMAC());
+                newRequest.setSellerHMAC(mostRecent.getLastChangeHMACSeller());
+                newRequest.setWts(mostRecent.getWts());
+                newRequest.setSigma(mostRecent.getSigma());
+                try {
+                    this.transferGood(newRequest);
+                } catch (TransactionException e) {
+                    e.printStackTrace();
+                }
+            }
             return mostRecent;
 
         }

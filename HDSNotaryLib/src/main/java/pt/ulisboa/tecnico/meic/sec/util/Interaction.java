@@ -10,6 +10,11 @@ import java.util.ArrayList;
  * This class will encapsulate all request arguments OR all response arguments.
  */
 public class Interaction implements Serializable {
+
+    public enum Type {TRANSFERGOOD, INTENTION2SELL}
+
+    private Type type;
+
     private byte[] hmac;
     private byte[] sellerHMAC;
     private byte[] buyerHMAC;
@@ -28,7 +33,7 @@ public class Interaction implements Serializable {
     private int ownerClock;
 
     private byte[] lastChangeHMAC;
-
+    private byte[] lastChangeHMACSeller;
 
 
     public Interaction(){
@@ -44,6 +49,9 @@ public class Interaction implements Serializable {
         buyerClock = 0;
         sellerClock = 0;
         wts = 0;
+        lastChangeHMAC = null;
+        lastChangeHMACSeller = null;
+        type = null;
     }
 
     public byte[] getHmac() {
@@ -176,6 +184,22 @@ public class Interaction implements Serializable {
 
     public void setLastChangeHMAC(byte[] lastChangeHMAC) {
         this.lastChangeHMAC = lastChangeHMAC;
+    }
+
+    public byte[] getLastChangeHMACSeller() {
+        return this.lastChangeHMACSeller;
+    }
+
+    public void setLastChangeHMACSeller(byte[] lastChangeHMACSeller) {
+        this.lastChangeHMACSeller = lastChangeHMACSeller;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public Type getType() {
+        return this.type;
     }
 
     @Override

@@ -11,6 +11,8 @@ import java.util.ArrayList;
  */
 public class Good implements Serializable {
 
+    public enum Type {TRANSFERGOOD, INTENTION2SELL}
+
     /** The good identifier **/
     private int goodID;
 
@@ -23,7 +25,9 @@ public class Good implements Serializable {
     private byte[] sigma;
 
     private byte[] lastChangeHMAC;
+    private byte[] lastChangeHMAC2;
 
+    private Type lastOperation;
 
 
     /** Prevents the good from having concurrent transactions **/
@@ -106,5 +110,21 @@ public class Good implements Serializable {
         if (goodID < 0) {
             throw new GoodException("GoodID must be a non-negative value!");
         }
+    }
+
+    public byte[] getLastChangeHMAC2() {
+        return lastChangeHMAC2;
+    }
+
+    public void setLastChangeHMAC2(byte[] lastChangeHMAC2) {
+        this.lastChangeHMAC2 = lastChangeHMAC2;
+    }
+
+    public void setLastOperation(Type lastOperation) {
+        this.lastOperation = lastOperation;
+    }
+
+    public Type getLastOperation() {
+        return this.lastOperation;
     }
 }
