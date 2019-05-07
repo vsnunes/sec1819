@@ -27,16 +27,19 @@ public class Interaction implements Serializable {
     private int buyerClock;
     private int sellerClock;
 
+    /** used for atomic and regular register */
     private int wts;
     private byte[] sigma;
     private int ownerID;
     private int ownerClock;
-
     private byte[] lastChangeHMAC;
     private byte[] lastChangeHMACSeller;
 
+    /** used for reliable broadcast */
+    private int echoContainerID;
+    private int notaryID;
 
-    public Interaction(){
+    public Interaction() {
         hmac = null;
         sellerHMAC = null;
         buyerHMAC = null;
@@ -52,6 +55,7 @@ public class Interaction implements Serializable {
         lastChangeHMAC = null;
         lastChangeHMACSeller = null;
         type = null;
+        setEchoContainerID(-1);
     }
 
     public byte[] getHmac() {
@@ -200,6 +204,22 @@ public class Interaction implements Serializable {
 
     public Type getType() {
         return this.type;
+    }
+
+    public int getEchoContainerID() {
+        return echoContainerID;
+    }
+    
+    public void setEchoContainerID(int echoContainerID) {
+        this.echoContainerID = echoContainerID;
+    }
+
+    public int getNotaryID() {
+        return notaryID;
+    }
+
+    public void setNotaryID(int notaryID) {
+        this.notaryID = notaryID;
     }
 
     @Override

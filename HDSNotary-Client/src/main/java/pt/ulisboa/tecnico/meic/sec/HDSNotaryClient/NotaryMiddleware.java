@@ -55,6 +55,7 @@ public class NotaryMiddleware implements NotaryInterface {
     private final int TIMEOUT = 5;
 
 
+
     public NotaryMiddleware(String pathToServersCfg) throws IOException, NotaryMiddlewareException {
 
         if (!(BYZANTINE_F < (REPLICAS_N / 3))) {
