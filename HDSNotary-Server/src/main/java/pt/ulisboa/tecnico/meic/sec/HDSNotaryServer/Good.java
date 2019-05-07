@@ -1,10 +1,8 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
-import javafx.util.Pair;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 /**
  * A class for describing Good items
@@ -24,6 +22,7 @@ public class Good implements Serializable {
 
     private byte[] sigma;
 
+    /** Just to store last values of last request**/
     private byte[] lastChangeHMAC;
     private byte[] lastChangeHMAC2;
 
@@ -31,6 +30,9 @@ public class Good implements Serializable {
 
     private int buyerID;
     private int sellerID;
+
+    private int sellerClock;
+    private int buyerClock;
 
 
     /** Prevents the good from having concurrent transactions **/
@@ -145,5 +147,21 @@ public class Good implements Serializable {
 
     public void setSellerID(int sellerID) {
         this.sellerID = sellerID;
+    }
+
+    public int getSellerClock() {
+        return sellerClock;
+    }
+
+    public void setSellerClock(int sellerClock) {
+        this.sellerClock = sellerClock;
+    }
+
+    public int getBuyerClock() {
+        return buyerClock;
+    }
+
+    public void setBuyerClock(int buyerClock) {
+        this.buyerClock = buyerClock;
     }
 }

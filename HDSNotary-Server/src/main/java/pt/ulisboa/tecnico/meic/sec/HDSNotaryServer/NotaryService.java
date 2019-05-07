@@ -182,6 +182,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             else if (good.getLastOperation() == Good.Type.TRANSFERGOOD) {
                 request.setBuyerID(good.getBuyerID());
                 request.setSellerID(good.getSellerID());
+                request.setSellerClock(good.getSellerClock());
+                request.setBuyerClock(good.getBuyerClock());
                 request.setType(Interaction.Type.TRANSFERGOOD);
             }
             return putHMAC(request, -1);
@@ -261,6 +263,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             good.setLastOperation(Good.Type.TRANSFERGOOD);
             good.setLastChangeHMAC2(request.getSellerHMAC());
             good.setLastChangeHMAC(request.getBuyerHMAC());
+            good.setBuyerClock(request.getBuyerClock());
+            good.setSellerClock(request.getSellerClock());
             doWrite();
             return putHMAC(request, 1);
             

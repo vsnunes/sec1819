@@ -125,12 +125,12 @@ public class NotaryMiddleware implements NotaryInterface {
                 catch(ExecutionException e) {
                     //log
                     errors = true;
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
                 catch(InterruptedException e) {
                     //log
                     errors = true;
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
 
@@ -187,7 +187,7 @@ public class NotaryMiddleware implements NotaryInterface {
                 }
 
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
             try {
                 Interaction result = resultFuture.get();
@@ -218,7 +218,7 @@ public class NotaryMiddleware implements NotaryInterface {
             catch(ExecutionException e) {
                 //log
                 errors = true;
-                e.printStackTrace();
+                //e.printStackTrace();
             }
             catch(NoSuchAlgorithmException e) {
                 //log
@@ -307,12 +307,14 @@ public class NotaryMiddleware implements NotaryInterface {
                 Interaction result = resultFuture.get();
                 writeList.add(result);
                 received ++;
-            }
-            catch(Exception e) {
-                //log
+            } catch (InterruptedException e) {
                 errors = true;
                 e.printStackTrace();
+            } catch (ExecutionException e) {
+                errors = true;
+                //e.printStackTrace();
             }
+
         }
 
         /** here we choose the value with the highest wts from writeList and then clean writeList*/
