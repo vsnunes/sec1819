@@ -46,8 +46,8 @@ public class Interaction implements Serializable {
         goodID = 0;
         userID = 0;
         userClock = 0;
-        buyerClock = 0;
-        sellerClock = 0;
+        buyerClock = 8;
+        sellerClock = 9;
         wts = 0;
         lastChangeHMAC = null;
         lastChangeHMACSeller = null;

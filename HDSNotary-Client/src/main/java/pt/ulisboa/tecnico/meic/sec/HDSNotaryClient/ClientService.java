@@ -106,7 +106,7 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
 
             String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
             request.setSellerHMAC(Digest.createDigest(data, cert));
-
+            System.out.println("ZÉ VAREJEIRA: " + data);
             response = notaryInterface.transferGood(request);
             if(response == null) {
                 throw new GoodException("Byzantine quorum not achieved :(");

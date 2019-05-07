@@ -77,6 +77,7 @@ public class BuyGood extends Operation {
 
             String data = "" + good + ClientService.userID + request.getBuyerClock() + request.getSellerClock();
             request.setBuyerHMAC(Digest.createDigest(data, cert));
+            System.out.println("ZÉ VAREJEIRA BUYER: " + data);
             /** increment id of current read operation*/
             request.setWts(request.getWts()+1);
             /** this signature is used to check byzantine things */

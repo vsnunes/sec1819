@@ -134,7 +134,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             request.setType(Interaction.Type.INTENTION2SELL);
             good.setLastOperation(Good.Type.INTENTION2SELL);
             doWrite();
-            return putHMAC(request, true);
+            return putHMAC(request, 0);
 
             
         }
@@ -184,7 +184,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 request.setSellerID(good.getSellerID());
                 request.setType(Interaction.Type.TRANSFERGOOD);
             }
-            return putHMAC(request, false);
+            return putHMAC(request, -1);
         }
         else{
             throw new GoodException("Good does not exist.");
@@ -214,7 +214,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             /*compare hmacs*/
             String data = "" + request.getGoodID() + request.getBuyerID() + request.getBuyerClock() + request.getSellerClock();
             if(!Digest.verify(request.getBuyerHMAC(), data,  cert)){
-                throw new HDSSecurityException("NotaryService: Tampering detected in Buyer!");
+                throw new HDSSecurityException("NotaryService: Tampering detected in Buyer! " + data);
             }
             /*check freshness*/
             if(request.getBuyerClock() <= getClock(buyerId)){
@@ -233,7 +233,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             /*compare hmacs*/
             String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
             if(!Digest.verify(request.getSellerHMAC(), data, cert)){
-                throw new HDSSecurityException("Tampering detected in Seller!");
+                throw new HDSSecurityException("Tampering detected in Seller! " + data);
             }
             /*check freshness*/
             if(request.getSellerClock() <= getClock(sellerId)){
@@ -262,7 +262,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             good.setLastChangeHMAC2(request.getSellerHMAC());
             good.setLastChangeHMAC(request.getBuyerHMAC());
             doWrite();
-            return putHMAC(request, true);
+            return putHMAC(request, 1);
             
 
         }
@@ -283,14 +283,17 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         return -1;
     }
 
-    private Interaction putHMAC(Interaction request, boolean write) throws HDSSecurityException {
+    private Interaction putHMAC(Interaction request, int option) throws HDSSecurityException {
         //HMAC using virtual certificates
         if (usingVirtualCerts) {
             Certification cert = new VirtualCertificate();
             try {
                 cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
-                if(write) {
+                if(option == 0) {
                     request.setLastChangeHMAC(request.getHmac());
+                } else if (option == 1) {
+                    request.setLastChangeHMAC(request.getBuyerHMAC());
+                    request.setLastChangeHMACSeller(request.getSellerHMAC());
                 }
 
                 request.setHmac(Digest.createDigest(request, cert));
