@@ -29,6 +29,9 @@ public class Good implements Serializable {
 
     private Type lastOperation;
 
+    private int buyerID;
+    private int sellerID;
+
 
     /** Prevents the good from having concurrent transactions **/
     private boolean inTransaction;
@@ -126,5 +129,21 @@ public class Good implements Serializable {
 
     public Type getLastOperation() {
         return this.lastOperation;
+    }
+
+    public int getBuyerID() {
+        return buyerID;
+    }
+
+    public void setBuyerID(int buyerID) {
+        this.buyerID = buyerID;
+    }
+
+    public int getSellerID() {
+        return sellerID;
+    }
+
+    public void setSellerID(int sellerID) {
+        this.sellerID = sellerID;
     }
 }

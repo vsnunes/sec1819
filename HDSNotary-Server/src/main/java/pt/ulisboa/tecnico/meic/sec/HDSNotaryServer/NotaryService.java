@@ -1,4 +1,5 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
+import org.omg.PortableServer.REQUEST_PROCESSING_POLICY_ID;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
@@ -178,8 +179,11 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             request.setLastChangeHMAC(good.getLastChangeHMAC());
             if (good.getLastOperation() == Good.Type.INTENTION2SELL)
                 request.setType(Interaction.Type.INTENTION2SELL);
-            else if (good.getLastOperation() == Good.Type.TRANSFERGOOD)
+            else if (good.getLastOperation() == Good.Type.TRANSFERGOOD) {
+                request.setBuyerID(good.getBuyerID());
+                request.setSellerID(good.getSellerID());
                 request.setType(Interaction.Type.TRANSFERGOOD);
+            }
             return putHMAC(request, false);
         }
         else{
@@ -252,6 +256,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             request.setResponse(true);
             request.setOwnerID(good.getOwner().getUserID());
 
+            good.setBuyerID(request.getBuyerID());
+            good.setSellerID(request.getSellerID());
             good.setLastOperation(Good.Type.TRANSFERGOOD);
             good.setLastChangeHMAC2(request.getSellerHMAC());
             good.setLastChangeHMAC(request.getBuyerHMAC());
