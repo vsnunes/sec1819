@@ -46,7 +46,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private static String TRANSACTIONSTMP_FILE;
 
     /** list for echos of all clients */
-    private ArrayList<ClientEcho> clientEchos;
+    private volatile ArrayList<ClientEcho> clientEchos;
 
     /** Number of notaries */
     private final int NUMBER_OF_CLIENTS = 5;
