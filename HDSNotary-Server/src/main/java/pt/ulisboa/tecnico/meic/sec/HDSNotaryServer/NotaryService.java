@@ -45,6 +45,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private static String USERSGOODSTMP_FILE;
     private static String TRANSACTIONSTMP_FILE;
 
+    /** list for echos of all clients */
+    private ArrayList<ClientEcho> clientEchos;
+
+    /** Number of notaries */
+    private final int NUMBER_OF_CLIENTS = 5;
+
     private NotaryService() throws RemoteException, GoodException {
         super();
         USERSGOODS_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + ".bin";
@@ -68,6 +74,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 e.getMessage();
             }
         }
+        clientEchos = new ArrayList<ClientEcho>(NUMBER_OF_CLIENTS);
         instance = this;
     }
 
@@ -300,7 +307,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 }
 
                 request.setHmac(Digest.createDigest(request, cert));
-                
+                request.setNotaryID(Main.NOTARY_ID);
                 
                 cert.stop();
             } catch (NoSuchAlgorithmException e) {
@@ -312,6 +319,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             try {
                 cert.init();
                 request.setHmac(Digest.createDigest(request, cert));
+
+                request.setNotaryID(Main.NOTARY_ID);
                 cert.stop();
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();

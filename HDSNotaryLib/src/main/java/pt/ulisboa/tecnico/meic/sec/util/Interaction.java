@@ -36,8 +36,10 @@ public class Interaction implements Serializable {
     private byte[] lastChangeHMACSeller;
 
     /** used for reliable broadcast */
-    private int echoContainerID;
+    private int clientID;
+    private byte[] clientIDSignature;
     private int notaryID;
+    private byte[] notaryIDSignature;
 
     public Interaction() {
         hmac = null;
@@ -55,7 +57,6 @@ public class Interaction implements Serializable {
         lastChangeHMAC = null;
         lastChangeHMACSeller = null;
         type = null;
-        setEchoContainerID(-1);
     }
 
     public byte[] getHmac() {
@@ -206,12 +207,28 @@ public class Interaction implements Serializable {
         return this.type;
     }
 
-    public int getEchoContainerID() {
-        return echoContainerID;
+    public int getClientID() {
+        return clientID;
     }
-    
-    public void setEchoContainerID(int echoContainerID) {
-        this.echoContainerID = echoContainerID;
+
+    public void setClientID(int clientID) {
+        this.clientID = clientID;
+    }
+
+    public byte[] getClientIDSignature() {
+        return clientIDSignature;
+    }
+
+    public void setClientIDSignature(byte[] clientIDSignature) {
+        this.clientIDSignature = clientIDSignature;
+    }
+
+    public byte[] getNotaryIDSignature() {
+        return notaryIDSignature;
+    }
+
+    public void setNotaryIDSignature(byte[] notaryIDSignature) {
+        this.notaryIDSignature = notaryIDSignature;
     }
 
     public int getNotaryID() {

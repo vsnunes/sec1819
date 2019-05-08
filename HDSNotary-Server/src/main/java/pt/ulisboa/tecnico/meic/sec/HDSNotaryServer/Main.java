@@ -19,6 +19,8 @@ public class Main {
     public static int NOTARY_SERVICE_PORT = 10000;
     public static final String NOTARY_SERVICE_NAME = "HDSNotary";
 
+    public static int NOTARY_ID = 1;
+
     /** User's certificates folder location. BE AWARE it must end with slash (/) ! **/
     public static final String USERS_CERTS_FOLDER = "../HDSNotaryLib/src/main/resources/certs/";
 
@@ -28,7 +30,9 @@ public class Main {
         CCSmartCard card = null;
 
         if (args.length > 0) {
-            NOTARY_SERVICE_PORT = 10000 + Integer.parseInt(args[0]);
+            NOTARY_ID = Integer.parseInt(args[0]);
+            NOTARY_SERVICE_PORT = 10000 + NOTARY_ID;
+            System.setProperty("project.notary.private", "../HDSNotaryLib/src/main/resources/certs/java_certs/private_notary" + NOTARY_ID + "_pkcs8.pem");
         }
         new BoxUI("Notary is running on port " + NOTARY_SERVICE_PORT).showAndGo(BoxUI.WHITE_BOLD_BRIGHT);
 
