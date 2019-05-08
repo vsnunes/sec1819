@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
 import org.omg.PortableServer.REQUEST_PROCESSING_POLICY_ID;
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.exceptions.NotaryEchoMiddlewareException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
@@ -12,6 +13,7 @@ import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDE
 import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -29,7 +31,7 @@ public class NotaryEchoMiddleware implements NotaryInterface {
     private ArrayList<NotaryInterface> servers;
 
 
-    public NotaryEchoMiddleware(String pathToServersCfg, String myUrl) {
+    public NotaryEchoMiddleware(String pathToServersCfg, String myUrl) throws NotaryEchoMiddlewareException, IOException {
         this.servers = new ArrayList<>();
         servers = new ArrayList<>();
 
@@ -86,7 +88,7 @@ public class NotaryEchoMiddleware implements NotaryInterface {
     }
 
     //TODO: Add this to the interface
-    @Override
+    //@Override
     public Interaction echo(Interaction request) {
         /*
         TODO: Maintain a list of received echos.
@@ -99,6 +101,7 @@ public class NotaryEchoMiddleware implements NotaryInterface {
             echos[P] = request
           
         */
+        return null;
     }
 
     @Override

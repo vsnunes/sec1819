@@ -3,7 +3,6 @@ import org.omg.PortableServer.REQUEST_PROCESSING_POLICY_ID;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
-import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.interfaces.NotaryByzantineInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.*;
 

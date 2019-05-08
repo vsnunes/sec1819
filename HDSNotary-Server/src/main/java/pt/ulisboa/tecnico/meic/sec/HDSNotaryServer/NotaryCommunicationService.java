@@ -17,12 +17,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class NotaryCommunicationService implements NotaryCommunicationInterface {
     
-    private ArrayList<EchoContainer> echos;
 
-    public NotaryCommunicationService() {
-        this.echos = new ArrayList<>();
-
-    }
     
     @Override
     public void send(Interaction request) throws RemoteException {
