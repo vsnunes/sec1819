@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
 import org.omg.PortableServer.REQUEST_PROCESSING_POLICY_ID;
 import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.exceptions.NotaryEchoMiddlewareException;
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.interfaces.NotaryCommunicationInterface;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
@@ -28,7 +29,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class NotaryEchoMiddleware implements NotaryInterface {
 
     //TODO: ArrayList of NotaryInterface with all RMI proxy objects
-    private ArrayList<NotaryInterface> servers;
+    private ArrayList<NotaryCommunicationInterface> servers;
 
 
     public NotaryEchoMiddleware(String pathToServersCfg, String myUrl) throws NotaryEchoMiddlewareException, IOException {
@@ -40,7 +41,7 @@ public class NotaryEchoMiddleware implements NotaryInterface {
         for (String url : urls) {
             try {
                 if(!url.equals(myUrl)) {
-                    servers.add((NotaryInterface) Naming.lookup(url));
+                    servers.add((NotaryCommunicationInterface) Naming.lookup(url));
                 }
             } catch (NotBoundException e) {
                 throw new NotaryEchoMiddlewareException(":( NotBound on Notary at " + url);
@@ -54,7 +55,13 @@ public class NotaryEchoMiddleware implements NotaryInterface {
 
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
-        
+        boolean sentEcho = false;
+        ArrayList<Interaction> echos = new ArrayList<>();
+
+        for (NotaryCommunicationInterface notary : servers) {
+
+        }
+
         
         /*
         Just to init
