@@ -112,9 +112,6 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
                 throw new GoodException("Byzantine quorum not achieved :(");
             }
 
-            //Check the MAC using the cert of a corresponded Notary
-            System.setProperty("project.notary.cert.path", "../HDSNotaryLib/src/main/resources/certs/notary" + response.getNotaryID() + ".crt");
-
             /*checks answer from notary*/
             Certification notaryCert = new VirtualCertificate();
             notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
