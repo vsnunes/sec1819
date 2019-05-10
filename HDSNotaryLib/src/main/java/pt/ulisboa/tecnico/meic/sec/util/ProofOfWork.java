@@ -35,7 +35,7 @@ public class ProofOfWork {
             final String HMAC_SHA512 = "HmacSHA512";
             SecretKeySpec keySpec = new SecretKeySpec(byteKey, HMAC_SHA512);
 
-            sha512_HMAC = Mac.getInstance("HMAC_SHA512");
+            sha512_HMAC = Mac.getInstance(HMAC_SHA512);
             sha512_HMAC.init(keySpec);
 
             hmac = sha512_HMAC.doFinal(storedValues.getBytes(StandardCharsets.UTF_8));
@@ -62,4 +62,5 @@ public class ProofOfWork {
         }
         return true;
     }
+
 }
