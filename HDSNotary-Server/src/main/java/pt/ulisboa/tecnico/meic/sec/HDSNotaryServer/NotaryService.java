@@ -32,6 +32,19 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private HashMap<Integer, User> users;
     private HashMap<Integer, Good> goods;
 
+    /** Number of clients */
+    public static final int NUMBER_OF_CLIENTS = 5;
+
+    /** Number of notaries */
+    public static final int NUMBER_OF_NOTARIES = 4;
+
+    public static final int N = 4;
+    /** Maximum of Byzantine faults */
+    public static final int F = 1;
+
+    public static Integer[] echoCounter;
+    public static Integer[] readyCounter;
+
     /** Every transaction has an ID so keeps record of the last ID used in a transaction **/
     private int transactionCounter = 0;
 
@@ -45,11 +58,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private static String USERSGOODSTMP_FILE;
     private static String TRANSACTIONSTMP_FILE;
 
-    /** list for echos of all clients */
-    private volatile ArrayList<ClientEcho> clientEchos;
 
-    /** Number of notaries */
-    private final int NUMBER_OF_CLIENTS = 5;
 
     private NotaryService() throws RemoteException, GoodException {
         super();
@@ -74,7 +83,9 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 e.getMessage();
             }
         }
-        clientEchos = new ArrayList<ClientEcho>(NUMBER_OF_CLIENTS);
+        /** remeber to make this persistent!!!!!!!! */
+        echoCounter = new Integer[NUMBER_OF_NOTARIES + 1];
+        readyCounter = new Integer[NUMBER_OF_NOTARIES + 1];
         instance = this;
     }
 

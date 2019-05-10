@@ -2,17 +2,37 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 
-import java.util.ArrayList;
+import static java.util.Collections.frequency;
+import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryService.NUMBER_OF_NOTARIES;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.locks.*;
+
+/**
+ * Class for storing properties of Authenticated Double-Echo Broadcast per
+ * notary
+ */
 public class ClientEcho {
-    private final int NUMBER_OF_NOTARIES = 4;
     private int clientID;
-    private ArrayList<Interaction> echos;
-    private Interaction pending;
+    private Interaction[] echos;
+    private Interaction[] readys;
+    private boolean sentEcho;
+    private boolean sentReady;
+    private boolean delivered;
+    private final Lock lock = new ReentrantLock();
+    private Condition quorumEchos = lock.newCondition();
+    private Condition quorumReadys = lock.newCondition();
+    private Interaction quorum;
 
     public ClientEcho(int clientID) {
         this.clientID = clientID;
-        this.echos = new ArrayList<Interaction>(NUMBER_OF_NOTARIES);
+        this.echos = new Interaction[NUMBER_OF_NOTARIES + 1];
+        this.readys = new Interaction[NUMBER_OF_NOTARIES + 1];
+        this.sentEcho = false;
+        this.sentReady = false;
+        this.delivered = false;
     }
 
     public int getClientID() {
@@ -23,19 +43,104 @@ public class ClientEcho {
         this.clientID = clientID;
     }
 
-    public ArrayList<Interaction> getEchos() {
+    public Interaction[] getEchos() {
         return echos;
     }
 
-    public void setEchos(ArrayList<Interaction> echos) {
+    public void setEchos(Interaction[] echos) {
         this.echos = echos;
     }
 
-    public Interaction getPending() {
-        return pending;
+    public Interaction[] getReadys() {
+        return readys;
     }
 
-    public void setPending(Interaction pending) {
-        this.pending = pending;
+    public void setReadys(Interaction[] readys) {
+        this.readys = readys;
     }
+
+    public boolean isDelivered() {
+        return delivered;
+    }
+
+    public void setDelivered(boolean delivered) {
+        this.delivered = delivered;
+    }
+
+    public boolean isSentReady() {
+        return sentReady;
+    }
+
+    public void setSentReady(boolean sentReady) {
+        this.sentReady = sentReady;
+    }
+
+    public boolean isSentEcho() {
+        return sentEcho;
+    }
+
+    public void setSentEcho(boolean sentEcho) {
+        this.sentEcho = sentEcho;
+    }
+
+    public void addEcho(int position, Interaction echo) {
+        this.echos[position] = echo;
+    }
+
+    public void addReady(int position, Interaction echo) {
+        this.readys[position] = echo;
+    }
+
+    public Condition getQuorumReadys() {
+        return quorumReadys;
+    }
+
+    public void setQuorumReadys(Condition quorumReadys) {
+        this.quorumReadys = quorumReadys;
+    }
+
+    public Condition getQuorumEchos() {
+        return quorumEchos;
+    }
+
+    public void setQuorumEchos(Condition quorumEchos) {
+        this.quorumEchos = quorumEchos;
+    }
+
+    public Interaction getQuorum() {
+        return quorum;
+    }
+
+    public void setQuorum(Interaction quorum) {
+        this.quorum = quorum;
+    }
+
+    public int getNumberOfQuorumReceivedEchos() {
+        int echos = 0;
+        for (Interaction interaction : this.echos) {
+            if (interaction != null) {
+                int numberOfInteractions = frequency(Arrays.asList(this.echos), interaction);
+                if (numberOfInteractions > echos) {
+                    setQuorum(interaction);
+                    echos = numberOfInteractions;
+                }
+            }
+        }
+        return echos;
+    }
+
+    public int getNumberOfQuorumReceivedReadys() {
+        int readys = 0;
+        for (Interaction interaction : this.readys) {
+            if (interaction != null) {
+                int numberOfInteractions = frequency(Arrays.asList(this.readys), interaction);
+                if (numberOfInteractions > readys) {
+                    setQuorum(interaction);
+                    readys=numberOfInteractions;
+                } 
+            }
+        } 
+        return readys;
+    }    
+
 }

@@ -164,4 +164,5 @@ public class Good implements Serializable {
     public void setBuyerClock(int buyerClock) {
         this.buyerClock = buyerClock;
     }
+
 }

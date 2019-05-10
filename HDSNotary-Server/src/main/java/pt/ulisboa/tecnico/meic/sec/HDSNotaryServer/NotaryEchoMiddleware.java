@@ -25,15 +25,26 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryService.*;
 
 public class NotaryEchoMiddleware implements NotaryInterface {
 
     //TODO: ArrayList of NotaryInterface with all RMI proxy objects
     private ArrayList<NotaryCommunicationInterface> servers;
 
+    private NotaryService notaryService;
 
-    public NotaryEchoMiddleware(String pathToServersCfg, String myUrl) throws NotaryEchoMiddlewareException, IOException {
+    /** list for echos of all clients */
+    protected static volatile ArrayList<ClientEcho> clientEchos;
+
+    private static final long TIMEOUT_MILI = 5;
+
+
+    public NotaryEchoMiddleware(String pathToServersCfg, String myUrl, NotaryService notaryService) throws NotaryEchoMiddlewareException, IOException {
         this.servers = new ArrayList<>();
+        this.notaryService = notaryService;
+        this.clientEchos = new ArrayList<ClientEcho>(NUMBER_OF_CLIENTS);
         servers = new ArrayList<>();
 
         List<String> urls = CFGHelper.fetchURLsFromCfg(pathToServersCfg,0);
@@ -55,65 +66,89 @@ public class NotaryEchoMiddleware implements NotaryInterface {
 
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
-        boolean sentEcho = false;
-        ArrayList<Interaction> echos = new ArrayList<>();
-
-        for (NotaryCommunicationInterface notary : servers) {
-
-        }
-
+        //verify the client signature
+        int clientId = request.getClientID();
         
-        /*
-        Just to init
-            sentecho = false
-            delivered = false
-            echos[numero de notarios]
-        TODO: Arrays of responses
-        for each notary in array do
-            responses <= notary.intentionToSell(request);
+        
+        ClientEcho clientEcho = clientEchos.get(clientId);
+        if (clientEcho.isSentEcho() == false) {
+            request.setNotaryID(Main.NOTARY_ID);
 
-        If I'm the one who sent this request AND not yet sent ECHO then
-            setecho <= true
-            for each notary in array do
-                echos <= notary.echo(request)
+            int echoClock = ++NotaryService.echoCounter[Main.NOTARY_ID];
+            request.setEchoClock(echoClock);
+
+            Certification cert = new VirtualCertificate();
+            cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+            try {
+                request.setNotaryIDSignature(Digest.createDigest(request.echoString(), cert));
+            } catch (NoSuchAlgorithmException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+            clientEcho.setSentEcho(true);
+
+            for (NotaryCommunicationInterface notary : this.servers) {
+                notary.echo(request);
+            }
             
-            Esta parte que esta aqui em baixo é basicamente usar future tasks para quando existir um echo response, e quando existir echo quorum responses
-            saio do loop, meto delivered a true e envio m
+            try {
+                boolean receivedAllEchos = false, receivedAllReadys = false;
 
-            #OfEchos = 0
-            for each process P in echos
-            if echo[P] is not null then
-                #OfEchos <= #OfEchos + 1
+                synchronized(clientEcho.getQuorumEchos()) {
+                    while (!(clientEcho.getNumberOfQuorumReceivedEchos() > (N + F)/2)) {
+                        receivedAllEchos = clientEcho.getQuorumEchos().await(TIMEOUT_MILI, TimeUnit.SECONDS);
+                    }
+                }
 
-            if #OfEchos > (N + f) / 2 then
-                return RESPONSE
-            else wait for more echos
-         
-         */
-        
-        return null;
-    }
 
-    //TODO: Add this to the interface
-    //@Override
-    public Interaction echo(Interaction request) {
-        /*
-        TODO: Maintain a list of received echos.
-        TODO: Add to the interaction the owner of the request (which notary sent that 
-        request in order to distinguish processes)
+                int readyClock = ++NotaryService.readyCounter[Main.NOTARY_ID];
+                request.setReadyClock(readyClock);
 
-        P <= request.getNotaryID() //P stores the ID of the Notary who sent this echo
+                if (clientEcho.isSentReady() == false && receivedAllEchos==true) {
+                    clientEcho.setSentReady(true);
+                    for (NotaryCommunicationInterface notary : this.servers) {
+                        notary.ready(clientEcho.getQuorum());
+                    }
+                }
 
-        if I'm not yet received echo from process P then
-            echos[P] = request
-          
-        */
+                //Amplification phase!
+                synchronized(clientEcho.getQuorumReadys()) {
+                    if((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
+                        clientEcho.setSentReady(true);
+                        for (NotaryCommunicationInterface notary : this.servers) {
+                            notary.ready(clientEcho.getQuorum());
+                        }
+                    }
+                }
+                
+                synchronized(clientEcho.getQuorumReadys()) {
+                    while (clientEcho.getNumberOfQuorumReceivedReadys() < (2 * F) && clientEcho.isDelivered()==true) {
+                        receivedAllReadys = clientEcho.getQuorumReadys().await(TIMEOUT_MILI, TimeUnit.SECONDS);
+                    }
+                }
+
+                //readys timeout expired!
+                if (receivedAllReadys == false) {
+                    throw new HDSSecurityException("Failed during ready propagation phase :(");
+                }
+                //only after receiving readys
+                synchronized(clientEcho) {
+                    clientEcho.setDelivered(true);
+                    return notaryService.intentionToSell(clientEcho.getQuorum());                       
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+        }
+            
         return null;
     }
 
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
-        return null;
+        return notaryService.getStateOfGood(request);
     }
 
     @Override

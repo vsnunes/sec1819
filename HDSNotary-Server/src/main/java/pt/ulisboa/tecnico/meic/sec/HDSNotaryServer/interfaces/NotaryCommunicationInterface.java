@@ -11,14 +11,11 @@ import pt.ulisboa.tecnico.meic.sec.util.*;
 public interface NotaryCommunicationInterface extends Remote {
 
     /**
-     * Sends a message
-     */
-    void send(Interaction request) throws RemoteException;
-
-    /**
      * Sends a echo
      */
     void echo(Interaction request) throws RemoteException;
+
+    void ready(Interaction request) throws RemoteException;
 
 
 }
