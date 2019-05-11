@@ -23,6 +23,8 @@
 
         <!-- Java PTEID JAR Location -->
         <project.pteidjar.location>C:/Program Files/Portugal Identity Card/sdk/Java/pteidlibj.jar</project.pteidjar.location>
+
+        <project.notary.rmi>//localhost</project.notary.rmi>
     </properties>
 
 
@@ -96,6 +98,10 @@
                         <systemProperty>
                             <key>project.nameserver.config</key>
                             <value>${project.nameserver.config}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <key>project.notary.rmi</key>
+                            <value>${project.notary.rmi}</value>
                         </systemProperty>
                     </systemProperties>
                 </configuration>

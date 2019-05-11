@@ -9,6 +9,7 @@ import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -20,19 +21,34 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
-public class NotaryCommunicationService implements NotaryCommunicationInterface {
+public class NotaryCommunicationService implements NotaryCommunicationInterface, Serializable {
 
     @Override
     public void echo(Interaction request) throws RemoteException {
-        int clientId = request.getClientID();
-        int notaryId = request.getNotaryID();
-        int lastEchoCounter = NotaryService.echoCounter[notaryId];
         
+        System.out.println("Varejeira: recebi echo do " + request.getNotaryID() + " e eu sou o " + Main.NOTARY_ID);
+        int clientId = request.getUserID();
+        int notaryId = request.getNotaryID();
+        int lastEchoCounter = -1;
+        synchronized(NotaryService.echoCounter) {
+            lastEchoCounter = NotaryService.echoCounter[notaryId];
+        }
+
+        System.out.println("varejeira lastEchoCounter " + lastEchoCounter);
+        System.out.println("varejeira echoClock " + request.getEchoClock());
         if (request.getEchoClock() <= lastEchoCounter) {
             throw new RemoteException("Replay attack of echo message!");
         }
 
-        ClientEcho clientEcho = NotaryEchoMiddleware.clientEchos.get(clientId);
+        synchronized(NotaryService.echoCounter) {
+            NotaryService.echoCounter[notaryId] = new Integer(request.getEchoClock());
+        }
+
+        System.out.println("Varejeira after checking echo clock");
+        ClientEcho clientEcho = null;
+        synchronized(NotaryService.echoCounter[clientId]) {
+            clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
+        }
 
         VirtualCertificate notaryCert = new VirtualCertificate();
         try {
@@ -41,7 +57,7 @@ public class NotaryCommunicationService implements NotaryCommunicationInterface 
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-
+        System.out.println("Varejeira after cert");
         /* compare hmacs */
         try {
             if (Digest.verify(request.getNotaryIDSignature(), request.echoString(), notaryCert) == false) {
@@ -51,27 +67,47 @@ public class NotaryCommunicationService implements NotaryCommunicationInterface 
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
- 
+        System.out.println("Varejeira after sign");
         synchronized (clientEcho.getEchos()) {
             Interaction notaryInteraction = clientEcho.getEchos()[notaryId];
             if (notaryInteraction == null) {
+                System.out.println("Varejeira after if notaryInteraction a null");
                 clientEcho.addEcho(notaryId, request);
-                clientEcho.getQuorumEchos().signal();
+                System.out.println("Varejeira after addEcho");
+                try {
+                    clientEcho.getLock().lock();
+                    clientEcho.getQuorumEchos().signal();
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+                System.out.println("Varejeira after signal");
             }
         }
+        System.out.println("Varejeira leaving echo function");
     }
 
     @Override
     public void ready(Interaction request) throws RemoteException {
-        int clientId = request.getClientID();
+        System.out.println("Varejeira: recebi echo!");
+        int clientId = request.getUserID();
         int notaryId = request.getNotaryID();
-        int lastReadyCounter = NotaryService.readyCounter[notaryId];
+        int lastReadyCounter = -1;
+        synchronized(NotaryService.readyCounter) {
+            lastReadyCounter = NotaryService.readyCounter[notaryId];
+        }
 
         if (request.getReadyClock() <= lastReadyCounter) {
             throw new RemoteException("Replay attack of ready message!");
         }
 
-        ClientEcho clientEcho = NotaryEchoMiddleware.clientEchos.get(clientId);
+        synchronized(NotaryService.readyCounter) {
+            NotaryService.readyCounter[notaryId] = new Integer(request.getReadyClock());
+        }
+
+        ClientEcho clientEcho = null;
+        synchronized(NotaryService.echoCounter[clientId]) {
+            clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
+        }
 
         VirtualCertificate notaryCert = new VirtualCertificate();
         try {
@@ -94,6 +130,7 @@ public class NotaryCommunicationService implements NotaryCommunicationInterface 
             Interaction notaryInteraction = clientEcho.getReadys()[notaryId];
             if (notaryInteraction == null) {
                 clientEcho.addReady(notaryId, request);
+                clientEcho.getLock().lock();
                 clientEcho.getQuorumReadys().signal();
             }
         }

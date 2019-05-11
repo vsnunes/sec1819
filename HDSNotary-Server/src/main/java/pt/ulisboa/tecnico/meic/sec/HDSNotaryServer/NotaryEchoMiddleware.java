@@ -28,56 +28,103 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryService.*;
 
-public class NotaryEchoMiddleware implements NotaryInterface {
+public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryInterface {
 
-    //TODO: ArrayList of NotaryInterface with all RMI proxy objects
+    // TODO: ArrayList of NotaryInterface with all RMI proxy objects
     private ArrayList<NotaryCommunicationInterface> servers;
 
     private NotaryService notaryService;
 
     /** list for echos of all clients */
-    protected static volatile ArrayList<ClientEcho> clientEchos;
+    protected static volatile ClientEcho[] clientEchos;
 
     private static final long TIMEOUT_MILI = 5;
 
+    /** flag for init RMI */
+    private boolean needInitRMI;
 
-    public NotaryEchoMiddleware(String pathToServersCfg, String myUrl, NotaryService notaryService) throws NotaryEchoMiddlewareException, IOException {
+    private String pathToServersCfg;
+
+    public NotaryEchoMiddleware(String pathToServersCfg, String myUrl, NotaryService notaryService)
+            throws NotaryEchoMiddlewareException, IOException {
         this.servers = new ArrayList<>();
         this.notaryService = notaryService;
-        this.clientEchos = new ArrayList<ClientEcho>(NUMBER_OF_CLIENTS);
+        this.clientEchos = new ClientEcho[NUMBER_OF_CLIENTS + 1];
+
+        for (int i = 1; i < NUMBER_OF_CLIENTS + 1; i++) {
+            this.clientEchos[i] = new ClientEcho(i);
+        }
+
         servers = new ArrayList<>();
+        needInitRMI = true;
+        this.pathToServersCfg = pathToServersCfg;
 
-        List<String> urls = CFGHelper.fetchURLsFromCfg(pathToServersCfg,0);
+    }
 
-        for (String url : urls) {
-            try {
-                if(!url.equals(myUrl)) {
+    private void initRMI() throws NotaryEchoMiddlewareException {
+        List<String> urls;
+        try {
+            urls = CFGHelper.fetchURLsFromCfg(this.pathToServersCfg, 0);
+            for (String url : urls) {
+                url = url +"COM";
+                try {
                     servers.add((NotaryCommunicationInterface) Naming.lookup(url));
+                } catch (NotBoundException e) {
+                    throw new NotaryEchoMiddlewareException(":( NotBound on Notary at " + url);
+                } catch (MalformedURLException e) {
+                    throw new NotaryEchoMiddlewareException(":( Malform URL! Cannot find Notary Service at " + url);
+                } catch (RemoteException e) {
+                    System.out.println(":( It looks like I miss the connection with Notary at " + url + " ignoring...");
                 }
-            } catch (NotBoundException e) {
-                throw new NotaryEchoMiddlewareException(":( NotBound on Notary at " + url);
-            } catch (MalformedURLException e) {
-                throw new NotaryEchoMiddlewareException(":( Malform URL! Cannot find Notary Service at " + url);
-            } catch (RemoteException e) {
-                System.out.println(":( It looks like I miss the connection with Notary at " + url + " ignoring...");
             }
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
         }
     }
 
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
+
+        if(needInitRMI) {
+            needInitRMI = false;
+            try {
+                initRMI();
+            } catch (NotaryEchoMiddlewareException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        
+        
+        int clientId = request.getUserID();
+        
         //verify the client signature
-        int clientId = request.getClientID();
+        Certification cert = new VirtualCertificate();
+        cert.init(new File(System.getProperty("project.users.cert.path") + clientId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
         
         
-        ClientEcho clientEcho = clientEchos.get(clientId);
+        try {
+            if (!Digest.verify(request, cert)) {
+                throw new HDSSecurityException("You are not user " + clientId + "!!");
+            }
+        } catch (NoSuchAlgorithmException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        }
+
+        ClientEcho clientEcho = clientEchos[clientId];
         if (clientEcho.isSentEcho() == false) {
             request.setNotaryID(Main.NOTARY_ID);
+            System.out.println("Varejeira ID: " + request.getNotaryID());
 
-            int echoClock = ++NotaryService.echoCounter[Main.NOTARY_ID];
+            int echoClock = NotaryService.echoCounter[Main.NOTARY_ID]+1;
+            
             request.setEchoClock(echoClock);
 
-            Certification cert = new VirtualCertificate();
+            System.out.println("Varejeira Echo Clock: " + request.getEchoClock());
+
+            cert = new VirtualCertificate();
             cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
             try {
                 request.setNotaryIDSignature(Digest.createDigest(request.echoString(), cert));
@@ -86,21 +133,23 @@ public class NotaryEchoMiddleware implements NotaryInterface {
                 e1.printStackTrace();
             }
             clientEcho.setSentEcho(true);
-
-            for (NotaryCommunicationInterface notary : this.servers) {
+            System.out.println("Varejeira Sent Echo: " + clientEcho.isSentEcho());
+            for (int i = 0; i < this.servers.size(); i++) {
+                NotaryCommunicationInterface notary = this.servers.get(i);
+                System.out.println(notary);
                 notary.echo(request);
             }
-            
+            System.out.println("Varejeira Sent Echo 2 all");
             try {
                 boolean receivedAllEchos = false, receivedAllReadys = false;
 
-                synchronized(clientEcho.getQuorumEchos()) {
-                    while (!(clientEcho.getNumberOfQuorumReceivedEchos() > (N + F)/2)) {
-                        receivedAllEchos = clientEcho.getQuorumEchos().await(TIMEOUT_MILI, TimeUnit.SECONDS);
-                    }
+                clientEcho.getLock().lock();
+                while (!(clientEcho.getNumberOfQuorumReceivedEchos() > (N + F)/2)) {
+                    receivedAllEchos = clientEcho.getQuorumEchos().await(TIMEOUT_MILI, TimeUnit.SECONDS);
                 }
+                
 
-
+                
                 int readyClock = ++NotaryService.readyCounter[Main.NOTARY_ID];
                 request.setReadyClock(readyClock);
 
@@ -110,22 +159,26 @@ public class NotaryEchoMiddleware implements NotaryInterface {
                         notary.ready(clientEcho.getQuorum());
                     }
                 }
+                
+                System.out.println("Varejeira Sent Ready 2 all");
 
                 //Amplification phase!
-                synchronized(clientEcho.getQuorumReadys()) {
-                    if((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
-                        clientEcho.setSentReady(true);
-                        for (NotaryCommunicationInterface notary : this.servers) {
-                            notary.ready(clientEcho.getQuorum());
-                        }
+                clientEcho.getLock().lock();
+                if((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
+                    clientEcho.setSentReady(true);
+                    for (NotaryCommunicationInterface notary : this.servers) {
+                        notary.ready(clientEcho.getQuorum());
                     }
                 }
                 
-                synchronized(clientEcho.getQuorumReadys()) {
-                    while (clientEcho.getNumberOfQuorumReceivedReadys() < (2 * F) && clientEcho.isDelivered()==true) {
-                        receivedAllReadys = clientEcho.getQuorumReadys().await(TIMEOUT_MILI, TimeUnit.SECONDS);
-                    }
+
+                System.out.println("Varejeira After amplification");
+
+                clientEcho.getLock().lock();
+                while (clientEcho.getNumberOfQuorumReceivedReadys() < (2 * F) && clientEcho.isDelivered()==true) {
+                    receivedAllReadys = clientEcho.getQuorumReadys().await(TIMEOUT_MILI, TimeUnit.SECONDS);
                 }
+                
 
                 //readys timeout expired!
                 if (receivedAllReadys == false) {
@@ -142,17 +195,35 @@ public class NotaryEchoMiddleware implements NotaryInterface {
             }
             
         }
-            
+        System.out.println("Varejeira do return!"); 
         return null;
     }
 
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
+        if(needInitRMI) {
+            needInitRMI = false;
+            try {
+                initRMI();
+            } catch (NotaryEchoMiddlewareException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
         return notaryService.getStateOfGood(request);
     }
 
     @Override
     public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException {
+        if(needInitRMI) {
+            needInitRMI = false;
+            try {
+                initRMI();
+            } catch (NotaryEchoMiddlewareException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
         return null;
     }
 
@@ -163,11 +234,11 @@ public class NotaryEchoMiddleware implements NotaryInterface {
 
     @Override
     public void doPrint() throws RemoteException {
-
+        notaryService.doPrint();
     }
 
     @Override
     public void shutdown() throws RemoteException {
-
+        notaryService.shutdown();
     }
 }

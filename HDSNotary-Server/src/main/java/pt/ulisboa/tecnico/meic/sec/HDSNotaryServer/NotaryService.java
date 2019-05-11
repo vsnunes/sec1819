@@ -86,6 +86,10 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         /** remeber to make this persistent!!!!!!!! */
         echoCounter = new Integer[NUMBER_OF_NOTARIES + 1];
         readyCounter = new Integer[NUMBER_OF_NOTARIES + 1];
+        for (int i = 1; i <= NUMBER_OF_NOTARIES; i++) {
+            echoCounter[i] = new Integer(0);
+            readyCounter[i] = new Integer(0);
+        }
         instance = this;
     }
 

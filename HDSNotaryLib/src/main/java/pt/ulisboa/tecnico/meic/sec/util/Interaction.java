@@ -37,8 +37,6 @@ public class Interaction implements Serializable {
     private byte[] lastChangeHMACSeller;
 
     /** used for reliable broadcast */
-    private int clientID;
-    private byte[] clientIDSignature;
     private int notaryID;
     /** it is used for echo message passing */
     private byte[] notaryIDSignature;
@@ -212,22 +210,6 @@ public class Interaction implements Serializable {
         return this.type;
     }
 
-    public int getClientID() {
-        return clientID;
-    }
-
-    public void setClientID(int clientID) {
-        this.clientID = clientID;
-    }
-
-    public byte[] getClientIDSignature() {
-        return clientIDSignature;
-    }
-
-    public void setClientIDSignature(byte[] clientIDSignature) {
-        this.clientIDSignature = clientIDSignature;
-    }
-
     public byte[] getNotaryIDSignature() {
         return notaryIDSignature;
     }
@@ -288,8 +270,6 @@ public class Interaction implements Serializable {
                 ", ownerClock=" + ownerClock +
                 ", lastChangeHMAC=" + Arrays.toString(lastChangeHMAC) +
                 ", lastChangeHMACSeller=" + Arrays.toString(lastChangeHMACSeller) +
-                ", clientID=" + clientID +
-                ", clientIDSignature=" + Arrays.toString(clientIDSignature) +
                 ", notaryID=" + notaryID +
                 ", echoClock=" + echoClock +
                 '}';
@@ -315,8 +295,6 @@ public class Interaction implements Serializable {
                 ", ownerClock=" + ownerClock +
                 ", lastChangeHMAC=" + Arrays.toString(lastChangeHMAC) +
                 ", lastChangeHMACSeller=" + Arrays.toString(lastChangeHMACSeller) +
-                ", clientID=" + clientID +
-                ", clientIDSignature=" + Arrays.toString(clientIDSignature) +
                 ", notaryID=" + notaryID +
                 ", echoClock=" + echoClock +
                 ", readyClock=" + readyClock +
@@ -340,15 +318,13 @@ public class Interaction implements Serializable {
                 getWts() == that.getWts() &&
                 getOwnerID() == that.getOwnerID() &&
                 getOwnerClock() == that.getOwnerClock() &&
-                getClientID() == that.getClientID() &&
                 getType() == that.getType() &&
                 Arrays.equals(getHmac(), that.getHmac()) &&
                 Arrays.equals(getSellerHMAC(), that.getSellerHMAC()) &&
                 Arrays.equals(getBuyerHMAC(), that.getBuyerHMAC()) &&
                 Arrays.equals(getSigma(), that.getSigma()) &&
                 Arrays.equals(getLastChangeHMAC(), that.getLastChangeHMAC()) &&
-                Arrays.equals(getLastChangeHMACSeller(), that.getLastChangeHMACSeller()) &&
-                Arrays.equals(getClientIDSignature(), that.getClientIDSignature());
+                Arrays.equals(getLastChangeHMACSeller(), that.getLastChangeHMACSeller());
     }
 
     @Override

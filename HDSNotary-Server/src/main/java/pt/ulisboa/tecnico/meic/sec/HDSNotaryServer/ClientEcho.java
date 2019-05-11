@@ -115,6 +115,10 @@ public class ClientEcho {
         this.quorum = quorum;
     }
 
+    public Lock getLock() {
+        return this.lock;
+    }
+
     public int getNumberOfQuorumReceivedEchos() {
         int echos = 0;
         for (Interaction interaction : this.echos) {
