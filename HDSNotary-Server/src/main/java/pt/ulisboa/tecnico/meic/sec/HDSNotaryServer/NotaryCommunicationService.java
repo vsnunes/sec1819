@@ -26,8 +26,8 @@ public class NotaryCommunicationService implements NotaryCommunicationInterface,
     @Override
     public void echo(Interaction request) throws RemoteException {
         
-        System.out.println("Varejeira: recebi echo do " + request.getNotaryID() + " e eu sou o " + Main.NOTARY_ID);
-        int clientId = request.getUserID();
+        System.out.println("Varejeira: recebi echo do " + request.getNotaryID());
+        /*int clientId = request.getUserID();
         int notaryId = request.getNotaryID();
         int lastEchoCounter = -1;
         synchronized(NotaryService.echoCounter) {
@@ -52,13 +52,13 @@ public class NotaryCommunicationService implements NotaryCommunicationInterface,
 
         VirtualCertificate notaryCert = new VirtualCertificate();
         try {
-            notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
+            notaryCert.init(new File("../HDSNotaryLib/src/main/resources/certs/notary" + request.getNotaryID() + ".crt").getAbsolutePath());
         } catch (HDSSecurityException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
         System.out.println("Varejeira after cert");
-        /* compare hmacs */
+        //compare hmacs 
         try {
             if (Digest.verify(request.getNotaryIDSignature(), request.echoString(), notaryCert) == false) {
                 throw new HDSSecurityException("tampering detected in echo message!");
@@ -83,7 +83,7 @@ public class NotaryCommunicationService implements NotaryCommunicationInterface,
                 System.out.println("Varejeira after signal");
             }
         }
-        System.out.println("Varejeira leaving echo function");
+        System.out.println("Varejeira leaving echo function");*/
     }
 
     @Override
@@ -111,7 +111,7 @@ public class NotaryCommunicationService implements NotaryCommunicationInterface,
 
         VirtualCertificate notaryCert = new VirtualCertificate();
         try {
-            notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
+            notaryCert.init(new File("../HDSNotaryLib/src/main/resources/certs/notary" + request.getNotaryID() + ".crt").getAbsolutePath());
 
             try {
                 if (Digest.verify(request.getNotaryIDSignature(), request.echoString(), notaryCert) == false) {

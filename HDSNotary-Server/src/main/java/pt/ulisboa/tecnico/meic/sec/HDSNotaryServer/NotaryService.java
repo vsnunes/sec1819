@@ -165,6 +165,13 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     }
 
+    public void debugPrintBCArrays() {
+        System.out.println("=== Echo Counter ===");
+        System.out.printf("[%d, %d, %d, %d]\n", echoCounter[1], echoCounter[2], echoCounter[3], echoCounter[4]);
+        System.out.println("=== Ready Counter ===");
+        System.out.printf("[%d, %d, %d, %d]\n", readyCounter[1], readyCounter[2], readyCounter[3], readyCounter[4]);
+        System.out.println();
+    }
 
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
