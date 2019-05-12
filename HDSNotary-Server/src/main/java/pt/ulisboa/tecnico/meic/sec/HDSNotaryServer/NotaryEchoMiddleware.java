@@ -40,7 +40,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
     /** list for echos of all clients */
     protected static ClientEcho[] clientEchos;
 
-    private static final long TIMEOUT_SEC = 5;
+    static final long TIMEOUT_SEC = 5;
 
     /** flag for init RMI */
     private boolean needInitRMI;
@@ -188,14 +188,26 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 System.out.println("After quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
                 notaryService.debugPrintBCArrays();
                 
-                int readyClock = ++NotaryService.readyCounter[Main.NOTARY_ID];
+                request = clientEcho.getQuorum();
+                request.setNotaryID(Main.NOTARY_ID);
+                int readyClock = NotaryService.readyCounter[Main.NOTARY_ID] + 1;
                 request.setReadyClock(readyClock);
-
+                
+                cert = new VirtualCertificate();
+                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+                try {
+                    request.setReadySignature(Digest.createDigest(request.readyString(), cert));
+                } catch (NoSuchAlgorithmException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+                
                 if (clientEcho.isSentReady() == false && receivedAllEchos==true) {
                     clientEcho.setSentReady(true);
                     for (NotaryCommunicationInterface notary : this.servers) {
                         try {
-                            completionService.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, clientEcho.getQuorum()));
+                            System.out.println("varejeira mandei um ready!!!!!!");
+                            completionService.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, request));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -204,38 +216,32 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 
                 System.out.println("Varejeira Sent Ready 2 all");
 
-                //Amplification phase!
-                
-                if((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
-                    clientEcho.setSentReady(true);
-                    for (NotaryCommunicationInterface notary : this.servers) {
-                        try {
-                            completionService.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, clientEcho.getQuorum()));
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                if(clientEcho.isDelivered()==false) {
+                    clientEcho.getLock().lock();
+                    try {
+                        while (!(clientEcho.getNumberOfQuorumReceivedReadys() > (2 * F))) {
+                            receivedAllReadys = clientEcho.getQuorumReadys().await(TIMEOUT_SEC, TimeUnit.SECONDS);
+                            if(!receivedAllReadys) {
+                                break;
+                            } else {
+                                System.out.println("varejeira recebi um ready!!!!");
+                            }
                         }
+                    } finally {
+                        clientEcho.getLock().unlock();
                     }
-                }
-                
-                System.out.println("Varejeira after amplification");
+                    notaryService.debugPrintBCArrays();
 
-                clientEcho.getLock().lock();
-                try {
-                    while (clientEcho.getNumberOfQuorumReceivedReadys() < (2 * F) && clientEcho.isDelivered()==true) {
-                        receivedAllReadys = clientEcho.getQuorumReadys().await(TIMEOUT_SEC, TimeUnit.SECONDS);
+
+                    //readys timeout expired!
+                    if (receivedAllReadys == false) {
+                        throw new HDSSecurityException("Failed during ready propagation phase :(");
                     }
-                } finally {
-                    clientEcho.getLock().unlock();
-                }
-
-                //readys timeout expired!
-                if (receivedAllReadys == false) {
-                    throw new HDSSecurityException("Failed during ready propagation phase :(");
-                }
-                //only after receiving readys
-                synchronized(clientEcho) {
-                    clientEcho.setDelivered(true);
-                    return notaryService.intentionToSell(clientEcho.getQuorum());                       
+                    //only after receiving readys
+                    synchronized(clientEcho) {
+                        clientEcho.setDelivered(true);
+                        return notaryService.intentionToSell(clientEcho.getQuorum());                       
+                    }
                 }
             
             } catch (Exception e) {

@@ -22,8 +22,12 @@ public class NotaryEchoTask implements Callable<Interaction> {
     @Override
     public Interaction call() throws Exception {
         switch (operation) {
-            case ECHO: notaryInterface.echo(params);
-            case READY: notaryInterface.ready(params);
+            case ECHO: 
+                notaryInterface.echo(params); 
+                break;
+            case READY: 
+                notaryInterface.ready(params); 
+                break;
         }
         return null;
     }
