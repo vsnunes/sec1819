@@ -23,15 +23,15 @@ public class NotaryCommunicationService extends UnicastRemoteObject implements N
     public void echo(Interaction request) throws RemoteException {
         
         System.out.println("Varejeira: recebi echo do " + request.getNotaryID());
-        /*int clientId = request.getUserID();
+        int clientId = request.getUserID();
         int notaryId = request.getNotaryID();
         int lastEchoCounter = -1;
         synchronized(NotaryService.echoCounter) {
             lastEchoCounter = NotaryService.echoCounter[notaryId];
         }
 
-        System.out.println("varejeira lastEchoCounter " + lastEchoCounter);
-        System.out.println("varejeira echoClock " + request.getEchoClock());
+        //System.out.println("varejeira lastEchoCounter " + lastEchoCounter);
+        //System.out.println("varejeira echoClock " + request.getEchoClock());
         if (request.getEchoClock() <= lastEchoCounter) {
             throw new RemoteException("Replay attack of echo message!");
         }
@@ -40,7 +40,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject implements N
             NotaryService.echoCounter[notaryId] = new Integer(request.getEchoClock());
         }
 
-        System.out.println("Varejeira after checking echo clock");
+        //System.out.println("Varejeira after checking echo clock");
         ClientEcho clientEcho = null;
         synchronized(NotaryService.echoCounter[clientId]) {
             clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
@@ -53,7 +53,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject implements N
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        System.out.println("Varejeira after cert");
+        //System.out.println("Varejeira after cert");
         //compare hmacs 
         try {
             if (Digest.verify(request.getNotaryIDSignature(), request.echoString(), notaryCert) == false) {
@@ -63,28 +63,30 @@ public class NotaryCommunicationService extends UnicastRemoteObject implements N
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        System.out.println("Varejeira after sign");
+        //System.out.println("Varejeira after sign");
         synchronized (clientEcho.getEchos()) {
             Interaction notaryInteraction = clientEcho.getEchos()[notaryId];
             if (notaryInteraction == null) {
-                System.out.println("Varejeira after if notaryInteraction a null");
+                //System.out.println("Varejeira after if notaryInteraction a null");
                 clientEcho.addEcho(notaryId, request);
-                System.out.println("Varejeira after addEcho");
+                //System.out.println("Varejeira after addEcho");
                 try {
                     clientEcho.getLock().lock();
                     clientEcho.getQuorumEchos().signal();
                 } catch(Exception e) {
                     e.printStackTrace();
+                } finally {
+                    clientEcho.getLock().unlock();
                 }
-                System.out.println("Varejeira after signal");
+                //System.out.println("Varejeira after signal");
             }
         }
-        System.out.println("Varejeira leaving echo function");*/
+        //System.out.println("Varejeira leaving echo function");
     }
 
     @Override
     public void ready(Interaction request) throws RemoteException {
-        System.out.println("Varejeira: recebi echo!");
+        //System.out.println("Varejeira: recebi ready!");
         int clientId = request.getUserID();
         int notaryId = request.getNotaryID();
         int lastReadyCounter = -1;
@@ -126,8 +128,13 @@ public class NotaryCommunicationService extends UnicastRemoteObject implements N
             Interaction notaryInteraction = clientEcho.getReadys()[notaryId];
             if (notaryInteraction == null) {
                 clientEcho.addReady(notaryId, request);
+                
                 clientEcho.getLock().lock();
-                clientEcho.getQuorumReadys().signal();
+                try {
+                    clientEcho.getQuorumReadys().signal();
+                } finally {
+                    clientEcho.getLock().unlock();
+                }
             }
         }
     }

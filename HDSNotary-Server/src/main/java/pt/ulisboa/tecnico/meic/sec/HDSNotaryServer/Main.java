@@ -33,13 +33,14 @@ public class Main {
         CCSmartCard card = null;
 
         if (args.length > 0) {
-            NOTARY_ID = Integer.parseInt(args[0]);
-            NOTARY_SERVICE_PORT = 10000 + NOTARY_ID;
-            System.setProperty("project.notary.private",
-                    "../HDSNotaryLib/src/main/resources/certs/java_certs/private_notary" + NOTARY_ID + "_pkcs8.pem");
-            System.setProperty("project.notary.cert.path",
-                    "../HDSNotaryLib/src/main/resources/certs/notary" + NOTARY_ID + ".crt");
+            NOTARY_ID = Integer.parseInt(args[0]);            
         }
+        NOTARY_SERVICE_PORT = 10000 + NOTARY_ID;
+        System.setProperty("project.notary.private",
+                    "../HDSNotaryLib/src/main/resources/certs/java_certs/private_notary" + NOTARY_ID + "_pkcs8.pem");
+        System.setProperty("project.notary.cert.path",
+                    "../HDSNotaryLib/src/main/resources/certs/notary" + NOTARY_ID + ".crt");
+
         new BoxUI("Notary is running on port " + NOTARY_SERVICE_PORT).showAndGo(BoxUI.WHITE_BOLD_BRIGHT);
 
         Registry reg = LocateRegistry.createRegistry(NOTARY_SERVICE_PORT);
