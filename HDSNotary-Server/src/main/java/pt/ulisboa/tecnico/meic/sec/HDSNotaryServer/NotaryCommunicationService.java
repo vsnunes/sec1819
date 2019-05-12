@@ -8,20 +8,16 @@ import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
 
-public class NotaryCommunicationService implements NotaryCommunicationInterface, Serializable {
+public class NotaryCommunicationService extends UnicastRemoteObject implements NotaryCommunicationInterface, Serializable {
+
+    protected NotaryCommunicationService() throws RemoteException {
+        super();
+    }
 
     @Override
     public void echo(Interaction request) throws RemoteException {

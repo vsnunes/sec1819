@@ -103,6 +103,7 @@ public class NotaryMiddleware implements NotaryInterface {
 
             for (NotaryInterface notaryInterface : servers) {
                 completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
+                break;
             }
 
             int received = 0;
