@@ -36,8 +36,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     /** Maximum of Byzantine faults */
     public static final int F = 1;
 
-    public static Integer[] echoCounter;
-    public static Integer[] readyCounter;
+    public static Integer[][] echoCounter;
+    public static Integer[][] readyCounter;
 
     /** Every transaction has an ID so keeps record of the last ID used in a transaction **/
     private int transactionCounter = 0;
@@ -78,12 +78,19 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             }
         }
         /** remeber to make this persistent!!!!!!!! */
-        echoCounter = new Integer[NUMBER_OF_NOTARIES + 1];
-        readyCounter = new Integer[NUMBER_OF_NOTARIES + 1];
+        echoCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
+        readyCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
         for (int i = 1; i <= NUMBER_OF_NOTARIES; i++) {
-            echoCounter[i] = new Integer(0);
-            readyCounter[i] = new Integer(0);
+            echoCounter[i] = new Integer[NUMBER_OF_CLIENTS + 1];
+            readyCounter[i] = new Integer[NUMBER_OF_CLIENTS + 1];
+
+            for (int j = 1; j <= NUMBER_OF_CLIENTS; j++) {
+                echoCounter[i][j] = new Integer(0);
+                readyCounter[i][j] = new Integer(0);
+            }
         }
+
+        
         instance = this;
     }
 
@@ -164,9 +171,24 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     public void debugPrintBCArrays() {
         System.out.println("=== Echo Counter ===");
-        System.out.printf("[%d, %d, %d, %d]\n", echoCounter[1], echoCounter[2], echoCounter[3], echoCounter[4]);
+        for (int i = 1; i <= NUMBER_OF_NOTARIES; i++) {
+            String line = "N%d: [";
+            for (int j = 1; j <= NUMBER_OF_CLIENTS - 1; j++) {
+                line += echoCounter[i][j] + ", ";
+            }
+            line += echoCounter[i][NUMBER_OF_CLIENTS] + "]\n";
+            System.out.printf(line, i);
+        }
+
         System.out.println("=== Ready Counter ===");
-        System.out.printf("[%d, %d, %d, %d]\n", readyCounter[1], readyCounter[2], readyCounter[3], readyCounter[4]);
+        for (int i = 1; i <= NUMBER_OF_NOTARIES; i++) {
+            String line = "N%d: [";
+            for (int j = 1; j <= NUMBER_OF_CLIENTS - 1; j++) {
+                line += readyCounter[i][j] + ", ";
+            }
+            line += readyCounter[i][NUMBER_OF_CLIENTS] + "]\n";
+            System.out.printf(line, i);
+        }
         System.out.println();
     }
 

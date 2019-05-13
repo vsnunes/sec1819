@@ -140,7 +140,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             //System.out.println("Varejeira ID: " + request.getNotaryID());
 
             //notaryService.debugPrintBCArrays();
-            int echoClock = NotaryService.echoCounter[id] + 1;
+            int echoClock = NotaryService.echoCounter[id][clientId] + 1;
 
             request.setEchoClock(echoClock);
 
@@ -201,7 +201,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 request = clientEcho.getQuorum();
                 final int idNotary = new Integer(Main.NOTARY_ID);
                 request.setNotaryID(idNotary);
-                int readyClock = NotaryService.readyCounter[idNotary] + 1;
+                int readyClock = NotaryService.readyCounter[idNotary][clientId] + 1;
                 request.setReadyClock(readyClock);
 
                 request.setType(Interaction.Type.INTENTION2SELL);

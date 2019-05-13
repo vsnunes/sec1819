@@ -48,7 +48,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         int notaryId = request.getNotaryID();
         int lastEchoCounter = -1;
         synchronized (NotaryService.echoCounter) {
-            lastEchoCounter = NotaryService.echoCounter[notaryId];
+            lastEchoCounter = NotaryService.echoCounter[notaryId][clientId];
         }
 
         // System.out.println("varejeira lastEchoCounter " + lastEchoCounter);
@@ -58,12 +58,12 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         synchronized (NotaryService.echoCounter) {
-            NotaryService.echoCounter[notaryId] = new Integer(request.getEchoClock());
+            NotaryService.echoCounter[notaryId][clientId] = new Integer(request.getEchoClock());
         }
 
         // System.out.println("Varejeira after checking echo clock");
         ClientEcho clientEcho = null;
-        synchronized (NotaryService.echoCounter[clientId]) {
+        synchronized (NotaryEchoMiddleware.clientEchos) {
             clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
         }
 
@@ -113,7 +113,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         int notaryId = request.getNotaryID();
         int lastReadyCounter = -1;
         synchronized (NotaryService.readyCounter) {
-            lastReadyCounter = NotaryService.readyCounter[notaryId];
+            lastReadyCounter = NotaryService.readyCounter[notaryId][clientId];
         }
 
         if (request.getReadyClock() <= lastReadyCounter) {
@@ -121,11 +121,11 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         synchronized (NotaryService.readyCounter) {
-            NotaryService.readyCounter[notaryId] = new Integer(request.getReadyClock());
+            NotaryService.readyCounter[notaryId][clientId] = new Integer(request.getReadyClock());
         }
 
         ClientEcho clientEcho = null;
-        synchronized (NotaryService.echoCounter[clientId]) {
+        synchronized (NotaryEchoMiddleware.clientEchos[clientId]) {
             clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
         }
         try {
