@@ -102,15 +102,14 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
     
         
-        if (needInitRMI) {
-            needInitRMI = false;
-            try {
-                initRMI();
-            } catch (NotaryEchoMiddlewareException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+        
+        try {
+            initRMI();
+        } catch (NotaryEchoMiddlewareException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
+        
 
         int clientId = request.getUserID();
 

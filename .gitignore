@@ -12,4 +12,5 @@ target/
 bin/
 HDSNotary-Server/Transaction*.bin
 HDSNotary-Server/UsersGoods*.bin
+HDSNotary-Server/RBClocks*.bin
 .directory

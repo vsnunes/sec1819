@@ -59,6 +59,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
         synchronized (NotaryService.echoCounter) {
             NotaryService.echoCounter[notaryId][clientId] = new Integer(request.getEchoClock());
+            NotaryService.doWriteRB();
         }
 
         // System.out.println("Varejeira after checking echo clock");
@@ -127,6 +128,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         ClientEcho clientEcho = null;
         synchronized (NotaryEchoMiddleware.clientEchos[clientId]) {
             clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
+            NotaryService.doWriteRB();
         }
         try {
             NotaryService.getInstance().debugPrintBCArrays();

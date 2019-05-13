@@ -51,6 +51,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private static String TRANSACTIONS_FILE;
     private static String USERSGOODSTMP_FILE;
     private static String TRANSACTIONSTMP_FILE;
+    private static String RB_FILE;
+    private static String RBTMP_FILE;
 
 
 
@@ -60,6 +62,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         USERSGOODSTMP_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + "TMP.bin";
         TRANSACTIONS_FILE = "Transaction" + NOTARY_SERVICE_PORT + ".bin";
         TRANSACTIONSTMP_FILE = "Transaction" + NOTARY_SERVICE_PORT + "TMP.bin";
+        RBTMP_FILE = "RBClocks" + NOTARY_SERVICE_PORT +"TMP.bin";
+        RB_FILE = "RBClocks" + NOTARY_SERVICE_PORT +".bin";
 
         if (!doRead()) {
             System.out.println("No data found, initializing...");
@@ -77,20 +81,20 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 e.getMessage();
             }
         }
-        /** remeber to make this persistent!!!!!!!! */
-        echoCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
-        readyCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
-        for (int i = 1; i <= NUMBER_OF_NOTARIES; i++) {
-            echoCounter[i] = new Integer[NUMBER_OF_CLIENTS + 1];
-            readyCounter[i] = new Integer[NUMBER_OF_CLIENTS + 1];
+        if(!doReadRB()) {
+            /** remeber to make this persistent!!!!!!!! */
+            echoCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
+            readyCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
+            for (int i = 1; i <= NUMBER_OF_NOTARIES; i++) {
+                echoCounter[i] = new Integer[NUMBER_OF_CLIENTS + 1];
+                readyCounter[i] = new Integer[NUMBER_OF_CLIENTS + 1];
 
-            for (int j = 1; j <= NUMBER_OF_CLIENTS; j++) {
-                echoCounter[i][j] = new Integer(0);
-                readyCounter[i][j] = new Integer(0);
+                for (int j = 1; j <= NUMBER_OF_CLIENTS; j++) {
+                    echoCounter[i][j] = new Integer(0);
+                    readyCounter[i][j] = new Integer(0);
+                }
             }
         }
-
-        
         instance = this;
     }
 
@@ -476,6 +480,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     public void doPrint(){
+        /* RB state */
+        debugPrintBCArrays();
         try {
             //path to be defined
 
@@ -541,7 +547,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 transactions.add(transaction);
                 System.out.println("Transaction with id " + transaction.getTransactionID() + " was recovered");
             }
-
         }
         catch (FileNotFoundException e) {
             System.out.println("File " + TRANSACTIONS_FILE +" not found");
@@ -554,13 +559,11 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             System.out.println("Class not found");
             e.printStackTrace();
         }
-
         try {
             oi.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     /*Execute transactions pending*/
@@ -624,7 +627,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     }
 
-    private void swapFiles(String original, String tmp) {
+    private static void swapFiles(String original, String tmp) {
         System.out.println("Performing the swap of " + tmp + " ...");
         File originalFile= new File(original);
         try {
@@ -716,6 +719,55 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     public void shutdown() throws RemoteException {
         //server dont need to do any post execution operations
     }
+
+    /*update clocks for RB phase*/
+    public static void doWriteRB(){
+        System.out.println("Writing RBClocks...");
+        try {
+
+            File file = new File(RBTMP_FILE);
+            file.createNewFile();
+            FileOutputStream f = new FileOutputStream(file, false);
+            ObjectOutputStream o = new ObjectOutputStream(f);
+            o.writeObject(echoCounter);
+            o.writeObject(readyCounter);
+
+            o.close();
+            swapFiles(RB_FILE,RBTMP_FILE);
+        }
+        catch (IOException e) {
+            System.out.println("Error initializing stream");
+        }
+    }
+
+    /*read clock for RB phase*/
+    private boolean doReadRB() {
+        System.out.println("Reading RBClocks...");
+        try {
+            File file = new File(RB_FILE);
+            if(!file.exists()){
+                System.out.println("File " + RB_FILE + " does not exists");
+                return false;
+            }
+            FileInputStream fi = new FileInputStream(file);
+            ObjectInputStream oi = new ObjectInputStream(fi);
+            echoCounter = (Integer[][]) oi.readObject();
+            readyCounter = (Integer[][]) oi.readObject();
+            oi.close();
+            return true;
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("File " + RB_FILE+ " not found");
+        } catch (IOException e) {
+            System.out.println("Error initializing stream");
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            System.out.println("Class not found");
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
 
 }
