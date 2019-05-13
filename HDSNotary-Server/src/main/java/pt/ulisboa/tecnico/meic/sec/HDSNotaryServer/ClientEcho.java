@@ -28,11 +28,7 @@ public class ClientEcho {
 
     public ClientEcho(int clientID) {
         this.clientID = clientID;
-        this.echos = new Interaction[NUMBER_OF_NOTARIES + 1];
-        this.readys = new Interaction[NUMBER_OF_NOTARIES + 1];
-        this.sentEcho = false;
-        this.sentReady = false;
-        this.delivered = false;
+        this.clean();
     }
 
     public int getClientID() {
@@ -72,7 +68,9 @@ public class ClientEcho {
     }
 
     public void setSentReady(boolean sentReady) {
-        this.sentReady = sentReady;
+        synchronized(this) {
+            this.sentReady = sentReady;
+        }
     }
 
     public boolean isSentEcho() {
@@ -80,7 +78,9 @@ public class ClientEcho {
     }
 
     public void setSentEcho(boolean sentEcho) {
-        this.sentEcho = sentEcho;
+        synchronized(this) {
+            this.sentEcho = sentEcho;
+        }
     }
 
     public void addEcho(int position, Interaction echo) {
@@ -145,6 +145,16 @@ public class ClientEcho {
             }
         } 
         return readys;
-    }    
+    } 
+    
+    public void clean() {
+        System.out.println("varejeira do clean!!!");
+        this.echos = new Interaction[NUMBER_OF_NOTARIES + 1];
+        this.readys = new Interaction[NUMBER_OF_NOTARIES + 1];
+        this.sentEcho = false;
+        this.sentReady = false;
+        this.delivered = false;
+        this.quorum = null;
+    }
 
 }

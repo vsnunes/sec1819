@@ -117,13 +117,16 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
 
         try {
+            System.out.println(request.toString());
             /*compare hmacs*/
             if(!Digest.verify(request, cert)){
                 throw new HDSSecurityException("Tampering detected!");
             }
             /*check freshness*/
-            if(request.getUserClock() <= getClock(userId)){
-                throw new HDSSecurityException("Replay attack detected!!");
+            int clock = getClock(userId);
+            System.out.println("User clock: " + request.getUserClock() + " | " + clock);
+            if(request.getUserClock() <= clock){
+                throw new HDSSecurityException("Replay attack detected!! Request User Clock: " + request.getUserClock() + " getClock: " + clock);
             }
         } catch (NoSuchAlgorithmException e) {
             throw new RemoteException(e.getMessage());
