@@ -54,12 +54,14 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         // System.out.println("varejeira lastEchoCounter " + lastEchoCounter);
         // System.out.println("varejeira echoClock " + request.getEchoClock());
         if (request.getEchoClock() <= lastEchoCounter) {
-            throw new RemoteException("Replay attack of echo message!");
+            System.out.println("Replay attack of echo message! vindo do notario " + notaryId);
+            throw new RemoteException("Replay attack of echo message! vindo do notario " + notaryId);
         }
 
         synchronized (NotaryService.echoCounter) {
             NotaryService.echoCounter[notaryId][clientId] = new Integer(request.getEchoClock());
             NotaryService.doWriteRB();
+            System.out.println("recebi o echo do " + request.getNotaryID() + " e realizei a escrita persistente");
         }
 
         // System.out.println("Varejeira after checking echo clock");
@@ -118,6 +120,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         if (request.getReadyClock() <= lastReadyCounter) {
+            System.out.println("Replay attack of ready message!");
             throw new RemoteException("Replay attack of ready message!");
         }
 
@@ -130,12 +133,11 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
             NotaryService.doWriteRB();
         }
-        try {
+        /*try {
             NotaryService.getInstance().debugPrintBCArrays();
         } catch (GoodException e2) {
-            // TODO Auto-generated catch block
             e2.printStackTrace();
-        }
+        }*/
 
         VirtualCertificate notaryCert = new VirtualCertificate();
         try {

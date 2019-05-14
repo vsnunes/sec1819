@@ -54,7 +54,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
 
     public NotaryEchoMiddleware(String pathToServersCfg, String myUrl, NotaryService notaryService)
             throws NotaryEchoMiddlewareException, IOException {
-        this.servers = new ArrayList<>();
+        
         this.notaryService = notaryService;
         this.clientEchos = new ClientEcho[NUMBER_OF_CLIENTS + 1];
 
@@ -72,6 +72,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
 
     private void initRMI() throws NotaryEchoMiddlewareException {
         List<String> urls;
+        this.servers = new ArrayList<>();
         try {
             urls = CFGHelper.fetchURLsFromCfg(this.pathToServersCfg, 0);
             for (String url : urls) {
@@ -195,7 +196,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 }
 
                 System.out.println("After quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
-                notaryService.debugPrintBCArrays();
+                //notaryService.debugPrintBCArrays();
                 
                 request = clientEcho.getQuorum();
                 final int idNotary = new Integer(Main.NOTARY_ID);
@@ -241,7 +242,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     } finally {
                         clientEcho.getLock().unlock();
                     }
-                    notaryService.debugPrintBCArrays();
+                    //notaryService.debugPrintBCArrays();
 
                     if (clientEcho.getNumberOfQuorumReceivedReadys() > (2 * F)) {
                         receivedAllReadys = true;

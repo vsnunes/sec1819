@@ -426,7 +426,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
      */
     private void doWrite(){
-        System.out.println("Writing GoodsUser...");
+        //System.out.println("Writing GoodsUser...");
         try {
 
             File file = new File(USERSGOODSTMP_FILE);
@@ -450,7 +450,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     To be called when notary service starts
      */
     private boolean doRead() {
-        System.out.println("Reading GoodsUser...");
+        //System.out.println("Reading GoodsUser...");
         try {
             File file = new File(USERSGOODS_FILE);
             if(!file.exists()){
@@ -568,7 +568,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     /*Execute transactions pending*/
     private ArrayList<Transaction> doReadTransactions(){
-        System.out.println("Reading transaction...");
+        //System.out.println("Reading transaction...");
         ArrayList<Transaction> transactions = new ArrayList<Transaction>();
         ObjectInputStream oi = null;
         try {
@@ -628,19 +628,19 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     private static void swapFiles(String original, String tmp) {
-        System.out.println("Performing the swap of " + tmp + " ...");
+        //System.out.println("Performing the swap of " + tmp + " ...");
         File originalFile= new File(original);
         try {
-            System.out.println(originalFile.createNewFile());
+            originalFile.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
         File tmpFile= new File(tmp);
 
-        System.out.println(originalFile.renameTo(new File("dummy" + tmp)));
-        System.out.println(tmpFile.renameTo(new File(original)));
+        originalFile.renameTo(new File("dummy" + tmp));
+        tmpFile.renameTo(new File(original));
         File dummy = new File("dummy"+tmp);
-        System.out.println(dummy.delete());
+        dummy.delete();
 
     }
 
@@ -722,7 +722,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     /*update clocks for RB phase*/
     public static void doWriteRB(){
-        System.out.println("Writing RBClocks...");
+        //System.out.println("Writing RBClocks...");
         try {
 
             File file = new File(RBTMP_FILE);
@@ -742,7 +742,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     /*read clock for RB phase*/
     private boolean doReadRB() {
-        System.out.println("Reading RBClocks...");
+        //System.out.println("Reading RBClocks...");
         try {
             File file = new File(RB_FILE);
             if(!file.exists()){
