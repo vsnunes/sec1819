@@ -102,6 +102,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                 completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALECHO, clientId));*/
             }
         }
+        System.out.println("Varejeira: sai do echo do " + request.getNotaryID() + "**saida**");
         // System.out.println("Varejeira leaving echo function");
     }
 
