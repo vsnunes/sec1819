@@ -7,11 +7,12 @@ import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 
 public class NotaryEchoTask implements Callable<Interaction> {
 
-    public enum Operation {ECHO, READY}
+    public enum Operation {ECHO, READY, SIGNALECHO, SIGNALREADY}
 
     private NotaryCommunicationInterface notaryInterface;
     private Operation operation;
     private Interaction params;
+    private int clientId;
 
     public NotaryEchoTask(NotaryCommunicationInterface notaryInterface, Operation operation, Interaction parms) {
         this.notaryInterface = notaryInterface;
@@ -19,15 +20,28 @@ public class NotaryEchoTask implements Callable<Interaction> {
         this.params = parms;
     }
 
+    public NotaryEchoTask(NotaryCommunicationInterface notaryInterface, Operation operation, int clientId) {
+        this.notaryInterface = notaryInterface;
+        this.operation = operation;
+        this.clientId = clientId;
+    }
+
     @Override
     public Interaction call() throws Exception {
         switch (operation) {
             case ECHO: 
-                notaryInterface.echo(params); 
+                notaryInterface.echo(params);
                 break;
             case READY: 
                 notaryInterface.ready(params); 
                 break;
+
+            case SIGNALECHO:
+                notaryInterface.signalEcho(clientId);
+                break;
+            
+            case SIGNALREADY:
+                notaryInterface.signalReady(clientId);
         }
         return null;
     }

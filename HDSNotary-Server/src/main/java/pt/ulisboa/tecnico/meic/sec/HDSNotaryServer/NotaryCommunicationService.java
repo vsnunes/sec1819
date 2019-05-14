@@ -95,15 +95,11 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                 // System.out.println("Varejeira after if notaryInteraction a null");
                 clientEcho.addEcho(notaryId, request);
                 // System.out.println("Varejeira after addEcho");
-                try {
-                    clientEcho.getLock().lock();
-                    clientEcho.getQuorumEchos().signal();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    clientEcho.getLock().unlock();
-                }
-                // System.out.println("Varejeira after signal");
+                /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+                CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
+
+                NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
+                completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALECHO, clientId));*/
             }
         }
         // System.out.println("Varejeira leaving echo function");
@@ -163,12 +159,11 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                 //System.out.println("Ratazana null");
                 clientEcho.addReady(notaryId, request);
 
-                clientEcho.getLock().lock();
-                try {
-                    clientEcho.getQuorumReadys().signal();
-                } finally {
-                    clientEcho.getLock().unlock();
-                }
+                /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+                CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
+
+                NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
+                completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALREADY, clientId));*/
             }
             //else System.out.println("Ratazana not null");
         }
@@ -293,32 +288,25 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
     }
 
-    
-    private List<NotaryCommunicationInterface> initRMI() throws NotaryEchoMiddlewareException {
-        List<String> urls;
-        List<NotaryCommunicationInterface> servers = new ArrayList<>();
+    @Override
+    public void signalReady(int clientId) throws RemoteException {
+        ClientEcho clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
+        clientEcho.getReadyLock().lock();
         try {
-            urls = CFGHelper.fetchURLsFromCfg(System.getProperty("project.nameserver.config"), 0);
-            for (String url : urls) {
-                url = url + "COM";
-                try {
-                    
-                    servers.add((NotaryCommunicationInterface) Naming.lookup(url));
-                    //System.out.println("Varejeira no init a adicionar: " + url);
-                    
-                } catch (NotBoundException e) {
-                    throw new NotaryEchoMiddlewareException(":( NotBound on Notary at " + url);
-                } catch (MalformedURLException e) {
-                    throw new NotaryEchoMiddlewareException(":( Malform URL! Cannot find Notary Service at " + url);
-                } catch (RemoteException e) {
-                    System.out.println(":( It looks like I miss the connection with Notary at " + url + " ignoring...");
-                }
-            }
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+            clientEcho.getQuorumReadys().signal();
+        } finally {
+            clientEcho.getReadyLock().unlock();
         }
-        return servers;
-        //System.out.println("Varejeira do initRMI: " + servers.size());
+    }
+
+    @Override
+    public void signalEcho(int clientId) throws RemoteException {
+        ClientEcho clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
+        clientEcho.getEchoLock().lock();
+        try {
+            clientEcho.getQuorumEchos().signal();
+        } finally {
+            clientEcho.getEchoLock().unlock();
+        }
     }
 }
