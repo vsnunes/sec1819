@@ -156,7 +156,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         synchronized (clientEcho.getReadys()) {
             Interaction notaryInteraction = clientEcho.getReadys()[notaryId];
             if (notaryInteraction == null) {
-                //System.out.println("Ratazana null");
+                System.out.println("Ratazana null");
                 clientEcho.addReady(notaryId, request);
 
                 /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -165,27 +165,12 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                 NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
                 completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALREADY, clientId));*/
             }
-            //else System.out.println("Ratazana not null");
+            else System.out.println("Ratazana not null");
         }
 
         // ================= Amplification phase! =================
 
         /*if ((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
-
-            if (!clientEcho.getDeliveredLock().tryLock()) {
-                return;
-            }
-
-            if (clientEcho.isDelivered()) {
-                try {
-                    return;
-                } finally {
-                    clientEcho.getDeliveredLock().unlock();
-                }
-            }
-
-
-
             System.out.println("VAREJEIRA ENTREI NA FASE DE AMPLIFICAÇÃO!!!!!!");
             clientEcho.setSentReady(true);
             boolean receivedAllReadys = false;
@@ -200,7 +185,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                     request = clientEcho.getQuorum();
                     final int idNotary = new Integer(Main.NOTARY_ID);
                     request.setNotaryID(idNotary);
-                    int readyClock = NotaryService.readyCounter[idNotary][clientId] + 1;
+                    int readyClock = NotaryService.readyCounter[idNotary] + 1;
                     request.setReadyClock(readyClock);
                     
                     Certification cert = new VirtualCertificate();
@@ -230,7 +215,8 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
                     clientEcho.getLock().lock();
                     try {
-                        while (!(clientEcho.getNumberOfQuorumReceivedReadys() > (2 * F))) {
+                        while (clientEcho.getNumberOfQuorumReceivedReadys() < (2 * F)
+                                && clientEcho.isDelivered() == true) {
                             try {
                                 receivedAllReadys = clientEcho.getQuorumReadys().await(TIMEOUT_SEC, TimeUnit.SECONDS);
                             } catch (InterruptedException e) {
@@ -282,8 +268,6 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             } catch (GoodException e1) {
                 e1.printStackTrace();
             }
-
-            clientEcho.getDeliveredLock().unlock();
         }*/
 
     }
