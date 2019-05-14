@@ -33,14 +33,14 @@ import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryService.*;
 public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryInterface {
 
     // TODO: ArrayList of NotaryInterface with all RMI proxy objects
-    private ArrayList<NotaryCommunicationInterface> servers;
+    public static ArrayList<NotaryCommunicationInterface> servers;
 
     private NotaryService notaryService;
 
     /** list for echos of all clients */
     protected static ClientEcho[] clientEchos;
 
-    static final long TIMEOUT_SEC = 5;
+    static final long TIMEOUT_SEC = 30;
 
     /** flag for init RMI */
     private boolean needInitRMI;
@@ -72,7 +72,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
 
     private void initRMI() throws NotaryEchoMiddlewareException {
         List<String> urls;
-        this.servers = new ArrayList<>();
+        servers = new ArrayList<>();
         try {
             urls = CFGHelper.fetchURLsFromCfg(this.pathToServersCfg, 0);
             for (String url : urls) {
@@ -176,7 +176,8 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
 
                 
                 System.out.println("Before LOCK");
-                clientEcho.getLock().lock();
+
+                /*clientEcho.getEchoLock().lock();
                 try {
                     //System.out.println("Before quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
                     while (!(clientEcho.getNumberOfQuorumReceivedEchos() > (N + F)/2)) {
@@ -188,13 +189,22 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     }
                 }
                 finally {
-                    clientEcho.getLock().unlock();
+                    clientEcho.getEchoLock().unlock();
+                }*/
+
+                int quorumEchos = 0;
+                Future<Interaction> resultFuture = null;
+                while (!(quorumEchos > (N + F)/2)) {
+                    //receivedAllReadys = clientEcho.getQuorumReadys().await(TIMEOUT_SEC, TimeUnit.SECONDS);
+                    resultFuture = completionService.poll(TIMEOUT_SEC, TimeUnit.SECONDS);
+                    if (resultFuture == null) {
+                        System.out.println("Não recebi o quorum de echos!!!! Timeout disparado");
+                        throw new HDSSecurityException("Não recebi o quorum de echos!!!!");
+                    }
+                    quorumEchos++;
                 }
                 
-                if (clientEcho.getNumberOfQuorumReceivedEchos() > (2 * F)) {
-                    receivedAllEchos = true;
-                }
-
+               
                 System.out.println("After quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
                 //notaryService.debugPrintBCArrays();
                 
@@ -214,7 +224,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     e1.printStackTrace();
                 }
                 System.out.println(Main.NOTARY_ID + " i'm about to send readys " + clientEcho.isSentReady() + receivedAllEchos);
-                if (clientEcho.isSentReady() == false && receivedAllEchos==true) {
+                if (clientEcho.isSentReady() == false) {
                     clientEcho.setSentReady(true);
                     for (NotaryCommunicationInterface notary : this.servers) {
                         try {
@@ -225,11 +235,14 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                         }
                     }
                 }
+
+                
+
                 
                 System.out.println("Varejeira Sent Ready 2 all");
 
                 if(clientEcho.isDelivered()==false) {
-                    clientEcho.getLock().lock();
+                    /*clientEcho.getReadyLock().lock();
                     try {
                         while (!(clientEcho.getNumberOfQuorumReceivedReadys() > (2 * F))) {
                             receivedAllReadys = clientEcho.getQuorumReadys().await(TIMEOUT_SEC, TimeUnit.SECONDS);
@@ -240,18 +253,21 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                             }
                         }
                     } finally {
-                        clientEcho.getLock().unlock();
-                    }
-                    //notaryService.debugPrintBCArrays();
+                        clientEcho.getReadyLock().unlock();
+                    }*/
 
-                    if (clientEcho.getNumberOfQuorumReceivedReadys() > (2 * F)) {
-                        receivedAllReadys = true;
+                    int quorumReadys = 0;
+                    resultFuture = null;
+                    while (!(quorumReadys > (2 * F))) {
+                        //receivedAllReadys = clientEcho.getQuorumReadys().await(TIMEOUT_SEC, TimeUnit.SECONDS);
+                        resultFuture = completionService.poll(TIMEOUT_SEC, TimeUnit.SECONDS);
+                        if (resultFuture == null) {
+                            System.out.println("Not received quorum of readys! Timeout disparado");
+                            throw new HDSSecurityException("Not received quorum of readys!");
+                        }
+                        quorumReadys++;
                     }
-
-                    //readys timeout expired!
-                    if (receivedAllReadys == false) {
-                        throw new HDSSecurityException("Failed during ready propagation phase :(");
-                    }
+                    
                     //only after receiving readys
                     synchronized(clientEcho) {
                         clientEcho.setDelivered(true);

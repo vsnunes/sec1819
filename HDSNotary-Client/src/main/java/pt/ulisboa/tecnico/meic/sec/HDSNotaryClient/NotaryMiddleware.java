@@ -52,7 +52,7 @@ public class NotaryMiddleware implements NotaryInterface {
     private ThreadPoolExecutor poolExecutor;
 
     /**timeout for responses waiting */
-    private final int TIMEOUT = 5;
+    private final int TIMEOUT = 30;
 
 
 
@@ -332,13 +332,16 @@ public class NotaryMiddleware implements NotaryInterface {
 
     @Override
     public int getClock(int userID) throws RemoteException {
-        int response = -1;
+        int maxResponse = -1, response;
 
         for (NotaryInterface notaryInterface : servers) {
             response = notaryInterface.getClock(userID);
+            if (response > maxResponse) {
+                maxResponse = response;
+            }
         }
 
-        return response;
+        return maxResponse;
     }
 
     @Override
