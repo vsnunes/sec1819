@@ -84,6 +84,7 @@ public class NotaryMiddleware implements NotaryInterface {
 
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
+        boolean toTest = true;
         /** create writeList */
         ArrayList<Interaction> writeList = new ArrayList<Interaction>();
         CompletionService<Interaction> completionService =
@@ -102,6 +103,10 @@ public class NotaryMiddleware implements NotaryInterface {
                 request.setSigma(Digest.createDigest(""+request.getWts()+request.getResponse(), cert));
 
             for (NotaryInterface notaryInterface : servers) {
+                if(toTest) {
+                    request.setResponse(toTest);
+                    toTest = false;
+                }
                 completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
             }
 

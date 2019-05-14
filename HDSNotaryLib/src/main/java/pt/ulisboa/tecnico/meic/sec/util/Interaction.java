@@ -293,8 +293,8 @@ public class Interaction implements Serializable {
                 ", sigma=" + Arrays.toString(sigma) +
                 ", ownerID=" + ownerID +
                 ", ownerClock=" + ownerClock +
-                ", lastChangeHMAC=" + Arrays.toString(lastChangeHMAC) +
-                ", lastChangeHMACSeller=" + Arrays.toString(lastChangeHMACSeller) +
+                //", lastChangeHMAC=" + Arrays.toString(lastChangeHMAC) +
+                //", lastChangeHMACSeller=" + Arrays.toString(lastChangeHMACSeller) +
                 ", notaryID=" + notaryID +
                 ", echoClock=" + echoClock +
                 ", readyClock=" + readyClock +

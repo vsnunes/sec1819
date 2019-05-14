@@ -24,6 +24,8 @@ public class ClientEcho {
     private final Lock lock = new ReentrantLock();
     private Condition quorumEchos = lock.newCondition();
     private Condition quorumReadys = lock.newCondition();
+    private Lock deliveredLock = new ReentrantLock();
+    private Condition safetyDelivered = deliveredLock.newCondition();
     private Interaction quorum;
 
     public ClientEcho(int clientID) {
@@ -119,6 +121,10 @@ public class ClientEcho {
         return this.lock;
     }
 
+    public Lock getDeliveredLock() {
+        return this.deliveredLock;
+    }
+
     public int getNumberOfQuorumReceivedEchos() {
         int echos = 0;
         for (Interaction interaction : this.echos) {
@@ -148,7 +154,7 @@ public class ClientEcho {
     } 
     
     public void clean() {
-        System.out.println("varejeira do clean!!!");
+        //System.out.println("varejeira do clean!!!");
         this.echos = new Interaction[NUMBER_OF_NOTARIES + 1];
         this.readys = new Interaction[NUMBER_OF_NOTARIES + 1];
         this.sentEcho = false;
