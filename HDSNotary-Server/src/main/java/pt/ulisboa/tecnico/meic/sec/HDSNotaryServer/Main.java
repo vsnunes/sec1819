@@ -102,6 +102,7 @@ public class Main {
         //Wait for connections
         try {
             System.in.read();
+            NotaryService.getInstance().doWriteRB();
         } catch (IOException e) {
             System.err.println("** NOTARY: Problem in System.read: " + e.getMessage());
             e.printStackTrace();

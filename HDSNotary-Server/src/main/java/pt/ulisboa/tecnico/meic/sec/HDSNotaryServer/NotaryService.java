@@ -737,6 +737,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             o.writeObject(echoCounter);
             o.writeObject(readyCounter);
 
+            f.close();
             o.close();
             swapFiles(RB_FILE,RBTMP_FILE);
         }
@@ -758,6 +759,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             ObjectInputStream oi = new ObjectInputStream(fi);
             echoCounter = (Integer[][]) oi.readObject();
             readyCounter = (Integer[][]) oi.readObject();
+            fi.close();
             oi.close();
             return true;
         }
