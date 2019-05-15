@@ -1,4 +1,5 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
+
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
@@ -20,9 +21,11 @@ import java.util.*;
  * A Class for implementing NotaryInterface on Server
  */
 
-public class NotaryService extends UnicastRemoteObject implements NotaryInterface,Serializable {
+public class NotaryService extends UnicastRemoteObject implements NotaryInterface, Serializable {
 
-    /** HashMap for match the ID with the object even though the object has an ID**/
+    /**
+     * HashMap for match the ID with the object even though the object has an ID
+     **/
     private HashMap<Integer, User> users;
     private HashMap<Integer, Good> goods;
 
@@ -39,7 +42,10 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     public static Integer[][] echoCounter;
     public static Integer[][] readyCounter;
 
-    /** Every transaction has an ID so keeps record of the last ID used in a transaction **/
+    /**
+     * Every transaction has an ID so keeps record of the last ID used in a
+     * transaction
+     **/
     private int transactionCounter = 0;
 
     private static NotaryService instance;
@@ -54,16 +60,14 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private static String RB_FILE;
     private static String RBTMP_FILE;
 
-
-
     private NotaryService() throws RemoteException, GoodException {
         super();
         USERSGOODS_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + ".bin";
         USERSGOODSTMP_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + "TMP.bin";
         TRANSACTIONS_FILE = "Transaction" + NOTARY_SERVICE_PORT + ".bin";
         TRANSACTIONSTMP_FILE = "Transaction" + NOTARY_SERVICE_PORT + "TMP.bin";
-        RBTMP_FILE = "RBClocks" + NOTARY_SERVICE_PORT +"TMP.bin";
-        RB_FILE = "RBClocks" + NOTARY_SERVICE_PORT +".bin";
+        RBTMP_FILE = "RBClocks" + NOTARY_SERVICE_PORT + "TMP.bin";
+        RB_FILE = "RBClocks" + NOTARY_SERVICE_PORT + ".bin";
 
         if (!doRead()) {
             System.out.println("No data found, initializing...");
@@ -72,8 +76,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             createUser();
             createGood();
             doWrite();
-        }
-        else {
+        } else {
 
             try {
                 doRecoverTransactions();
@@ -81,7 +84,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 e.getMessage();
             }
         }
-        if(!doReadRB()) {
+        if (!doReadRB()) {
             /** remeber to make this persistent!!!!!!!! */
             echoCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
             readyCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
@@ -107,15 +110,15 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     public static NotaryService getInstance() throws RemoteException, GoodException {
-        if(instance == null){
+        if (instance == null) {
             return new NotaryService();
         }
         return instance;
     }
-    
 
     @Override
-    public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
+    public Interaction intentionToSell(Interaction request)
+            throws RemoteException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
         int userId = request.getUserID();
         boolean bool = request.getResponse();
@@ -124,20 +127,22 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         Certification cert = new VirtualCertificate();
 
-        cert.init(new File(System.getProperty("project.users.cert.path") + userId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
-
+        cert.init(new File(
+                System.getProperty("project.users.cert.path") + userId + System.getProperty("project.users.cert.ext"))
+                        .getAbsolutePath());
 
         try {
             System.out.println(request.toString());
-            /*compare hmacs*/
-            if(!Digest.verify(request, cert)){
+            /* compare hmacs */
+            if (!Digest.verify(request, cert)) {
                 throw new HDSSecurityException("Tampering detected!");
             }
-            /*check freshness*/
+            /* check freshness */
             int clock = getClock(userId);
             System.out.println("User clock: " + request.getUserClock() + " | " + clock);
-            if(request.getUserClock() <= clock){
-                throw new HDSSecurityException("Replay attack detected!! Request User Clock: " + request.getUserClock() + " getClock: " + clock);
+            if (request.getUserClock() <= clock) {
+                throw new HDSSecurityException("Replay attack detected!! Request User Clock: " + request.getUserClock()
+                        + " getClock: " + clock);
             }
         } catch (NoSuchAlgorithmException e) {
             throw new RemoteException(e.getMessage());
@@ -371,7 +376,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 e.printStackTrace();
             }
         }
-
+        
         return request;
     }
 
