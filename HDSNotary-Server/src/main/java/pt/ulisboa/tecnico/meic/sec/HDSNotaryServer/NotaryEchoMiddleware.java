@@ -198,7 +198,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     Thread.sleep(500);
                     System.out.println("After ECHO sleep " + clientEcho.getNumberOfQuorumReceivedEchos() + " ID " + echoIdentifier);
                     waited++; 
-                    if (waited >= 40) { 
+                    if (waited >= 200) { 
                         System.out.println("Timeout expired on echos");
                     throw new HDSSecurityException("Timeout expired on echos"); 
                     }
@@ -253,7 +253,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                         Thread.sleep(500);
                         System.out.println("After READY sleep " + clientEcho.getNumberOfQuorumReceivedReadys() + " ID " + echoIdentifier);
                         waited++; 
-                        if (waited >= 40) {
+                        if (waited >= 200) {
                             System.out.println("Timeout expired on readys"); 
                             throw new HDSSecurityException("Timeout expired on readys"); 
                         }

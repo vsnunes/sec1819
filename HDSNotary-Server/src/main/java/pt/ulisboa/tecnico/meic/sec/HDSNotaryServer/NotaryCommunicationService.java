@@ -70,7 +70,6 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             e.printStackTrace();
         }
 
-
         synchronized (NotaryService.echoCounter) {
             lastEchoCounter = NotaryService.echoCounter[notaryId][clientId];
         }
@@ -89,18 +88,17 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         // System.out.println("Varejeira after checking echo clock");
-        /*ClientEcho clientEcho = null;
-        synchronized (NotaryEchoMiddleware.clientEchos) {
-            clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
-        }*/
+        /*
+         * ClientEcho clientEcho = null; synchronized (NotaryEchoMiddleware.clientEchos)
+         * { clientEcho = NotaryEchoMiddleware.clientEchos[clientId]; }
+         */
 
-        
-        //if this request exists on echoHashMap
+        // if this request exists on echoHashMap
         ClientEcho clientEcho = null;
 
         String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
-        synchronized(clientEchosMap){
-            if(clientEchosMap.containsKey(echoIdentifier)) {
+        synchronized (clientEchosMap) {
+            if (clientEchosMap.containsKey(echoIdentifier)) {
                 clientEcho = clientEchosMap.get(echoIdentifier);
             } else {
                 clientEcho = new ClientEcho();
@@ -127,21 +125,26 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             e.printStackTrace();
         }
         // System.out.println("Varejeira after sign");
-    
-        //if (notaryInteraction == null) {
-            // System.out.println("Varejeira after if notaryInteraction a null");
-            clientEcho.addEcho(request);
-            System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario " + request.getNotaryID()
-                                 + " e o ID " + echoIdentifier + " e estou com " + clientEcho.getNumberOfQuorumReceivedEchos() + " valores iguais no array");
-                
-            // System.out.println("Varejeira after addEcho");
-            /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-            CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
 
-            NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
-            completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALECHO, clientId));*/
-        //}
-        
+        // if (notaryInteraction == null) {
+        // System.out.println("Varejeira after if notaryInteraction a null");
+        clientEcho.addEcho(request);
+        System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario "
+                + request.getNotaryID() + " e o ID " + echoIdentifier + " e estou com "
+                + clientEcho.getNumberOfQuorumReceivedEchos() + " valores iguais no array");
+
+        // System.out.println("Varejeira after addEcho");
+        /*
+         * ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor)
+         * Executors.newFixedThreadPool(1); CompletionService<Interaction>
+         * completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
+         * 
+         * NotaryCommunicationInterface server =
+         * NotaryEchoMiddleware.servers.get(notaryId - 1); completionService.submit(new
+         * NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALECHO, clientId));
+         */
+        // }
+
         System.out.println("Varejeira: sai do echo do " + request.getNotaryID() + "**saida**");
         // System.out.println("Varejeira leaving echo function");
     }
@@ -152,7 +155,6 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         int clientId = request.getUserID();
         int notaryId = request.getNotaryID();
         int lastReadyCounter = -1;
-
 
         // verify the client signature
         Certification cert = new VirtualCertificate();
@@ -189,31 +191,29 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             NotaryService.readyCounter[notaryId][clientId] = new Integer(request.getReadyClock());
         }
 
-        /*ClientEcho clientEcho = null;
-        synchronized (NotaryEchoMiddleware.clientEchos[clientId]) {
-            clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
-            NotaryService.doWriteRB();
-        }*/
+        /*
+         * ClientEcho clientEcho = null; synchronized
+         * (NotaryEchoMiddleware.clientEchos[clientId]) { clientEcho =
+         * NotaryEchoMiddleware.clientEchos[clientId]; NotaryService.doWriteRB(); }
+         */
 
-        //if this request exists on echoHashMap
+        // if this request exists on echoHashMap
         ClientEcho clientEcho = null;
 
         String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
-        synchronized(clientEchosMap){
-            if(clientEchosMap.containsKey(echoIdentifier)) {
+        synchronized (clientEchosMap) {
+            if (clientEchosMap.containsKey(echoIdentifier)) {
                 clientEcho = clientEchosMap.get(echoIdentifier);
             } else {
                 clientEcho = new ClientEcho();
                 clientEchosMap.put(echoIdentifier, clientEcho);
             }
         }
-       
 
-        /*try {
-            NotaryService.getInstance().debugPrintBCArrays();
-        } catch (GoodException e2) {
-            e2.printStackTrace();
-        }*/
+        /*
+         * try { NotaryService.getInstance().debugPrintBCArrays(); } catch
+         * (GoodException e2) { e2.printStackTrace(); }
+         */
 
         VirtualCertificate notaryCert = new VirtualCertificate();
         try {
@@ -234,19 +234,89 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         clientEcho.addReady(request);
-        System.out.println("FILIPE: READY recebi este request " + request.toString() + " do notario " + request.getNotaryID()
-                                 + " e o ID " + echoIdentifier + " e estou com " + clientEcho.getNumberOfQuorumReceivedReadys() + " valores iguais no array");
-            
+        System.out.println("FILIPE: READY recebi este request " + request.toString() + " do notario "
+                + request.getNotaryID() + " e o ID " + echoIdentifier + " e estou com "
+                + clientEcho.getNumberOfQuorumReceivedReadys() + " valores iguais no array");
 
-            /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-            CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
-
-            NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
-            completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALREADY, clientId));*/
-    
+        /*
+         * ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor)
+         * Executors.newFixedThreadPool(1); CompletionService<Interaction>
+         * completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
+         * 
+         * NotaryCommunicationInterface server =
+         * NotaryEchoMiddleware.servers.get(notaryId - 1); completionService.submit(new
+         * NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALREADY, clientId));
+         */
 
         // ================= Amplification phase! =================
+        if (clientEcho.getNumberOfQuorumReceivedReadys() > F) {
+            // here im sleeping to make sure that this phase is not wrongly triggered
+            try {
+                Thread.sleep(20000);
+                if(!(clientEcho.getNumberOfQuorumReceivedReadys() > (2*F))) {
+                    ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_NOTARIES);
+                    CompletionService<Interaction> completionAmplificationPhase = new ExecutorCompletionService<Interaction>(poolExecutor);
+                    System.out.println("FASE DE AMPLIFICAÇÃO: começou");
+                    /*Here im officially starting the amplification*/
+                    final int idNotary = new Integer(Main.NOTARY_ID);
+                    request.setNotaryID(idNotary);
+                    int readyClock = NotaryService.readyCounter[idNotary][clientId] + 1;
+                    request.setReadyClock(readyClock);
+                    /*broadcast ready*/
+                    for (NotaryCommunicationInterface notary : NotaryEchoMiddleware.servers) {
+                        try {
+                            completionAmplificationPhase.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, request));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    System.out.println("FASE DE AMPLIFICAÇÃO: acabou o broadcast");
 
+
+                    /*wait until quorum*/
+                    int waited = 0;
+                    System.out.println("FASE DE AMPLIFICAÇÃO: before quorum readys tenho " + clientEcho.getNumberOfQuorumReceivedReadys() + " no array");
+                    while (clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) {
+                        Thread.sleep(500);
+                        System.out.println("After amplification phase READY sleep of " + clientEcho.getNumberOfQuorumReceivedReadys() + " ID " + echoIdentifier);
+                        waited++; 
+                        if (waited >= 200) {
+                            System.out.println("Timeout expired on readys of amplification phase"); 
+                            throw new RemoteException("Timeout expired on readys of amplification phase"); 
+                        }
+                        
+                    }
+                    System.out.println("FASE DE AMPLIFICAÇÃO: after quorum readys tenho " + clientEcho.getNumberOfQuorumReceivedReadys() + " no array");
+
+
+                    request = clientEcho.getQuorumReadys();
+                    request.setNotaryID(idNotary);
+                    request.setType(Interaction.Type.INTENTION2SELL);
+
+                    // only after receiving readys
+                    if(!clientEcho.isDelivered()) {
+                        synchronized (clientEcho) {
+                            clientEcho.setDelivered(true);
+                            try {
+                                NotaryService.getInstance().intentionToSell(request);
+                                System.out.println("FASE DE AMPLIFICAÇÃO: entreguei a mensagem!!!!");
+                            } catch (GoodException | HDSSecurityException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+                        }
+                    } 
+                    else {
+                        System.out.println("FASE DE AMPLIFICAÇÃO: a mensagem já tinha sido entregue, não a entreguei de novo!!!");
+                    }
+
+
+                }
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
         /*if ((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
             System.out.println("VAREJEIRA ENTREI NA FASE DE AMPLIFICAÇÃO!!!!!!");
             clientEcho.setSentReady(true);
