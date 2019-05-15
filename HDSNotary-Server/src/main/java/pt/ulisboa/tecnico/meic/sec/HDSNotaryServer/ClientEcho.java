@@ -149,11 +149,10 @@ public class ClientEcho {
     public int getNumberOfQuorumReceivedReadys() {
         synchronized(this.readys) {
             int maxReadys = 0;
-            System.out.println("Tenho " + this.readys.size() + " readys!");
             for (Interaction interaction : this.readys) {
                 if (interaction != null) {
                     int numberOfInteractions = frequency(this.readys, interaction);
-                    System.out.println(" getNumberOfQuorumReceivedReadys #interactions " + numberOfInteractions + " maxReadys: " + maxReadys);
+                    //System.out.println(" getNumberOfQuorumReceivedReadys #interactions " + numberOfInteractions + " maxReadys: " + maxReadys);
                     if (numberOfInteractions > maxReadys) {
                         maxReadys=numberOfInteractions;
                         if(maxReadys > (2*F)) {

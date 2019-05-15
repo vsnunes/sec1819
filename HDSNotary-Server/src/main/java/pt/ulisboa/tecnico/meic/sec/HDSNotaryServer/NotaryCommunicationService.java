@@ -99,11 +99,13 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         ClientEcho clientEcho = null;
 
         String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
-        if(clientEchosMap.containsKey(echoIdentifier)) {
-            clientEcho = clientEchosMap.get(echoIdentifier);
-        } else {
-            clientEcho = new ClientEcho();
-            clientEchosMap.put(echoIdentifier, clientEcho);
+        synchronized(clientEchosMap){
+            if(clientEchosMap.containsKey(echoIdentifier)) {
+                clientEcho = clientEchosMap.get(echoIdentifier);
+            } else {
+                clientEcho = new ClientEcho();
+                clientEchosMap.put(echoIdentifier, clientEcho);
+            }
         }
 
         VirtualCertificate notaryCert = new VirtualCertificate();
@@ -128,9 +130,9 @@ public class NotaryCommunicationService extends UnicastRemoteObject
     
         //if (notaryInteraction == null) {
             // System.out.println("Varejeira after if notaryInteraction a null");
-            System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario " + request.getNotaryID()
-                                 + " e o ID " + echoIdentifier);
             clientEcho.addEcho(request);
+            System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario " + request.getNotaryID()
+                                 + " e o ID " + echoIdentifier + " e estou com " + clientEcho.getNumberOfQuorumReceivedEchos() + " valores iguais no array");
                 
             // System.out.println("Varejeira after addEcho");
             /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -197,12 +199,15 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         ClientEcho clientEcho = null;
 
         String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
-        if(clientEchosMap.containsKey(echoIdentifier)) {
-            clientEcho = clientEchosMap.get(echoIdentifier);
-        } else {
-            clientEcho = new ClientEcho();
-            clientEchosMap.put(echoIdentifier, clientEcho);
+        synchronized(clientEchosMap){
+            if(clientEchosMap.containsKey(echoIdentifier)) {
+                clientEcho = clientEchosMap.get(echoIdentifier);
+            } else {
+                clientEcho = new ClientEcho();
+                clientEchosMap.put(echoIdentifier, clientEcho);
+            }
         }
+       
 
         /*try {
             NotaryService.getInstance().debugPrintBCArrays();
@@ -228,10 +233,10 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             e.printStackTrace();
         }
 
-        
+        clientEcho.addReady(request);
         System.out.println("FILIPE: READY recebi este request " + request.toString() + " do notario " + request.getNotaryID()
-                                 + " e o ID " + echoIdentifier);
-            clientEcho.addReady(request);
+                                 + " e o ID " + echoIdentifier + " e estou com " + clientEcho.getNumberOfQuorumReceivedReadys() + " valores iguais no array");
+            
 
             /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
             CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
@@ -341,6 +346,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                 e1.printStackTrace();
             }
         }*/
+        System.out.println("Varejeira: sai do ready do " + request.getNotaryID() + "**saida**");
 
     }
 }
