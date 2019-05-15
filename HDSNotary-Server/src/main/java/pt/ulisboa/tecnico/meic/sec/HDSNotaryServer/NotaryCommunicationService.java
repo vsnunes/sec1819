@@ -130,7 +130,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         //if (notaryInteraction == null) {
             // System.out.println("Varejeira after if notaryInteraction a null");
             System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario " + request.getNotaryID()
-                                 + " e eu sou o " + Main.NOTARY_ID);
+                                 + " e o ID " + echoIdentifier);
             clientEcho.addEcho(notaryId, request);
                 
             // System.out.println("Varejeira after addEcho");
@@ -232,7 +232,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         
         Interaction notaryInteraction = clientEcho.getReadys()[notaryId];
         System.out.println("FILIPE: READY recebi este request " + request.toString() + " do notario " + request.getNotaryID()
-                                 + " e eu sou o " + Main.NOTARY_ID);
+                                 + " e o ID " + echoIdentifier);
             clientEcho.addReady(notaryId, request);
 
             /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
