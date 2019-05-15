@@ -137,6 +137,7 @@ public class ClientEcho {
                             //if(quorumEchos == null) {
                                 setQuorumEchos(interaction);
                                 System.out.println(" getNumberOfQuorumReceivedEchos Escrevi no QuorumsEchos: " + interaction.toString());
+                                break;
                             /*}
                             else {
                                 System.out.println(" getNumberOfQuorumReceivedEchos quorumEchos e null" + maxEchos);
@@ -169,6 +170,7 @@ public class ClientEcho {
                             //if(quorumReadys == null) {
                                 setQuorumReadys(interaction);
                                 System.out.println(" getNumberOfQuorumReceivedReadys Escrevi no QuorumsReadys: " + interaction.toString());
+                                break;
                             /*}
                             else {
                                 System.out.println(" getNumberOfQuorumReceivedReadys quorumReadys e null" + maxReadys);

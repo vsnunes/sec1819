@@ -91,8 +91,10 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         // System.out.println("Varejeira after sign");
         
         Interaction notaryInteraction = clientEcho.getEchos()[notaryId];
-        if (notaryInteraction == null) {
+        //if (notaryInteraction == null) {
             // System.out.println("Varejeira after if notaryInteraction a null");
+            System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario " + request.getNotaryID()
+                                 + " e eu sou o " + Main.NOTARY_ID);
             clientEcho.addEcho(notaryId, request);
             // System.out.println("Varejeira after addEcho");
             /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -100,7 +102,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
             NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
             completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALECHO, clientId));*/
-        }
+        //}
         
         System.out.println("Varejeira: sai do echo do " + request.getNotaryID() + "**saida**");
         // System.out.println("Varejeira leaving echo function");
@@ -156,8 +158,8 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
         
         Interaction notaryInteraction = clientEcho.getReadys()[notaryId];
-        if (notaryInteraction == null) {
-            System.out.println("Ratazana null");
+        System.out.println("FILIPE: READY recebi este request " + request.toString() + " do notario " + request.getNotaryID()
+                                 + " e eu sou o " + Main.NOTARY_ID);
             clientEcho.addReady(notaryId, request);
 
             /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -165,8 +167,6 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
             NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
             completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALREADY, clientId));*/
-        }
-        else System.out.println("Ratazana not null");
     
 
         // ================= Amplification phase! =================

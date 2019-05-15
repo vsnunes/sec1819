@@ -56,18 +56,9 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             throws NotaryEchoMiddlewareException, IOException {
         
         this.notaryService = notaryService;
-        this.clientEchos = new ClientEcho[NUMBER_OF_CLIENTS + 1];
-
-        for (int i = 1; i <= NUMBER_OF_CLIENTS; i++) {
-            this.clientEchos[i] = new ClientEcho(i);
-        }
-
-        servers = new ArrayList<>();
-        needInitRMI = true;
         this.pathToServersCfg = pathToServersCfg;
         this.myUrl = myUrl;
-        poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_NOTARIES);
-
+        this.reset();
     }
 
     private void initRMI() throws NotaryEchoMiddlewareException {
@@ -101,6 +92,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
     public Interaction intentionToSell(Interaction request)
             throws RemoteException, GoodException, HDSSecurityException {
         CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
+        reset();
         System.out.println("MAL RECEBI: "+request.toString());
         
         int clientId = request.getUserID();
@@ -188,15 +180,15 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     quorumEchos++;
                 }
                 System.out.println("Before quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
-                int waited = 0;
+                //int waited = 0;
                 while(clientEcho.getNumberOfQuorumReceivedEchos() <= ((N+F)/2)) {
-                    Thread.sleep(500);
+                    //Thread.sleep(500);
                     System.out.println("After sleep " + clientEcho.getNumberOfQuorumReceivedEchos());
-                    waited++;
+                    /*waited++;
                     if (waited >= 40) {
                         System.out.println("Timeout expired on echos");
                         throw new HDSSecurityException("Timeout expired on echos");
-                    }
+                    }*/
                 } 
 
                 System.out.println("After quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
@@ -244,14 +236,14 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                         quorumReadys++;
                     }
 
-                    waited = 0;
+                    //waited = 0;
                     while(clientEcho.getNumberOfQuorumReceivedReadys() <= (2*F)) {
-                        Thread.sleep(500);
-                        waited++;
+                        //Thread.sleep(500);
+                        /*waited++;
                         if (waited >= 40) {
                             System.out.println("Timeout expired on readys");
                             throw new HDSSecurityException("Timeout expired on readys");
-                        }
+                        }*/
                     } 
 
                     request = clientEcho.getQuorumReadys();
@@ -277,6 +269,18 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         return null;
     }
 
+    public void reset() {
+        this.clientEchos = new ClientEcho[NUMBER_OF_CLIENTS + 1];
+
+        for (int i = 1; i <= NUMBER_OF_CLIENTS; i++) {
+            this.clientEchos[i] = new ClientEcho(i);
+        }
+
+        servers = new ArrayList<>();
+        needInitRMI = true;
+        poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_NOTARIES);
+    }
+    
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
         if(needInitRMI) {
