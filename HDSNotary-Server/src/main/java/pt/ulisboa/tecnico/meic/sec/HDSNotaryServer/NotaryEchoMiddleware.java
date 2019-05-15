@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryService.*;
 
 public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryInterface {
@@ -37,8 +38,10 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
 
     private NotaryService notaryService;
 
+    protected static ConcurrentHashMap <String, ClientEcho> clientEchosMap;
+
     /** list for echos of all clients */
-    protected static ClientEcho[] clientEchos;
+    //protected static ClientEcho[] clientEchos;
 
     static final long TIMEOUT_SEC = 30;
 
@@ -58,6 +61,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         this.notaryService = notaryService;
         this.pathToServersCfg = pathToServersCfg;
         this.myUrl = myUrl;
+        clientEchosMap = new ConcurrentHashMap<>();
         this.reset();
     }
 
@@ -92,11 +96,21 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
     public Interaction intentionToSell(Interaction request)
             throws RemoteException, GoodException, HDSSecurityException {
         CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
-        reset();
         System.out.println("MAL RECEBI: " + request.toString());
 
         int clientId = request.getUserID();
-        ClientEcho clientEcho = clientEchos[clientId];
+        
+        //ClientEcho clientEcho = clientEchos[clientId];
+        ClientEcho clientEcho = null;
+
+        String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+
+        if(clientEchosMap.containsKey(echoIdentifier)) {
+            clientEcho = clientEchosMap.get(echoIdentifier);
+        } else {
+            clientEcho = new ClientEcho();
+            clientEchosMap.put(echoIdentifier, clientEcho);
+        }
 
         try {
             initRMI();
@@ -247,6 +261,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     synchronized (clientEcho) {
                         clientEcho.setDelivered(true);
                         System.out.println("ANTES: " + request.toString());
+                        clientEchosMap.remove(echoIdentifier);
                         return notaryService.intentionToSell(request);
                     }
                 }
@@ -263,23 +278,23 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
     }
 
     public void reset() {
-        this.clientEchos = new ClientEcho[NUMBER_OF_CLIENTS + 1];
+        /*this.clientEchos = new ClientEcho[NUMBER_OF_CLIENTS + 1];
 
         for (int i = 1; i <= NUMBER_OF_CLIENTS; i++) {
             this.clientEchos[i] = new ClientEcho(i);
-        }
+        }*/
 
         servers = new ArrayList<>();
         needInitRMI = true;
         poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_NOTARIES);
-        try {
+        /*try {
             System.out.println("Adormeci para limpar, não deveria estar a receber pedidos");
             Thread.sleep(10000);
             System.out.println("Acordei, já posso receber pedidos!");
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
+        }*/
     }
     
     @Override

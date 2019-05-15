@@ -15,7 +15,6 @@ import java.util.concurrent.locks.*;
  * notary
  */
 public class ClientEcho {
-    private int clientID;
     private Interaction[] echos;
     private Interaction[] readys;
     private boolean sentEcho;
@@ -24,17 +23,8 @@ public class ClientEcho {
     private Interaction quorumEchos;
     private Interaction quorumReadys;
 
-    public ClientEcho(int clientID) {
-        this.clientID = clientID;
+    public ClientEcho() {
         this.clean();
-    }
-
-    public int getClientID() {
-        return clientID;
-    }
-
-    public void setClientID(int clientID) {
-        this.clientID = clientID;
     }
 
     public Interaction[] getEchos() {

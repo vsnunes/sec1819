@@ -47,6 +47,30 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         int clientId = request.getUserID();
         int notaryId = request.getNotaryID();
         int lastEchoCounter = -1;
+
+        // verify the client signature
+        Certification cert = new VirtualCertificate();
+        try {
+            cert.init(new File(System.getProperty("project.users.cert.path") + clientId
+                    + System.getProperty("project.users.cert.ext")).getAbsolutePath());
+        } catch (HDSSecurityException e3) {
+            // TODO Auto-generated catch block
+            e3.printStackTrace();
+        }
+
+        try {
+            if (!Digest.verify(request, cert)) {
+                throw new RemoteException("You are not user " + clientId + "!!");
+            }
+        } catch (NoSuchAlgorithmException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        } catch (HDSSecurityException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
         synchronized (NotaryService.echoCounter) {
             lastEchoCounter = NotaryService.echoCounter[notaryId][clientId];
         }
@@ -65,9 +89,21 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         // System.out.println("Varejeira after checking echo clock");
-        ClientEcho clientEcho = null;
+        /*ClientEcho clientEcho = null;
         synchronized (NotaryEchoMiddleware.clientEchos) {
             clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
+        }*/
+
+        
+        //if this request exists on echoHashMap
+        ClientEcho clientEcho = null;
+
+        String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+        if(clientEchosMap.containsKey(echoIdentifier)) {
+            clientEcho = clientEchosMap.get(echoIdentifier);
+        } else {
+            clientEcho = new ClientEcho();
+            clientEchosMap.put(echoIdentifier, clientEcho);
         }
 
         VirtualCertificate notaryCert = new VirtualCertificate();
@@ -96,6 +132,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario " + request.getNotaryID()
                                  + " e eu sou o " + Main.NOTARY_ID);
             clientEcho.addEcho(notaryId, request);
+                
             // System.out.println("Varejeira after addEcho");
             /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
             CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
@@ -114,6 +151,30 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         int clientId = request.getUserID();
         int notaryId = request.getNotaryID();
         int lastReadyCounter = -1;
+
+
+        // verify the client signature
+        Certification cert = new VirtualCertificate();
+        try {
+            cert.init(new File(System.getProperty("project.users.cert.path") + clientId
+                    + System.getProperty("project.users.cert.ext")).getAbsolutePath());
+        } catch (HDSSecurityException e3) {
+            // TODO Auto-generated catch block
+            e3.printStackTrace();
+        }
+
+        try {
+            if (!Digest.verify(request, cert)) {
+                throw new RemoteException("You are not user " + clientId + "!!");
+            }
+        } catch (NoSuchAlgorithmException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        } catch (HDSSecurityException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
         synchronized (NotaryService.readyCounter) {
             lastReadyCounter = NotaryService.readyCounter[notaryId][clientId];
         }
@@ -127,11 +188,23 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             NotaryService.readyCounter[notaryId][clientId] = new Integer(request.getReadyClock());
         }
 
-        ClientEcho clientEcho = null;
+        /*ClientEcho clientEcho = null;
         synchronized (NotaryEchoMiddleware.clientEchos[clientId]) {
             clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
             NotaryService.doWriteRB();
+        }*/
+
+        //if this request exists on echoHashMap
+        ClientEcho clientEcho = null;
+
+        String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+        if(clientEchosMap.containsKey(echoIdentifier)) {
+            clientEcho = clientEchosMap.get(echoIdentifier);
+        } else {
+            clientEcho = new ClientEcho();
+            clientEchosMap.put(echoIdentifier, clientEcho);
         }
+
         /*try {
             NotaryService.getInstance().debugPrintBCArrays();
         } catch (GoodException e2) {
