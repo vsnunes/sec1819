@@ -89,19 +89,19 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             e.printStackTrace();
         }
         // System.out.println("Varejeira after sign");
-        synchronized (clientEcho.getEchos()) {
-            Interaction notaryInteraction = clientEcho.getEchos()[notaryId];
-            if (notaryInteraction == null) {
-                // System.out.println("Varejeira after if notaryInteraction a null");
-                clientEcho.addEcho(notaryId, request);
-                // System.out.println("Varejeira after addEcho");
-                /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-                CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
+        
+        Interaction notaryInteraction = clientEcho.getEchos()[notaryId];
+        if (notaryInteraction == null) {
+            // System.out.println("Varejeira after if notaryInteraction a null");
+            clientEcho.addEcho(notaryId, request);
+            // System.out.println("Varejeira after addEcho");
+            /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+            CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
 
-                NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
-                completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALECHO, clientId));*/
-            }
+            NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
+            completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALECHO, clientId));*/
         }
+        
         System.out.println("Varejeira: sai do echo do " + request.getNotaryID() + "**saida**");
         // System.out.println("Varejeira leaving echo function");
     }
@@ -154,20 +154,20 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             e.printStackTrace();
         }
 
-        synchronized (clientEcho.getReadys()) {
-            Interaction notaryInteraction = clientEcho.getReadys()[notaryId];
-            if (notaryInteraction == null) {
-                System.out.println("Ratazana null");
-                clientEcho.addReady(notaryId, request);
+        
+        Interaction notaryInteraction = clientEcho.getReadys()[notaryId];
+        if (notaryInteraction == null) {
+            System.out.println("Ratazana null");
+            clientEcho.addReady(notaryId, request);
 
-                /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-                CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
+            /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+            CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
 
-                NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
-                completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALREADY, clientId));*/
-            }
-            else System.out.println("Ratazana not null");
+            NotaryCommunicationInterface server = NotaryEchoMiddleware.servers.get(notaryId - 1);
+            completionService.submit(new NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALREADY, clientId));*/
         }
+        else System.out.println("Ratazana not null");
+    
 
         // ================= Amplification phase! =================
 
@@ -271,27 +271,5 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             }
         }*/
 
-    }
-
-    @Override
-    public void signalReady(int clientId) throws RemoteException {
-        ClientEcho clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
-        clientEcho.getReadyLock().lock();
-        try {
-            clientEcho.getQuorumReadys().signal();
-        } finally {
-            clientEcho.getReadyLock().unlock();
-        }
-    }
-
-    @Override
-    public void signalEcho(int clientId) throws RemoteException {
-        ClientEcho clientEcho = NotaryEchoMiddleware.clientEchos[clientId];
-        clientEcho.getEchoLock().lock();
-        try {
-            clientEcho.getQuorumEchos().signal();
-        } finally {
-            clientEcho.getEchoLock().unlock();
-        }
     }
 }

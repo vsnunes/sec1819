@@ -3,7 +3,7 @@ package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 
 import static java.util.Collections.frequency;
-import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryService.NUMBER_OF_NOTARIES;
+import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryService.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,11 +21,8 @@ public class ClientEcho {
     private boolean sentEcho;
     private boolean sentReady;
     private boolean delivered;
-    private final Lock echoLock = new ReentrantLock();
-    private final Lock readyLock = new ReentrantLock();
-    private Condition quorumEchos = echoLock.newCondition();
-    private Condition quorumReadys = readyLock.newCondition();
-    private Interaction quorum;
+    private Interaction quorumEchos;
+    private Interaction quorumReadys;
 
     public ClientEcho(int clientID) {
         this.clientID = clientID;
@@ -41,19 +38,27 @@ public class ClientEcho {
     }
 
     public Interaction[] getEchos() {
-        return echos;
+        synchronized(this.echos) {
+            return echos;
+        }
     }
 
     public void setEchos(Interaction[] echos) {
-        this.echos = echos;
+        synchronized(this.echos) {
+            this.echos = echos;
+        }
     }
 
     public Interaction[] getReadys() {
-        return readys;
+        synchronized(this.readys) {
+            return this.readys;
+        }
     }
 
     public void setReadys(Interaction[] readys) {
-        this.readys = readys;
+        synchronized(this.readys) {
+            this.readys = readys;
+        }
     }
 
     public boolean isDelivered() {
@@ -85,71 +90,101 @@ public class ClientEcho {
     }
 
     public void addEcho(int position, Interaction echo) {
-        this.echos[position] = echo;
+        synchronized(this.echos){
+            this.echos[position] = echo;
+        }
     }
 
     public void addReady(int position, Interaction echo) {
-        this.readys[position] = echo;
+        synchronized(this.readys) {
+            this.readys[position] = echo;
+        }
     }
 
-    public Condition getQuorumReadys() {
-        return quorumReadys;
+    public Interaction getQuorumReadys() {
+        synchronized(this.quorumReadys) {
+            return quorumReadys;
+        }
     }
 
-    public void setQuorumReadys(Condition quorumReadys) {
-        this.quorumReadys = quorumReadys;
+    public void setQuorumReadys(Interaction quorumReadys) {
+        synchronized(this.quorumReadys) {
+            this.quorumReadys = quorumReadys;
+        }
     }
 
-    public Condition getQuorumEchos() {
-        return quorumEchos;
+    public Interaction getQuorumEchos() {
+        synchronized(this.quorumEchos) {
+            return quorumEchos;
+        }
     }
 
-    public void setQuorumEchos(Condition quorumEchos) {
-        this.quorumEchos = quorumEchos;
-    }
-
-    public Interaction getQuorum() {
-        return quorum;
-    }
-
-    public void setQuorum(Interaction quorum) {
-        this.quorum = quorum;
-    }
-
-    public Lock getReadyLock() {
-        return this.readyLock;
-    }
-
-    public Lock getEchoLock() {
-        return this.echoLock;
+    public void setQuorumEchos(Interaction quorumEchos) {
+        synchronized(this.quorumEchos) {
+            this.quorumEchos = quorumEchos;
+        }
     }
 
     public int getNumberOfQuorumReceivedEchos() {
-        int echos = 0;
-        for (Interaction interaction : this.echos) {
-            if (interaction != null) {
-                int numberOfInteractions = frequency(Arrays.asList(this.echos), interaction);
-                if (numberOfInteractions > echos) {
-                    setQuorum(interaction);
-                    echos = numberOfInteractions;
+        synchronized(this.echos) {
+            int maxEchos = 0;
+            for (Interaction interaction : this.echos) {
+                if (interaction != null) {
+                    int numberOfInteractions = frequency(Arrays.asList(this.echos), interaction);
+                    if (numberOfInteractions > maxEchos) {
+                        maxEchos = numberOfInteractions;
+                        if(maxEchos > ((NUMBER_OF_NOTARIES + F)/2)) {
+                            //if(quorumEchos == null) {
+                                setQuorumEchos(interaction);
+                                System.out.println(" getNumberOfQuorumReceivedEchos Escrevi no QuorumsEchos: " + interaction.toString());
+                            /*}
+                            else {
+                                System.out.println(" getNumberOfQuorumReceivedEchos quorumEchos e null" + maxEchos);
+                            }*/
+                        }
+                        else {
+                            //System.out.println(" getNumberOfQuorumReceivedEchos nao entrei no if da verificacao do quorum" + maxEchos);
+                        }
+                    } 
+                    else {
+                        //System.out.println(" getNumberOfQuorumReceivedEchos nao escrevi" + maxEchos);
+                    }
                 }
             }
+            return maxEchos;
         }
-        return echos;
     }
 
     public int getNumberOfQuorumReceivedReadys() {
-        int readys = 0;
-        for (Interaction interaction : this.readys) {
-            if (interaction != null) {
-                int numberOfInteractions = frequency(Arrays.asList(this.readys), interaction);
-                if (numberOfInteractions > readys) {
-                    setQuorum(interaction);
-                    readys=numberOfInteractions;
-                } 
-            }
-        } 
-        return readys;
+        synchronized(this.readys) {
+            int maxReadys = 0;
+            System.out.println("Tenho " + this.readys.length + " readys!");
+            for (Interaction interaction : this.readys) {
+                if (interaction != null) {
+                    int numberOfInteractions = frequency(Arrays.asList(this.readys), interaction);
+                    System.out.println(" getNumberOfQuorumReceivedReadys #interactions " + numberOfInteractions + " maxReadys: " + maxReadys);
+                    if (numberOfInteractions > maxReadys) {
+                        maxReadys=numberOfInteractions;
+                        if(maxReadys > (2*F)) {
+                            //if(quorumReadys == null) {
+                                setQuorumReadys(interaction);
+                                System.out.println(" getNumberOfQuorumReceivedReadys Escrevi no QuorumsReadys: " + interaction.toString());
+                            /*}
+                            else {
+                                System.out.println(" getNumberOfQuorumReceivedReadys quorumReadys e null" + maxReadys);
+                            }*/
+                        }
+                        else {
+                            //System.out.println(" getNumberOfQuorumReceivedReadys nao entrei no if da verificacao do quorum" + maxReadys);
+                        }
+                    } 
+                    else {
+                        //System.out.println(" getNumberOfQuorumReceivedReadys nao escrevi" + maxReadys);
+                    }
+                }
+            } 
+            return maxReadys;
+        }
     } 
     
     public void clean() {
@@ -159,7 +194,8 @@ public class ClientEcho {
         this.sentEcho = false;
         this.sentReady = false;
         this.delivered = false;
-        this.quorum = null;
+        this.quorumEchos = new Interaction();
+        this.quorumReadys = new Interaction();
     }
 
 }

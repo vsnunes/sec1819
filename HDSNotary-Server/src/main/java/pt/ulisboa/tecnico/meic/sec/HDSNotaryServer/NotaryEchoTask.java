@@ -7,7 +7,7 @@ import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 
 public class NotaryEchoTask implements Callable<Interaction> {
 
-    public enum Operation {ECHO, READY, SIGNALECHO, SIGNALREADY}
+    public enum Operation {ECHO, READY}
 
     private NotaryCommunicationInterface notaryInterface;
     private Operation operation;
@@ -35,13 +35,6 @@ public class NotaryEchoTask implements Callable<Interaction> {
             case READY: 
                 notaryInterface.ready(params); 
                 break;
-
-            case SIGNALECHO:
-                notaryInterface.signalEcho(clientId);
-                break;
-            
-            case SIGNALREADY:
-                notaryInterface.signalReady(clientId);
         }
         return null;
     }

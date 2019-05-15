@@ -318,13 +318,7 @@ public class Interaction implements Serializable {
                 getWts() == that.getWts() &&
                 getOwnerID() == that.getOwnerID() &&
                 getOwnerClock() == that.getOwnerClock() &&
-                getType() == that.getType() &&
-                Arrays.equals(getHmac(), that.getHmac()) &&
-                Arrays.equals(getSellerHMAC(), that.getSellerHMAC()) &&
-                Arrays.equals(getBuyerHMAC(), that.getBuyerHMAC()) &&
-                Arrays.equals(getSigma(), that.getSigma()) &&
-                Arrays.equals(getLastChangeHMAC(), that.getLastChangeHMAC()) &&
-                Arrays.equals(getLastChangeHMACSeller(), that.getLastChangeHMACSeller());
+                getType() == that.getType();
     }
 
     @Override

@@ -17,9 +17,4 @@ public interface NotaryCommunicationInterface extends Remote {
 
     void ready(Interaction request) throws RemoteException;
 
-    void signalEcho(int clientId) throws RemoteException;
-
-    void signalReady(int clientId) throws RemoteException;
-
-
 }

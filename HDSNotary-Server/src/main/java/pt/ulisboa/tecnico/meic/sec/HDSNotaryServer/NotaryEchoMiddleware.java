@@ -101,9 +101,12 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
     public Interaction intentionToSell(Interaction request)
             throws RemoteException, GoodException, HDSSecurityException {
         CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
-    
+        System.out.println("MAL RECEBI: "+request.toString());
         
-        
+        int clientId = request.getUserID();
+        ClientEcho clientEcho = clientEchos[clientId];
+        clientEcho.clean();
+
         try {
             initRMI();
         } catch (NotaryEchoMiddlewareException e) {
@@ -112,7 +115,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         }
         
 
-        int clientId = request.getUserID();
+        
 
         // verify the client signature
         Certification cert = new VirtualCertificate();
@@ -129,7 +132,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             e2.printStackTrace();
         }
 
-        ClientEcho clientEcho = clientEchos[clientId];
+       
         if(clientEcho.isSentReady()) {
             throw new HDSSecurityException("Amplification phase already triggered, ignoring request!");
         }
@@ -184,9 +187,9 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     }
                     quorumEchos++;
                 }
-
+                System.out.println("Before quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
                 int waited = 0;
-                while(clientEcho.getNumberOfQuorumReceivedEchos() < (N+F)/2) {
+                while(clientEcho.getNumberOfQuorumReceivedEchos() <= ((N+F)/2)) {
                     Thread.sleep(500);
                     System.out.println("After sleep " + clientEcho.getNumberOfQuorumReceivedEchos());
                     waited++;
@@ -196,16 +199,13 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     }
                 } 
 
-                
-               
                 System.out.println("After quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
                 
-                request = clientEcho.getQuorum();
+                request = clientEcho.getQuorumEchos();
                 final int idNotary = new Integer(Main.NOTARY_ID);
                 request.setNotaryID(idNotary);
                 int readyClock = NotaryService.readyCounter[idNotary][clientId] + 1;
                 request.setReadyClock(readyClock);
-
                 request.setType(Interaction.Type.INTENTION2SELL);
                 
                 cert = new VirtualCertificate();
@@ -245,7 +245,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     }
 
                     waited = 0;
-                    while(clientEcho.getNumberOfQuorumReceivedReadys() < (2 * F)) {
+                    while(clientEcho.getNumberOfQuorumReceivedReadys() <= (2*F)) {
                         Thread.sleep(500);
                         waited++;
                         if (waited >= 40) {
@@ -253,11 +253,15 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                             throw new HDSSecurityException("Timeout expired on readys");
                         }
                     } 
+
+                    request = clientEcho.getQuorumReadys();
+                    request.setNotaryID(idNotary);
+                    request.setType(Interaction.Type.INTENTION2SELL);
                     
                     //only after receiving readys
                     synchronized(clientEcho) {
                         clientEcho.setDelivered(true);
-                        clientEcho.clean();
+                        System.out.println("ANTES: "+request.toString());
                         return notaryService.intentionToSell(request);                       
                     }
                 }
