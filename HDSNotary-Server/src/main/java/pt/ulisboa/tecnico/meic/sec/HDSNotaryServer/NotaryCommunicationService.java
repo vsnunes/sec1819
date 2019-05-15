@@ -125,13 +125,12 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             e.printStackTrace();
         }
         // System.out.println("Varejeira after sign");
-        
-        Interaction notaryInteraction = clientEcho.getEchos()[notaryId];
+    
         //if (notaryInteraction == null) {
             // System.out.println("Varejeira after if notaryInteraction a null");
             System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario " + request.getNotaryID()
                                  + " e o ID " + echoIdentifier);
-            clientEcho.addEcho(notaryId, request);
+            clientEcho.addEcho(request);
                 
             // System.out.println("Varejeira after addEcho");
             /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -230,10 +229,9 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         
-        Interaction notaryInteraction = clientEcho.getReadys()[notaryId];
         System.out.println("FILIPE: READY recebi este request " + request.toString() + " do notario " + request.getNotaryID()
                                  + " e o ID " + echoIdentifier);
-            clientEcho.addReady(notaryId, request);
+            clientEcho.addReady(request);
 
             /*ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
             CompletionService<Interaction> completionService = new ExecutorCompletionService<Interaction>(poolExecutor);

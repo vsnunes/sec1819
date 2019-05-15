@@ -15,8 +15,8 @@ import java.util.concurrent.locks.*;
  * notary
  */
 public class ClientEcho {
-    private Interaction[] echos;
-    private Interaction[] readys;
+    private ArrayList<Interaction> echos;
+    private ArrayList<Interaction> readys;
     private boolean sentEcho;
     private boolean sentReady;
     private boolean delivered;
@@ -27,25 +27,25 @@ public class ClientEcho {
         this.clean();
     }
 
-    public Interaction[] getEchos() {
+    public ArrayList<Interaction> getEchos() {
         synchronized(this.echos) {
             return echos;
         }
     }
 
-    public void setEchos(Interaction[] echos) {
+    public void setEchos(ArrayList<Interaction> echos) {
         synchronized(this.echos) {
             this.echos = echos;
         }
     }
 
-    public Interaction[] getReadys() {
+    public ArrayList<Interaction> getReadys() {
         synchronized(this.readys) {
             return this.readys;
         }
     }
 
-    public void setReadys(Interaction[] readys) {
+    public void setReadys(ArrayList<Interaction> readys) {
         synchronized(this.readys) {
             this.readys = readys;
         }
@@ -79,15 +79,15 @@ public class ClientEcho {
         }
     }
 
-    public void addEcho(int position, Interaction echo) {
-        synchronized(this.echos){
-            this.echos[position] = echo;
+    public void addEcho(Interaction echo) {
+        synchronized(this.echos) {
+            this.echos.add(echo);
         }
     }
 
-    public void addReady(int position, Interaction echo) {
+    public void addReady(Interaction echo) {
         synchronized(this.readys) {
-            this.readys[position] = echo;
+            this.readys.add(echo);
         }
     }
 
@@ -120,7 +120,7 @@ public class ClientEcho {
             int maxEchos = 0;
             for (Interaction interaction : this.echos) {
                 if (interaction != null) {
-                    int numberOfInteractions = frequency(Arrays.asList(this.echos), interaction);
+                    int numberOfInteractions = frequency(this.echos, interaction);
                     if (numberOfInteractions > maxEchos) {
                         maxEchos = numberOfInteractions;
                         if(maxEchos > ((NUMBER_OF_NOTARIES + F)/2)) {
@@ -149,10 +149,10 @@ public class ClientEcho {
     public int getNumberOfQuorumReceivedReadys() {
         synchronized(this.readys) {
             int maxReadys = 0;
-            System.out.println("Tenho " + this.readys.length + " readys!");
+            System.out.println("Tenho " + this.readys.size() + " readys!");
             for (Interaction interaction : this.readys) {
                 if (interaction != null) {
-                    int numberOfInteractions = frequency(Arrays.asList(this.readys), interaction);
+                    int numberOfInteractions = frequency(this.readys, interaction);
                     System.out.println(" getNumberOfQuorumReceivedReadys #interactions " + numberOfInteractions + " maxReadys: " + maxReadys);
                     if (numberOfInteractions > maxReadys) {
                         maxReadys=numberOfInteractions;
@@ -181,8 +181,8 @@ public class ClientEcho {
     
     public void clean() {
         System.out.println("varejeira do clean!!!");
-        this.echos = new Interaction[NUMBER_OF_NOTARIES + 1];
-        this.readys = new Interaction[NUMBER_OF_NOTARIES + 1];
+        this.echos = new ArrayList<>();
+        this.readys = new ArrayList<>();
         this.sentEcho = false;
         this.sentReady = false;
         this.delivered = false;
