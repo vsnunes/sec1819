@@ -52,7 +52,7 @@ public class NotaryMiddleware implements NotaryInterface {
     private ThreadPoolExecutor poolExecutor;
 
     /**timeout for responses waiting */
-    private final int TIMEOUT = 5;
+    private final int TIMEOUT = 30;
 
 
 
@@ -100,9 +100,13 @@ public class NotaryMiddleware implements NotaryInterface {
         try {
                 System.out.println("zé assinado: " + ""+request.getWts()+request.getResponse());
                 request.setSigma(Digest.createDigest(""+request.getWts()+request.getResponse(), cert));
-
+            int test = 1;
             for (NotaryInterface notaryInterface : servers) {
+                if(test==4) {
+                    break;
+                }
                 completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
+                test++;
             }
 
             int received = 0;
@@ -246,6 +250,7 @@ public class NotaryMiddleware implements NotaryInterface {
                 newRequest.setSigma(mostRecent.getSigma());
                 
                 /** perform the write */
+                System.out.println("Performing write back phase!");
                 this.intentionToSell(newRequest);
             } else if (mostRecent.getType() == Interaction.Type.TRANSFERGOOD) {
 
@@ -262,6 +267,7 @@ public class NotaryMiddleware implements NotaryInterface {
                 newRequest.setWts(mostRecent.getWts());
                 newRequest.setSigma(mostRecent.getSigma());
                 try {
+                    System.out.println("Performing write back phase!");
                     this.transferGood(newRequest);
                 } catch (TransactionException e) {
                     e.printStackTrace();
@@ -332,13 +338,16 @@ public class NotaryMiddleware implements NotaryInterface {
 
     @Override
     public int getClock(int userID) throws RemoteException {
-        int response = -1;
+        int maxResponse = -1, response;
 
         for (NotaryInterface notaryInterface : servers) {
             response = notaryInterface.getClock(userID);
+            if (response > maxResponse) {
+                maxResponse = response;
+            }
         }
 
-        return response;
+        return maxResponse;
     }
 
     @Override

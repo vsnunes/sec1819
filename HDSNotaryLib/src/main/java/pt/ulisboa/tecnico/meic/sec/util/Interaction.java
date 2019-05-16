@@ -4,6 +4,7 @@ import javafx.util.Pair;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * A Class for describing interaction between entities (Notary <-> User) or (User <-> User)
@@ -36,8 +37,12 @@ public class Interaction implements Serializable {
     private byte[] lastChangeHMACSeller;
 
     /** used for reliable broadcast */
-    private int echoContainerID;
     private int notaryID;
+    /** it is used for echo message passing */
+    private byte[] notaryIDSignature;
+    private byte[] readySignature;
+    private int echoClock;
+    private int readyClock;
 
     public Interaction() {
         hmac = null;
@@ -49,13 +54,12 @@ public class Interaction implements Serializable {
         goodID = 0;
         userID = 0;
         userClock = 0;
-        buyerClock = 8;
-        sellerClock = 9;
+        buyerClock = 0;
+        sellerClock = 0;
         wts = 0;
         lastChangeHMAC = null;
         lastChangeHMACSeller = null;
         type = null;
-        setEchoContainerID(-1);
     }
 
     public byte[] getHmac() {
@@ -206,12 +210,12 @@ public class Interaction implements Serializable {
         return this.type;
     }
 
-    public int getEchoContainerID() {
-        return echoContainerID;
+    public byte[] getNotaryIDSignature() {
+        return notaryIDSignature;
     }
-    
-    public void setEchoContainerID(int echoContainerID) {
-        this.echoContainerID = echoContainerID;
+
+    public void setNotaryIDSignature(byte[] notaryIDSignature) {
+        this.notaryIDSignature = notaryIDSignature;
     }
 
     public int getNotaryID() {
@@ -222,8 +226,105 @@ public class Interaction implements Serializable {
         this.notaryID = notaryID;
     }
 
+    public int getReadyClock() {
+        return readyClock;
+    }
+
+    public void setReadyClock(int readyClock) {
+        this.readyClock = readyClock;
+    }
+
+    public int getEchoClock() {
+        return echoClock;
+    }
+
+    public void setEchoClock(int echoClock) {
+        this.echoClock = echoClock;
+    }
+
+    public byte[] getReadySignature() {
+        return readySignature;
+    }
+
+    public void setReadySignature(byte[] readySignature) {
+        this.readySignature = readySignature;
+    }
+
+    public String echoString() {
+        return "Interaction{" +
+                "type=" + type +
+                ", hmac=" + Arrays.toString(hmac) +
+                ", sellerHMAC=" + Arrays.toString(sellerHMAC) +
+                ", buyerHMAC=" + Arrays.toString(buyerHMAC) +
+                ", buyerID=" + buyerID +
+                ", sellerID=" + sellerID +
+                ", response=" + response +
+                ", goodID=" + goodID +
+                ", userID=" + userID +
+                ", userClock=" + userClock +
+                ", buyerClock=" + buyerClock +
+                ", sellerClock=" + sellerClock +
+                ", wts=" + wts +
+                ", sigma=" + Arrays.toString(sigma) +
+                ", ownerID=" + ownerID +
+                ", ownerClock=" + ownerClock +
+                ", lastChangeHMAC=" + Arrays.toString(lastChangeHMAC) +
+                ", lastChangeHMACSeller=" + Arrays.toString(lastChangeHMACSeller) +
+                ", notaryID=" + notaryID +
+                ", echoClock=" + echoClock +
+                '}';
+    }
+
+    public String readyString() {
+        return "Interaction{" +
+                "type=" + type +
+                ", hmac=" + Arrays.toString(hmac) +
+                ", sellerHMAC=" + Arrays.toString(sellerHMAC) +
+                ", buyerHMAC=" + Arrays.toString(buyerHMAC) +
+                ", buyerID=" + buyerID +
+                ", sellerID=" + sellerID +
+                ", response=" + response +
+                ", goodID=" + goodID +
+                ", userID=" + userID +
+                ", userClock=" + userClock +
+                ", buyerClock=" + buyerClock +
+                ", sellerClock=" + sellerClock +
+                ", wts=" + wts +
+                ", sigma=" + Arrays.toString(sigma) +
+                ", ownerID=" + ownerID +
+                ", ownerClock=" + ownerClock +
+                ", lastChangeHMAC=" + Arrays.toString(lastChangeHMAC) +
+                ", lastChangeHMACSeller=" + Arrays.toString(lastChangeHMACSeller) +
+                ", notaryID=" + notaryID +
+                ", echoClock=" + echoClock +
+                ", readyClock=" + readyClock +
+                ", notaryIDSignature" + Arrays.toString(notaryIDSignature) +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Interaction)) return false;
+        Interaction that = (Interaction) o;
+        return getBuyerID() == that.getBuyerID() &&
+                getSellerID() == that.getSellerID() &&
+                isResponse() == that.isResponse() &&
+                getGoodID() == that.getGoodID() &&
+                getUserID() == that.getUserID() &&
+                getUserClock() == that.getUserClock() &&
+                getBuyerClock() == that.getBuyerClock() &&
+                getSellerClock() == that.getSellerClock() &&
+                getWts() == that.getWts() &&
+                getOwnerID() == that.getOwnerID() &&
+                getOwnerClock() == that.getOwnerClock() &&
+                getType() == that.getType();
+    }
+
     @Override
     public String toString() {
         return "" + buyerID + sellerID + response + goodID + userID + userClock + buyerClock + sellerClock;
     }
+
+
 }

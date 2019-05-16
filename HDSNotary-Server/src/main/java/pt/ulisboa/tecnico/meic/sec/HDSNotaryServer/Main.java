@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
 
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.exceptions.NotaryEchoMiddlewareException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
@@ -18,28 +19,56 @@ public class Main {
     /** Port for accepting clients connection to the service **/
     public static int NOTARY_SERVICE_PORT = 10000;
     public static final String NOTARY_SERVICE_NAME = "HDSNotary";
+    public static final String NOTARY_COM_SERVICE_NAME = "HDSNotaryCOM";
 
-    /** User's certificates folder location. BE AWARE it must end with slash (/) ! **/
+    public static int NOTARY_ID = 1;
+
+    /**
+     * User's certificates folder location. BE AWARE it must end with slash (/) !
+     **/
     public static final String USERS_CERTS_FOLDER = "../HDSNotaryLib/src/main/resources/certs/";
 
-
-
     public static void main(String[] args) throws RemoteException, GoodException, HDSSecurityException {
+        
         CCSmartCard card = null;
 
         if (args.length > 0) {
-            NOTARY_SERVICE_PORT = 10000 + Integer.parseInt(args[0]);
+            NOTARY_ID = Integer.parseInt(args[0]);            
         }
+        NOTARY_SERVICE_PORT = 10000 + NOTARY_ID;
+        System.setProperty("project.notary.private",
+                    "../HDSNotaryLib/src/main/resources/certs/java_certs/private_notary" + NOTARY_ID + "_pkcs8.pem");
+        System.setProperty("project.notary.cert.path",
+                    "../HDSNotaryLib/src/main/resources/certs/notary" + NOTARY_ID + ".crt");
+
         new BoxUI("Notary is running on port " + NOTARY_SERVICE_PORT).showAndGo(BoxUI.WHITE_BOLD_BRIGHT);
 
-        NotaryService service = NotaryService.getInstance();
+        Registry reg = LocateRegistry.createRegistry(NOTARY_SERVICE_PORT);
+
+        NotaryEchoMiddleware service = null;
+        NotaryCommunicationService communicationService = null;
+
+        try {
+
+            communicationService = new NotaryCommunicationService();
+            reg.rebind(NOTARY_COM_SERVICE_NAME, communicationService);
+
+            String myURL = System.getProperty("project.notary.rmi") + ":" + NOTARY_SERVICE_PORT + "/" + NOTARY_COM_SERVICE_NAME;
+            service = new NotaryEchoMiddleware(System.getProperty("project.nameserver.config"), myURL, NotaryService.getInstance());
+            reg.rebind(NOTARY_SERVICE_NAME, service);
+
+        } catch (NotaryEchoMiddlewareException | IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+            System.exit(1);
+        }
 
         if (args.length > 1) {
             if (args[1].equals("CCSmartCard"))
-                service.setUsingVirtualCerts(false);
+                NotaryService.getInstance().setUsingVirtualCerts(false);
         }
 
-        if (service.isUsingVirtualCerts())
+        if (NotaryService.getInstance().isUsingVirtualCerts())
             new BoxUI("Notary is using VIRTUAL CERTS!").showAndGo(BoxUI.WHITE_BOLD_BRIGHT);
         else {
 
@@ -64,8 +93,7 @@ public class Main {
 
         }
 
-        Registry reg = LocateRegistry.createRegistry(NOTARY_SERVICE_PORT);
-        reg.rebind(NOTARY_SERVICE_NAME, service);
+        
 
         System.out.println("Main server ready");
         System.out.println("Awaiting connections");
@@ -74,13 +102,14 @@ public class Main {
         //Wait for connections
         try {
             System.in.read();
+            NotaryService.getInstance().doWriteRB();
         } catch (IOException e) {
             System.err.println("** NOTARY: Problem in System.read: " + e.getMessage());
             e.printStackTrace();
         }
 
         //if using CC smart card release the SDK!
-        if (!service.isUsingVirtualCerts()) {
+        if (!NotaryService.getInstance().isUsingVirtualCerts()) {
             card.stop();
         }
 

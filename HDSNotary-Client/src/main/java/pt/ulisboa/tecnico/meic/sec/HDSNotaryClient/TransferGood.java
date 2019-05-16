@@ -53,6 +53,9 @@ public class TransferGood extends Operation {
 
             response = notaryInterface.transferGood(request);
 
+            //Check the MAC using the cert of a corresponded Notary
+            System.setProperty("project.notary.cert.path", "../HDSNotaryLib/src/main/resources/certs/notary" + response.getNotaryID() + ".crt");
+
             VirtualCertificate notaryCert = new VirtualCertificate();
             notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
 

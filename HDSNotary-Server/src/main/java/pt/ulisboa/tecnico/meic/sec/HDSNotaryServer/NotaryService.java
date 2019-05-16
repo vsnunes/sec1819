@@ -1,5 +1,5 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryServer;
-import org.omg.PortableServer.REQUEST_PROCESSING_POLICY_ID;
+
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
@@ -11,28 +11,41 @@ import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDE
 import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
 
 import java.io.*;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * A Class for implementing NotaryInterface on Server
  */
 
-public class NotaryService extends UnicastRemoteObject implements NotaryInterface,Serializable {
+public class NotaryService extends UnicastRemoteObject implements NotaryInterface, Serializable {
 
-    /** HashMap for match the ID with the object even though the object has an ID**/
+    /**
+     * HashMap for match the ID with the object even though the object has an ID
+     **/
     private HashMap<Integer, User> users;
     private HashMap<Integer, Good> goods;
 
-    /** Every transaction has an ID so keeps record of the last ID used in a transaction **/
+    /** Number of clients */
+    public static final int NUMBER_OF_CLIENTS = 5;
+
+    /** Number of notaries */
+    public static final int NUMBER_OF_NOTARIES = 4;
+
+    public static final int N = 4;
+    /** Maximum of Byzantine faults */
+    public static final int F = 1;
+
+    public static Integer[][] echoCounter;
+    public static Integer[][] readyCounter;
+
+    /**
+     * Every transaction has an ID so keeps record of the last ID used in a
+     * transaction
+     **/
     private int transactionCounter = 0;
 
     private static NotaryService instance;
@@ -44,6 +57,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     private static String TRANSACTIONS_FILE;
     private static String USERSGOODSTMP_FILE;
     private static String TRANSACTIONSTMP_FILE;
+    private static String RB_FILE;
+    private static String RBTMP_FILE;
 
     private NotaryService() throws RemoteException, GoodException {
         super();
@@ -51,6 +66,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
         USERSGOODSTMP_FILE = "UsersGoods" + NOTARY_SERVICE_PORT + "TMP.bin";
         TRANSACTIONS_FILE = "Transaction" + NOTARY_SERVICE_PORT + ".bin";
         TRANSACTIONSTMP_FILE = "Transaction" + NOTARY_SERVICE_PORT + "TMP.bin";
+        RBTMP_FILE = "RBClocks" + NOTARY_SERVICE_PORT + "TMP.bin";
+        RB_FILE = "RBClocks" + NOTARY_SERVICE_PORT + ".bin";
 
         if (!doRead()) {
             System.out.println("No data found, initializing...");
@@ -59,13 +76,26 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             createUser();
             createGood();
             doWrite();
-        }
-        else {
+        } else {
 
             try {
                 doRecoverTransactions();
             } catch (TransactionException e) {
                 e.getMessage();
+            }
+        }
+        if (!doReadRB()) {
+            /** remeber to make this persistent!!!!!!!! */
+            echoCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
+            readyCounter = new Integer[NUMBER_OF_NOTARIES + 1][NUMBER_OF_CLIENTS + 1];
+            for (int i = 1; i <= NUMBER_OF_NOTARIES; i++) {
+                echoCounter[i] = new Integer[NUMBER_OF_CLIENTS + 1];
+                readyCounter[i] = new Integer[NUMBER_OF_CLIENTS + 1];
+
+                for (int j = 1; j <= NUMBER_OF_CLIENTS; j++) {
+                    echoCounter[i][j] = new Integer(0);
+                    readyCounter[i][j] = new Integer(0);
+                }
             }
         }
         instance = this;
@@ -80,15 +110,15 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     public static NotaryService getInstance() throws RemoteException, GoodException {
-        if(instance == null){
+        if (instance == null) {
             return new NotaryService();
         }
         return instance;
     }
-    
 
     @Override
-    public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
+    public Interaction intentionToSell(Interaction request)
+            throws RemoteException, GoodException, HDSSecurityException {
         int goodId = request.getGoodID();
         int userId = request.getUserID();
         boolean bool = request.getResponse();
@@ -97,17 +127,22 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
         Certification cert = new VirtualCertificate();
 
-        cert.init(new File(System.getProperty("project.users.cert.path") + userId + System.getProperty("project.users.cert.ext")).getAbsolutePath());
-
+        cert.init(new File(
+                System.getProperty("project.users.cert.path") + userId + System.getProperty("project.users.cert.ext"))
+                        .getAbsolutePath());
 
         try {
-            /*compare hmacs*/
-            if(!Digest.verify(request, cert)){
+            System.out.println(request.toString());
+            /* compare hmacs */
+            if (!Digest.verify(request, cert)) {
                 throw new HDSSecurityException("Tampering detected!");
             }
-            /*check freshness*/
-            if(request.getUserClock() <= getClock(userId)){
-                throw new HDSSecurityException("Replay attack detected!!");
+            /* check freshness */
+            int clock = getClock(userId);
+            System.out.println("User clock: " + request.getUserClock() + " | " + clock);
+            if (request.getUserClock() <= clock) {
+                throw new HDSSecurityException("Replay attack detected!! Request User Clock: " + request.getUserClock()
+                        + " getClock: " + clock);
             }
         } catch (NoSuchAlgorithmException e) {
             throw new RemoteException(e.getMessage());
@@ -143,6 +178,28 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     }
 
+    public void debugPrintBCArrays() {
+        System.out.println("=== Echo Counter ===");
+        for (int i = 1; i <= NUMBER_OF_NOTARIES; i++) {
+            String line = "N%d: [";
+            for (int j = 1; j <= NUMBER_OF_CLIENTS - 1; j++) {
+                line += echoCounter[i][j] + ", ";
+            }
+            line += echoCounter[i][NUMBER_OF_CLIENTS] + "]\n";
+            System.out.printf(line, i);
+        }
+
+        System.out.println("=== Ready Counter ===");
+        for (int i = 1; i <= NUMBER_OF_NOTARIES; i++) {
+            String line = "N%d: [";
+            for (int j = 1; j <= NUMBER_OF_CLIENTS - 1; j++) {
+                line += readyCounter[i][j] + ", ";
+            }
+            line += readyCounter[i][NUMBER_OF_CLIENTS] + "]\n";
+            System.out.printf(line, i);
+        }
+        System.out.println();
+    }
 
     @Override
     public Interaction getStateOfGood(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
@@ -300,7 +357,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 }
 
                 request.setHmac(Digest.createDigest(request, cert));
-                
+                request.setNotaryID(Main.NOTARY_ID);
                 
                 cert.stop();
             } catch (NoSuchAlgorithmException e) {
@@ -312,12 +369,14 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             try {
                 cert.init();
                 request.setHmac(Digest.createDigest(request, cert));
+
+                request.setNotaryID(Main.NOTARY_ID);
                 cert.stop();
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
         }
-
+        
         return request;
     }
 
@@ -372,7 +431,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
      */
     private void doWrite(){
-        System.out.println("Writing GoodsUser...");
+        //System.out.println("Writing GoodsUser...");
         try {
 
             File file = new File(USERSGOODSTMP_FILE);
@@ -396,7 +455,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     To be called when notary service starts
      */
     private boolean doRead() {
-        System.out.println("Reading GoodsUser...");
+        //System.out.println("Reading GoodsUser...");
         try {
             File file = new File(USERSGOODS_FILE);
             if(!file.exists()){
@@ -426,6 +485,8 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     public void doPrint(){
+        /* RB state */
+        debugPrintBCArrays();
         try {
             //path to be defined
 
@@ -491,7 +552,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 transactions.add(transaction);
                 System.out.println("Transaction with id " + transaction.getTransactionID() + " was recovered");
             }
-
         }
         catch (FileNotFoundException e) {
             System.out.println("File " + TRANSACTIONS_FILE +" not found");
@@ -504,18 +564,16 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             System.out.println("Class not found");
             e.printStackTrace();
         }
-
         try {
             oi.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     /*Execute transactions pending*/
     private ArrayList<Transaction> doReadTransactions(){
-        System.out.println("Reading transaction...");
+        //System.out.println("Reading transaction...");
         ArrayList<Transaction> transactions = new ArrayList<Transaction>();
         ObjectInputStream oi = null;
         try {
@@ -574,20 +632,20 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     }
 
-    private void swapFiles(String original, String tmp) {
-        System.out.println("Performing the swap of " + tmp + " ...");
+    private static void swapFiles(String original, String tmp) {
+        //System.out.println("Performing the swap of " + tmp + " ...");
         File originalFile= new File(original);
         try {
-            System.out.println(originalFile.createNewFile());
+            originalFile.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
         File tmpFile= new File(tmp);
 
-        System.out.println(originalFile.renameTo(new File("dummy" + tmp)));
-        System.out.println(tmpFile.renameTo(new File(original)));
+        originalFile.renameTo(new File("dummy" + tmp));
+        tmpFile.renameTo(new File(original));
         File dummy = new File("dummy"+tmp);
-        System.out.println(dummy.delete());
+        dummy.delete();
 
     }
 
@@ -666,6 +724,57 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     public void shutdown() throws RemoteException {
         //server dont need to do any post execution operations
     }
+
+    /*update clocks for RB phase*/
+    public static void doWriteRB(){
+        //System.out.println("Writing RBClocks...");
+        try {
+
+            File file = new File(RBTMP_FILE);
+            file.createNewFile();
+            FileOutputStream f = new FileOutputStream(file, false);
+            ObjectOutputStream o = new ObjectOutputStream(f);
+            o.writeObject(echoCounter);
+            o.writeObject(readyCounter);
+
+            f.close();
+            o.close();
+            swapFiles(RB_FILE,RBTMP_FILE);
+        }
+        catch (IOException e) {
+            System.out.println("Error initializing stream");
+        }
+    }
+
+    /*read clock for RB phase*/
+    private boolean doReadRB() {
+        //System.out.println("Reading RBClocks...");
+        try {
+            File file = new File(RB_FILE);
+            if(!file.exists()){
+                System.out.println("File " + RB_FILE + " does not exists");
+                return false;
+            }
+            FileInputStream fi = new FileInputStream(file);
+            ObjectInputStream oi = new ObjectInputStream(fi);
+            echoCounter = (Integer[][]) oi.readObject();
+            readyCounter = (Integer[][]) oi.readObject();
+            fi.close();
+            oi.close();
+            return true;
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("File " + RB_FILE+ " not found");
+        } catch (IOException e) {
+            System.out.println("Error initializing stream");
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            System.out.println("Class not found");
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
 
 }
