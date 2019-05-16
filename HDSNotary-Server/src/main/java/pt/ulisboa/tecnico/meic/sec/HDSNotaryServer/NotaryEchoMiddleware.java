@@ -106,7 +106,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         ClientEcho clientEcho = null;
 
        
-        String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+        String echoIdentifier = "ITS" + String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
         System.out.println("ESTOU A USAR A KEY " + echoIdentifier);
         synchronized(clientEchosMap){
             if(clientEchosMap.containsKey(echoIdentifier)) {
@@ -318,12 +318,12 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         CompletionService<Interaction> completionServiceReady = new ExecutorCompletionService<Interaction>(poolExecutor);
         System.out.println("MAL RECEBI: " + request.toString());
 
-        int clientId = request.getUserID();
+        int clientId = request.getSellerID();
         
         //ClientEcho clientEcho = clientEchos[clientId];
         ClientEcho clientEcho = null;
 
-        String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+        String echoIdentifier = "TG" + String.valueOf(request.getBuyerID()) + String.valueOf(request.getBuyerClock()) + String.valueOf(request.getSellerID()) + String.valueOf(request.getSellerClock());
 
         System.out.println("ESTOU A USAR A KEY " + echoIdentifier);
         
@@ -342,20 +342,29 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             e.printStackTrace();
         }
 
+        System.out.println("Depois do init rmi");
         // verify the client signature
         Certification cert = new VirtualCertificate();
         cert.init(new File(
                 System.getProperty("project.users.cert.path") + clientId + System.getProperty("project.users.cert.ext"))
                         .getAbsolutePath());
 
+        System.out.println("cert init");
+
         try {
-            if (!Digest.verify(request, cert)) {
+            System.out.println("DEBUG 1");
+            String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
+            if(!Digest.verify(request.getSellerHMAC(), data, cert)){
+                System.out.println("DEBUG 2");
+                System.out.println("You are not user " + clientId + "!!");
                 throw new HDSSecurityException("You are not user " + clientId + "!!");
             }
-        } catch (NoSuchAlgorithmException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
+            System.out.println("DEBUG 3");
+        } catch (Exception e2) {
+            System.out.println("NoSuchAlgorithm verify request failed\n" + e2.getMessage());
         }
+        System.out.println("Depois do verify");
+
 
         if(clientEcho.isDelivered()) {
             System.out.println("This message was already delivered in the application");
@@ -367,10 +376,12 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             throw new HDSSecurityException("Amplification phase already triggered, ignoring request!");
         }
 
+        System.out.println("DEBUG: isSentEcho " + clientEcho.isSentEcho());
         if (clientEcho.isSentEcho() == false) {
             final int id = new Integer(Main.NOTARY_ID);
             request.setNotaryID(id);
-        
+            request.setType(Interaction.Type.TRANSFERGOOD);
+
             int echoClock = NotaryService.echoCounter[id][clientId] + 1;
 
             request.setEchoClock(echoClock);
@@ -403,16 +414,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             try {
                 boolean receivedAllEchos = false, receivedAllReadys = false;
 
-                /*int quorumEchos = 0;
-                Future<Interaction> resultFuture = null;
-                while (quorumEchos < NUMBER_OF_NOTARIES) {
-                    resultFuture = completionService.poll(TIMEOUT_SEC, TimeUnit.SECONDS);
-                    if (resultFuture == null) {
-                        System.out.println("Não recebi o quorum de echos!!!! Timeout disparado");
-                        throw new HDSSecurityException("Não recebi o quorum de echos!!!!");
-                    }
-                    quorumEchos++;
-                }*/
                 System.out.println("Before quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
                 int waited = 0;
                 while (clientEcho.getNumberOfQuorumReceivedEchos() <= ((N + F) / 2)) {
@@ -433,7 +434,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 request.setNotaryID(idNotary);
                 int readyClock = NotaryService.readyCounter[idNotary][clientId] + 1;
                 request.setReadyClock(readyClock);
-                request.setType(Interaction.Type.INTENTION2SELL);
+                request.setType(Interaction.Type.TRANSFERGOOD);
 
                 cert = new VirtualCertificate();
                 cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
@@ -458,16 +459,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 System.out.println("Varejeira Sent Ready 2 all");
 
                 if (clientEcho.isDelivered() == false) {
-                    /*int quorumReadys = 0;
-                    resultFuture = null;
-                    while (quorumReadys < NUMBER_OF_NOTARIES) {
-                        resultFuture = completionService.poll(TIMEOUT_SEC, TimeUnit.SECONDS);
-                        if (resultFuture == null) {
-                            System.out.println("Not received quorum of readys! Timeout disparado");
-                            throw new HDSSecurityException("Not received quorum of readys!");
-                        }
-                        quorumReadys++;
-                    }*/
 
                     waited = 0;
                     while ((clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) && (!clientEcho.isDelivered())) {
@@ -484,7 +475,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                             clientEcho.setDelivered(true);
                             request = clientEcho.getQuorumReadys();
                             request.setNotaryID(idNotary);
-                            request.setType(Interaction.Type.INTENTION2SELL);
+                            request.setType(Interaction.Type.TRANSFERGOOD);
 
                             // only after receiving readys
                             synchronized (clientEcho) {
@@ -492,7 +483,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                                 System.out.println("ANTES: " + request.toString());
                                 //clientEchosMap.remove(echoIdentifier);
                                 try {
-                                    return notaryService.intentionToSell(request);
+                                    return notaryService.transferGood(request);
                                 }
                                 finally {
                                     clientEcho.getDeliveredLock().unlock();

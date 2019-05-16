@@ -46,7 +46,13 @@ public class NotaryCommunicationService extends UnicastRemoteObject
     public void echo(Interaction request) throws RemoteException {
 
         System.out.println("Varejeira: recebi echo do " + request.getNotaryID());
-        int clientId = request.getUserID();
+        int clientId = -1;
+        if(request.getType()==Type.INTENTION2SELL) {
+            clientId = request.getUserID();
+        }
+        else if (request.getType()==Type.TRANSFERGOOD) {
+            clientId = request.getSellerID();
+        } 
         int notaryId = request.getNotaryID();
         int lastEchoCounter = -1;
 
@@ -61,8 +67,19 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         try {
-            if (!Digest.verify(request, cert)) {
-                throw new RemoteException("You are not user " + clientId + "!!");
+            if(request.getType()==Type.INTENTION2SELL) {
+                if (!Digest.verify(request, cert)) {
+                    throw new RemoteException("You are not user " + clientId + "!!");
+                }
+            } else if (request.getType()==Type.TRANSFERGOOD) {
+                String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
+                if(!Digest.verify(request.getSellerHMAC(), data, cert)){
+                    throw new RemoteException("You are not user " + clientId + "!!");
+                }
+            } 
+            else {
+                System.out.println("Operation not find");
+                throw new RemoteException("Operation not find");
             }
         } catch (NoSuchAlgorithmException e2) {
             // TODO Auto-generated catch block
@@ -70,6 +87,9 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         } catch (HDSSecurityException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("DEBUG: asneira na verificação do cliente\n"+e.getMessage());
+            throw new RemoteException("You are not the correct user!");
         }
 
         synchronized (NotaryService.echoCounter) {
@@ -100,7 +120,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
         String echoIdentifier = "";
         if(request.getType()==Interaction.Type.INTENTION2SELL) {
-            echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+            echoIdentifier = "ITS" + String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
             synchronized (clientEchosMap) {
                 if (clientEchosMap.containsKey(echoIdentifier)) {
                     clientEcho = clientEchosMap.get(echoIdentifier);
@@ -110,7 +130,15 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                 }
             }
         } else {
-            System.out.println("ECHO ASNEIRA!!!!!!!!!!!!!!!!!!!!");
+            echoIdentifier = "TG" + String.valueOf(request.getBuyerID()) + String.valueOf(request.getBuyerClock()) + String.valueOf(request.getSellerID()) + String.valueOf(request.getSellerClock());
+            synchronized (clientEchosMap) {
+                if (clientEchosMap.containsKey(echoIdentifier)) {
+                    clientEcho = clientEchosMap.get(echoIdentifier);
+                } else {
+                    clientEcho = new ClientEcho();
+                    clientEchosMap.put(echoIdentifier, clientEcho);
+                }
+            }
         }
 
         VirtualCertificate notaryCert = new VirtualCertificate();
@@ -147,7 +175,13 @@ public class NotaryCommunicationService extends UnicastRemoteObject
     @Override
     public void ready(Interaction request) throws RemoteException {
         System.out.println("Varejeira: recebi ready do " + request.getNotaryID());
-        int clientId = request.getUserID();
+        int clientId = -1;
+        if(request.getType()==Type.INTENTION2SELL) {
+            clientId = request.getUserID();
+        }
+        else if (request.getType()==Type.TRANSFERGOOD) {
+            clientId = request.getSellerID();
+        } 
         int notaryId = request.getNotaryID();
         int lastReadyCounter = -1;
 
@@ -162,8 +196,19 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         try {
-            if (!Digest.verify(request, cert)) {
-                throw new RemoteException("You are not user " + clientId + "!!");
+            if(request.getType()==Type.INTENTION2SELL) {
+                if (!Digest.verify(request, cert)) {
+                    throw new RemoteException("You are not user " + clientId + "!!");
+                }
+            } else if (request.getType()==Type.TRANSFERGOOD) {
+                String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
+                if(!Digest.verify(request.getSellerHMAC(), data, cert)){
+                    throw new RemoteException("You are not user " + clientId + "!!");
+                }
+            } 
+            else {
+                System.out.println("Operation not find");
+                throw new RemoteException("Operation not find");
             }
         } catch (NoSuchAlgorithmException e2) {
             // TODO Auto-generated catch block
@@ -171,6 +216,9 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         } catch (HDSSecurityException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("DEBUG: asneira na verificação do cliente\n"+e.getMessage());
+            throw new RemoteException("You are not the correct user!");
         }
 
         synchronized (NotaryService.readyCounter) {
@@ -192,7 +240,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
         String echoIdentifier = "";
         if(request.getType()==Interaction.Type.INTENTION2SELL) {
-            echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+            echoIdentifier = "ITS" + String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
             synchronized (clientEchosMap) {
                 if (clientEchosMap.containsKey(echoIdentifier)) {
                     clientEcho = clientEchosMap.get(echoIdentifier);
@@ -202,7 +250,15 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                 }
             }
         } else {
-            System.out.println("ECHO ASNEIRA!!!!!!!!!!!!!!!!!!!!");
+            echoIdentifier = "TG" + String.valueOf(request.getBuyerID()) + String.valueOf(request.getBuyerClock()) + String.valueOf(request.getSellerID()) + String.valueOf(request.getSellerClock());
+            synchronized (clientEchosMap) {
+                if (clientEchosMap.containsKey(echoIdentifier)) {
+                    clientEcho = clientEchosMap.get(echoIdentifier);
+                } else {
+                    clientEcho = new ClientEcho();
+                    clientEchosMap.put(echoIdentifier, clientEcho);
+                }
+            }
         }
         
 
