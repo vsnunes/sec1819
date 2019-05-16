@@ -106,7 +106,6 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
 
             String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
             request.setSellerHMAC(Digest.createDigest(data, cert));
-            System.out.println("ZÉ VAREJEIRA: " + data);
             response = notaryInterface.transferGood(request);
             if(response == null) {
                 throw new GoodException("Byzantine quorum not achieved :(");
@@ -149,6 +148,9 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             new BoxUI("Security problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         } catch (GoodException e) {
             new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+        } catch (NullPointerException e) {
+            System.out.println("Amplification was probably triggered on server - some responses from notary might be " +
+                    "be missing");
         }
 
         return null;

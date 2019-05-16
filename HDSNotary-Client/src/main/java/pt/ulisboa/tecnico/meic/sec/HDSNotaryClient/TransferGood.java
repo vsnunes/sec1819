@@ -7,6 +7,7 @@ import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.Digest;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
+import pt.ulisboa.tecnico.meic.sec.util.ProofOfWork;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
 import java.io.File;

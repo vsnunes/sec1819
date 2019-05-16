@@ -5,10 +5,7 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
-import pt.ulisboa.tecnico.meic.sec.util.Certification;
-import pt.ulisboa.tecnico.meic.sec.util.Digest;
-import pt.ulisboa.tecnico.meic.sec.util.Interaction;
-import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
+import pt.ulisboa.tecnico.meic.sec.util.*;
 
 import java.io.File;
 import java.rmi.RemoteException;
@@ -53,7 +50,6 @@ public class IntentionToSell extends Operation {
             request.setUserClock(notaryInterface.getClock(ClientService.userID)+1);
             request.setHmac(Digest.createDigest(request, cert));
 
-
             response = notaryInterface.intentionToSell(request);
             
             //Check the MAC using the cert of a corresponded Notary
@@ -85,6 +81,9 @@ public class IntentionToSell extends Operation {
 
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
+        } catch (NullPointerException e) {
+            System.out.println("Amplification was probably triggered on server - some responses from notary might be " +
+                    "be missing");
         }
 
     }

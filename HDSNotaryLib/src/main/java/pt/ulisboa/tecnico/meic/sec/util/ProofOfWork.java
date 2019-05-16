@@ -63,4 +63,25 @@ public class ProofOfWork {
         return true;
     }
 
+    public static byte[] calculateWithNounce(String key, String content, int nounce) {
+        Mac sha512_HMAC;
+
+        byte[] hmac;
+        String storedValues = content + nounce;
+        try{
+            byte [] byteKey = key.getBytes(StandardCharsets.UTF_8);
+            final String HMAC_SHA512 = "HmacSHA512";
+            SecretKeySpec keySpec = new SecretKeySpec(byteKey, HMAC_SHA512);
+
+            sha512_HMAC = Mac.getInstance(HMAC_SHA512);
+            sha512_HMAC.init(keySpec);
+
+            hmac = sha512_HMAC.doFinal(storedValues.getBytes(StandardCharsets.UTF_8));
+
+            return hmac;
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

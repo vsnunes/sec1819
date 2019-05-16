@@ -82,6 +82,10 @@ public class GetStateOfGood extends Operation {
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
         }
+        catch (NullPointerException e) {
+            System.out.println("Amplification was probably triggered on server - some responses from notary might be " +
+                    "be missing");
+        }
     }
 
     @Override

@@ -28,6 +28,7 @@ public class Interaction implements Serializable {
     private int buyerClock;
     private int sellerClock;
 
+
     /** used for atomic and regular register */
     private int wts;
     private byte[] sigma;
@@ -43,6 +44,10 @@ public class Interaction implements Serializable {
     private byte[] readySignature;
     private int echoClock;
     private int readyClock;
+
+    /** proof of work nounce **/
+    private int nounce;
+    private byte[] proofOfWork;
 
     public Interaction() {
         hmac = null;
@@ -60,6 +65,8 @@ public class Interaction implements Serializable {
         lastChangeHMAC = null;
         lastChangeHMACSeller = null;
         type = null;
+        nounce = 0;
+        proofOfWork = null;
     }
 
     public byte[] getHmac() {
@@ -250,6 +257,18 @@ public class Interaction implements Serializable {
         this.readySignature = readySignature;
     }
 
+    public int getNounce() { return nounce; }
+
+    public void setNounce(int nounce) { this.nounce = nounce; }
+
+    public byte[] getProofOfWork() {
+        return proofOfWork;
+    }
+
+    public void setProofOfWork(byte[] proofOfWork) {
+        this.proofOfWork = proofOfWork;
+    }
+
     public String echoString() {
         return "Interaction{" +
                 "type=" + type +
@@ -326,5 +345,8 @@ public class Interaction implements Serializable {
         return "" + buyerID + sellerID + response + goodID + userID + userClock + buyerClock + sellerClock;
     }
 
+    public String toStringPOW() {
+        return "" + buyerID + goodID + userID + response + buyerClock;
+    }
 
 }

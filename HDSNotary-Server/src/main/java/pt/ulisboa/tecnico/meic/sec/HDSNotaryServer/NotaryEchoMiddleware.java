@@ -10,6 +10,8 @@ import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.*;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction.Type;
 
+import javax.xml.bind.DatatypeConverter;
+
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.NOTARY_SERVICE_PORT;
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDER;
 import static pt.ulisboa.tecnico.meic.sec.util.CertificateHelper.*;
@@ -76,7 +78,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 try {
 
                     servers.add((NotaryCommunicationInterface) Naming.lookup(url));
-                    // System.out.println("Varejeira no init a adicionar: " + url);
 
                 } catch (NotBoundException e) {
                     throw new NotaryEchoMiddlewareException(":( NotBound on Notary at " + url);
@@ -90,7 +91,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        // System.out.println("Varejeira do initRMI: " + servers.size());
     }
 
     @Override
@@ -167,7 +167,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 e1.printStackTrace();
             }
             clientEcho.setSentEcho(true);
-            // System.out.println("Varejeira Sent Echo: " + clientEcho.isSentEcho());
             Interaction tmp = request;
 
             for (int i = 1; i <= this.servers.size(); i++) {
@@ -182,7 +181,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 }
 
             }
-            System.out.println("Varejeira Sent Echo 2 all");
             try {
                 boolean receivedAllEchos = false, receivedAllReadys = false;
 
@@ -229,7 +227,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     }
                 }
 
-                System.out.println("Varejeira Sent Ready 2 all");
 
                 if (clientEcho.isDelivered() == false) {
                     
@@ -319,7 +316,13 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         System.out.println("MAL RECEBI: " + request.toString());
 
         int clientId = request.getSellerID();
-        
+
+        int nounce  = request.getNounce();
+        byte[] proofOfWork = request.getProofOfWork();
+        System.out.println("Calcula aqui " + DatatypeConverter.printBase64Binary(ProofOfWork.calculateWithNounce("2", request.toStringPOW(), nounce)));
+        if(!Arrays.equals(proofOfWork, ProofOfWork.calculateWithNounce("2", request.toStringPOW(), nounce))){
+            throw new HDSSecurityException("Proof of Work not valid");
+        }
         //ClientEcho clientEcho = clientEchos[clientId];
         ClientEcho clientEcho = null;
 

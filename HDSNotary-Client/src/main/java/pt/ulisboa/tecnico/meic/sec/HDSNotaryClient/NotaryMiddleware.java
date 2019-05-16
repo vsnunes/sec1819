@@ -85,9 +85,9 @@ public class NotaryMiddleware implements NotaryInterface {
     @Override
     public Interaction intentionToSell(Interaction request) throws RemoteException, GoodException, HDSSecurityException {
         /** create writeList */
-        ArrayList<Interaction> writeList = new ArrayList<Interaction>();
+        ArrayList<Interaction> writeList = new ArrayList<>();
         CompletionService<Interaction> completionService =
-                new ExecutorCompletionService<Interaction>(poolExecutor);
+                new ExecutorCompletionService<>(poolExecutor);
 
         /** increment id of current read operation*/
         request.setWts(request.getWts()+1);

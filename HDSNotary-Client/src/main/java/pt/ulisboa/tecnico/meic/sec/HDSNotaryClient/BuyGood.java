@@ -4,11 +4,9 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
-import pt.ulisboa.tecnico.meic.sec.util.Certification;
-import pt.ulisboa.tecnico.meic.sec.util.Digest;
-import pt.ulisboa.tecnico.meic.sec.util.Interaction;
-import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
+import pt.ulisboa.tecnico.meic.sec.util.*;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -77,12 +75,17 @@ public class BuyGood extends Operation {
 
             String data = "" + good + ClientService.userID + request.getBuyerClock() + request.getSellerClock();
             request.setBuyerHMAC(Digest.createDigest(data, cert));
-            System.out.println("ZÉ VAREJEIRA BUYER: " + data);
             /** increment id of current read operation*/
             request.setWts(request.getWts()+1);
             /** this signature is used to check byzantine things */
             request.setSigma(Digest.createDigest(""+request.getWts()+request.getResponse(), cert));
 
+            System.out.println("Calculating proof of work");
+            ProofOfWork proofOfWork = ProofOfWork.calculateHMAC("2",request.toStringPOW(),3);
+            System.out.println(DatatypeConverter.printBase64Binary(proofOfWork.getHash()));
+            System.out.println(proofOfWork.getNounce());
+            request.setProofOfWork(proofOfWork.getHash());
+            request.setNounce(proofOfWork.getNounce());
 
             response = anotherClient.buyGood(request);
             if(response != null) {
@@ -141,6 +144,10 @@ public class BuyGood extends Operation {
 
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
+        }
+        catch (NullPointerException e) {
+            System.out.println("Amplification was probably triggered on server - some responses from notary might be " +
+                    "be missing");
         }
 
         //DO NOT BLOCK THIS THREAD
