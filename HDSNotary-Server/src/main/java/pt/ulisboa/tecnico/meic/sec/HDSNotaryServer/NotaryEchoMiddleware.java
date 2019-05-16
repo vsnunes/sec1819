@@ -8,6 +8,7 @@ import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.*;
+import pt.ulisboa.tecnico.meic.sec.util.Interaction.Type;
 
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.NOTARY_SERVICE_PORT;
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.Main.USERS_CERTS_FOLDER;
@@ -104,10 +105,9 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         //ClientEcho clientEcho = clientEchos[clientId];
         ClientEcho clientEcho = null;
 
+       
         String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
-
         System.out.println("ESTOU A USAR A KEY " + echoIdentifier);
-        
         synchronized(clientEchosMap){
             if(clientEchosMap.containsKey(echoIdentifier)) {
                 clientEcho = clientEchosMap.get(echoIdentifier);
@@ -116,6 +116,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 clientEchosMap.put(echoIdentifier, clientEcho);
             }
         }
+        
         try {
             initRMI();
         } catch (NotaryEchoMiddlewareException e) {
@@ -155,6 +156,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             int echoClock = NotaryService.echoCounter[id][clientId] + 1;
 
             request.setEchoClock(echoClock);
+            request.setType(Interaction.Type.INTENTION2SELL);
 
             cert = new VirtualCertificate();
             cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
@@ -184,16 +186,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             try {
                 boolean receivedAllEchos = false, receivedAllReadys = false;
 
-                /*int quorumEchos = 0;
-                Future<Interaction> resultFuture = null;
-                while (quorumEchos < NUMBER_OF_NOTARIES) {
-                    resultFuture = completionService.poll(TIMEOUT_SEC, TimeUnit.SECONDS);
-                    if (resultFuture == null) {
-                        System.out.println("Não recebi o quorum de echos!!!! Timeout disparado");
-                        throw new HDSSecurityException("Não recebi o quorum de echos!!!!");
-                    }
-                    quorumEchos++;
-                }*/
+                
                 System.out.println("Before quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
                 int waited = 0;
                 while (clientEcho.getNumberOfQuorumReceivedEchos() <= ((N + F) / 2)) {
@@ -239,17 +232,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 System.out.println("Varejeira Sent Ready 2 all");
 
                 if (clientEcho.isDelivered() == false) {
-                    /*int quorumReadys = 0;
-                    resultFuture = null;
-                    while (quorumReadys < NUMBER_OF_NOTARIES) {
-                        resultFuture = completionService.poll(TIMEOUT_SEC, TimeUnit.SECONDS);
-                        if (resultFuture == null) {
-                            System.out.println("Not received quorum of readys! Timeout disparado");
-                            throw new HDSSecurityException("Not received quorum of readys!");
-                        }
-                        quorumReadys++;
-                    }*/
-
+                    
                     waited = 0;
                     while ((clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) && (!clientEcho.isDelivered())) {
                         Thread.sleep(500);
@@ -281,6 +264,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                             }
                         }
                     }
+
                 }
 
             } catch (Exception e) {
@@ -516,6 +500,8 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                             }
                         }
                     }
+
+                    //this part is just to prevent null pointer exception client side
                 }
 
             } catch (Exception e) {

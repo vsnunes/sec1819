@@ -10,6 +10,8 @@ import pt.ulisboa.tecnico.meic.sec.util.Certification;
 import pt.ulisboa.tecnico.meic.sec.util.Digest;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
+import pt.ulisboa.tecnico.meic.sec.util.Interaction.Type;
+
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryService.*;
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryEchoMiddleware.*;
 
@@ -96,14 +98,19 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         // if this request exists on echoHashMap
         ClientEcho clientEcho = null;
 
-        String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
-        synchronized (clientEchosMap) {
-            if (clientEchosMap.containsKey(echoIdentifier)) {
-                clientEcho = clientEchosMap.get(echoIdentifier);
-            } else {
-                clientEcho = new ClientEcho();
-                clientEchosMap.put(echoIdentifier, clientEcho);
+        String echoIdentifier = "";
+        if(request.getType()==Interaction.Type.INTENTION2SELL) {
+            echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+            synchronized (clientEchosMap) {
+                if (clientEchosMap.containsKey(echoIdentifier)) {
+                    clientEcho = clientEchosMap.get(echoIdentifier);
+                } else {
+                    clientEcho = new ClientEcho();
+                    clientEchosMap.put(echoIdentifier, clientEcho);
+                }
             }
+        } else {
+            System.out.println("ECHO ASNEIRA!!!!!!!!!!!!!!!!!!!!");
         }
 
         VirtualCertificate notaryCert = new VirtualCertificate();
@@ -132,18 +139,6 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario "
                 + request.getNotaryID() + " e o ID " + echoIdentifier + " e estou com "
                 + clientEcho.getNumberOfQuorumReceivedEchos() + " valores iguais no array");
-
-        // System.out.println("Varejeira after addEcho");
-        /*
-         * ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor)
-         * Executors.newFixedThreadPool(1); CompletionService<Interaction>
-         * completionService = new ExecutorCompletionService<Interaction>(poolExecutor);
-         * 
-         * NotaryCommunicationInterface server =
-         * NotaryEchoMiddleware.servers.get(notaryId - 1); completionService.submit(new
-         * NotaryEchoTask(server, NotaryEchoTask.Operation.SIGNALECHO, clientId));
-         */
-        // }
 
         System.out.println("Varejeira: sai do echo do " + request.getNotaryID() + "**saida**");
         // System.out.println("Varejeira leaving echo function");
@@ -195,15 +190,21 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         // if this request exists on echoHashMap
         ClientEcho clientEcho = null;
 
-        String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
-        synchronized (clientEchosMap) {
-            if (clientEchosMap.containsKey(echoIdentifier)) {
-                clientEcho = clientEchosMap.get(echoIdentifier);
-            } else {
-                clientEcho = new ClientEcho();
-                clientEchosMap.put(echoIdentifier, clientEcho);
+        String echoIdentifier = "";
+        if(request.getType()==Interaction.Type.INTENTION2SELL) {
+            echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+            synchronized (clientEchosMap) {
+                if (clientEchosMap.containsKey(echoIdentifier)) {
+                    clientEcho = clientEchosMap.get(echoIdentifier);
+                } else {
+                    clientEcho = new ClientEcho();
+                    clientEchosMap.put(echoIdentifier, clientEcho);
+                }
             }
+        } else {
+            System.out.println("ECHO ASNEIRA!!!!!!!!!!!!!!!!!!!!");
         }
+        
 
 
         VirtualCertificate notaryCert = new VirtualCertificate();
@@ -278,14 +279,23 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                     clientEcho.setDelivered(true);
                     request = clientEcho.getQuorumReadys();
                     request.setNotaryID(idNotary);
-                    request.setType(Interaction.Type.INTENTION2SELL);
+                    //request.setType(Interaction.Type.INTENTION2SELL);
 
                     // only after receiving readys
                     synchronized (clientEcho) {
                         clientEcho.setDelivered(true);
                         System.out.println("AMPLIFICATION ANTE DE ENTREGAR: " + request.toString());
                         try {
-                            NotaryService.getInstance().intentionToSell(request);
+                            if(request.getType()==Interaction.Type.INTENTION2SELL) {
+                                NotaryService.getInstance().intentionToSell(request);
+                            }
+                            if(request.getType()==Interaction.Type.TRANSFERGOOD) {
+                                try {
+                                    NotaryService.getInstance().transferGood(request);
+                                } catch (TransactionException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         } catch (GoodException | HDSSecurityException e) {
                             System.out.println(e.getMessage());
                         }
