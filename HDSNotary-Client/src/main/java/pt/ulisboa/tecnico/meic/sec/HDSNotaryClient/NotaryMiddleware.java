@@ -102,9 +102,9 @@ public class NotaryMiddleware implements NotaryInterface {
                 request.setSigma(Digest.createDigest(""+request.getWts()+request.getResponse(), cert));
             int test = 1;
             for (NotaryInterface notaryInterface : servers) {
-                /*if(test==3) {
+                if(test==4) {
                     break;
-                }*/
+                }
                 completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
                 test++;
             }
@@ -250,6 +250,7 @@ public class NotaryMiddleware implements NotaryInterface {
                 newRequest.setSigma(mostRecent.getSigma());
                 
                 /** perform the write */
+                System.out.println("Performing write back phase!");
                 this.intentionToSell(newRequest);
             } else if (mostRecent.getType() == Interaction.Type.TRANSFERGOOD) {
 
@@ -266,6 +267,7 @@ public class NotaryMiddleware implements NotaryInterface {
                 newRequest.setWts(mostRecent.getWts());
                 newRequest.setSigma(mostRecent.getSigma());
                 try {
+                    System.out.println("Performing write back phase!");
                     this.transferGood(newRequest);
                 } catch (TransactionException e) {
                     e.printStackTrace();

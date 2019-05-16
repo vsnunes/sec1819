@@ -138,21 +138,23 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             e2.printStackTrace();
         }
 
+        if(clientEcho.isDelivered()) {
+            System.out.println("This message was already delivered in the application");
+            throw new HDSSecurityException("This message was already delivered in the application");
+        }
+
         if (clientEcho.isSentReady()) {
+            System.out.println("Amplification phase already triggered, ignoring request!");
             throw new HDSSecurityException("Amplification phase already triggered, ignoring request!");
         }
 
         if (clientEcho.isSentEcho() == false) {
             final int id = new Integer(Main.NOTARY_ID);
             request.setNotaryID(id);
-            // System.out.println("Varejeira ID: " + request.getNotaryID());
-
-            // notaryService.debugPrintBCArrays();
+        
             int echoClock = NotaryService.echoCounter[id][clientId] + 1;
 
             request.setEchoClock(echoClock);
-
-            // System.out.println("Varejeira Echo Clock: " + request.getEchoClock());
 
             cert = new VirtualCertificate();
             cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
@@ -328,15 +330,202 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
 
     @Override
     public Interaction transferGood(Interaction request) throws RemoteException, TransactionException, GoodException, HDSSecurityException {
-        if(needInitRMI) {
-            needInitRMI = false;
-            try {
-                initRMI();
-            } catch (NotaryEchoMiddlewareException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+        CompletionService<Interaction> completionServiceEcho = new ExecutorCompletionService<Interaction>(poolExecutor);
+        CompletionService<Interaction> completionServiceReady = new ExecutorCompletionService<Interaction>(poolExecutor);
+        System.out.println("MAL RECEBI: " + request.toString());
+
+        int clientId = request.getUserID();
+        
+        //ClientEcho clientEcho = clientEchos[clientId];
+        ClientEcho clientEcho = null;
+
+        String echoIdentifier = String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
+
+        System.out.println("ESTOU A USAR A KEY " + echoIdentifier);
+        
+        synchronized(clientEchosMap){
+            if(clientEchosMap.containsKey(echoIdentifier)) {
+                clientEcho = clientEchosMap.get(echoIdentifier);
+            } else {
+                clientEcho = new ClientEcho();
+                clientEchosMap.put(echoIdentifier, clientEcho);
             }
         }
+        try {
+            initRMI();
+        } catch (NotaryEchoMiddlewareException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        // verify the client signature
+        Certification cert = new VirtualCertificate();
+        cert.init(new File(
+                System.getProperty("project.users.cert.path") + clientId + System.getProperty("project.users.cert.ext"))
+                        .getAbsolutePath());
+
+        try {
+            if (!Digest.verify(request, cert)) {
+                throw new HDSSecurityException("You are not user " + clientId + "!!");
+            }
+        } catch (NoSuchAlgorithmException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        }
+
+        if(clientEcho.isDelivered()) {
+            System.out.println("This message was already delivered in the application");
+            throw new HDSSecurityException("This message was already delivered in the application");
+        }
+
+        if (clientEcho.isSentReady()) {
+            System.out.println("Amplification phase already triggered, ignoring request!");
+            throw new HDSSecurityException("Amplification phase already triggered, ignoring request!");
+        }
+
+        if (clientEcho.isSentEcho() == false) {
+            final int id = new Integer(Main.NOTARY_ID);
+            request.setNotaryID(id);
+        
+            int echoClock = NotaryService.echoCounter[id][clientId] + 1;
+
+            request.setEchoClock(echoClock);
+
+            cert = new VirtualCertificate();
+            cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+            try {
+                request.setNotaryIDSignature(Digest.createDigest(request.echoString(), cert));
+            } catch (NoSuchAlgorithmException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+            clientEcho.setSentEcho(true);
+            // System.out.println("Varejeira Sent Echo: " + clientEcho.isSentEcho());
+            Interaction tmp = request;
+
+            for (int i = 1; i <= this.servers.size(); i++) {
+                try {
+                    NotaryCommunicationInterface notary = this.servers.get(i - 1);
+
+                    completionServiceEcho.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.ECHO, request));
+
+                    request = tmp;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+            System.out.println("Varejeira Sent Echo 2 all");
+            try {
+                boolean receivedAllEchos = false, receivedAllReadys = false;
+
+                /*int quorumEchos = 0;
+                Future<Interaction> resultFuture = null;
+                while (quorumEchos < NUMBER_OF_NOTARIES) {
+                    resultFuture = completionService.poll(TIMEOUT_SEC, TimeUnit.SECONDS);
+                    if (resultFuture == null) {
+                        System.out.println("Não recebi o quorum de echos!!!! Timeout disparado");
+                        throw new HDSSecurityException("Não recebi o quorum de echos!!!!");
+                    }
+                    quorumEchos++;
+                }*/
+                System.out.println("Before quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
+                int waited = 0;
+                while (clientEcho.getNumberOfQuorumReceivedEchos() <= ((N + F) / 2)) {
+                    Thread.sleep(500);
+                    System.out.println("After ECHO sleep " + clientEcho.getNumberOfQuorumReceivedEchos() + " ID " + echoIdentifier);
+                    waited++; 
+                    if (waited >= 200) { 
+                        System.out.println("Timeout expired on echos");
+                        throw new HDSSecurityException("Timeout expired on echos"); 
+                    }
+                     
+                }
+
+                System.out.println("After quorum echo middleware " + clientEcho.getNumberOfQuorumReceivedEchos());
+
+                request = clientEcho.getQuorumEchos();
+                final int idNotary = new Integer(Main.NOTARY_ID);
+                request.setNotaryID(idNotary);
+                int readyClock = NotaryService.readyCounter[idNotary][clientId] + 1;
+                request.setReadyClock(readyClock);
+                request.setType(Interaction.Type.INTENTION2SELL);
+
+                cert = new VirtualCertificate();
+                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+                try {
+                    request.setReadySignature(Digest.createDigest(request.readyString(), cert));
+                } catch (NoSuchAlgorithmException e1) {
+                    e1.printStackTrace();
+                }
+                System.out.println(
+                        Main.NOTARY_ID + " i'm about to send readys " + clientEcho.isSentReady() + receivedAllEchos);
+                if (clientEcho.isSentReady() == false) {
+                    clientEcho.setSentReady(true);
+                    for (NotaryCommunicationInterface notary : this.servers) {
+                        try {
+                            completionServiceReady.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, request));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                System.out.println("Varejeira Sent Ready 2 all");
+
+                if (clientEcho.isDelivered() == false) {
+                    /*int quorumReadys = 0;
+                    resultFuture = null;
+                    while (quorumReadys < NUMBER_OF_NOTARIES) {
+                        resultFuture = completionService.poll(TIMEOUT_SEC, TimeUnit.SECONDS);
+                        if (resultFuture == null) {
+                            System.out.println("Not received quorum of readys! Timeout disparado");
+                            throw new HDSSecurityException("Not received quorum of readys!");
+                        }
+                        quorumReadys++;
+                    }*/
+
+                    waited = 0;
+                    while ((clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) && (!clientEcho.isDelivered())) {
+                        Thread.sleep(500);
+                        System.out.println("After READY sleep " + clientEcho.getNumberOfQuorumReceivedReadys() + " ID " + echoIdentifier);
+                        waited++; 
+                        if (waited >= 200) {
+                            System.out.println("Timeout expired on readys"); 
+                            throw new HDSSecurityException("Timeout expired on readys"); 
+                        }
+                    }
+                    if(!clientEcho.isDelivered()) {
+                        if(clientEcho.getDeliveredLock().tryLock()) {
+                            clientEcho.setDelivered(true);
+                            request = clientEcho.getQuorumReadys();
+                            request.setNotaryID(idNotary);
+                            request.setType(Interaction.Type.INTENTION2SELL);
+
+                            // only after receiving readys
+                            synchronized (clientEcho) {
+                                clientEcho.setDelivered(true);
+                                System.out.println("ANTES: " + request.toString());
+                                //clientEchosMap.remove(echoIdentifier);
+                                try {
+                                    return notaryService.intentionToSell(request);
+                                }
+                                finally {
+                                    clientEcho.getDeliveredLock().unlock();
+                                }
+                            }
+                        }
+                    }
+                }
+
+            } catch (Exception e) {
+                //e.printStackTrace();
+            }
+
+        } else {
+            System.out.println("Varejeira isSent is True");
+        }
+        System.out.println("Varejeira do return!");
         return null;
     }
 
