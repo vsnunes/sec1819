@@ -9,7 +9,6 @@ import java.io.File;
 import java.util.Random;
 
 import static org.junit.Assert.*;
-import static pt.ulisboa.tecnico.meic.sec.util.KeysHelper.createKey;
 
 public class VirtualCertificateTest {
 
@@ -35,7 +34,7 @@ public class VirtualCertificateTest {
 
         byte[] signature = virtualSmartCard.signData(data.getBytes(StandardCharsets.UTF_8));
 
-        //assertEquals(true, virtualSmartCard.verifyData(data.getBytes(), signature));
+        assertEquals(true, virtualSmartCard.verifyData(data.getBytes(), signature));
 
         virtualSmartCard.stop();
     }

@@ -10,12 +10,13 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import javax.crypto.*;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 
@@ -23,6 +24,11 @@ import java.security.PrivateKey;
  * A class for describing basic RSA certificates operations.
  */
 public class CertificateHelper {
+
+    private static byte[] salt = {
+            (byte)0xc7, (byte)0x73, (byte)0x21, (byte)0x8c,
+            (byte)0x7e, (byte)0xc8, (byte)0xee, (byte)0x99
+    };
 
     /**
      * Reads a public key from certificate
@@ -79,43 +85,44 @@ public class CertificateHelper {
      * @throws InvalidKeySpecException
      * @throws URISyntaxException
      */
-    public static PrivateKey readPrivateKey(String privateKeyPath, String passphrase) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, URISyntaxException {
-
-        String privateKeyContent;
-
-        byte[] file = Files.readAllBytes(Paths.get(privateKeyPath));
-
-
+    public static PrivateKey readPrivateKey(String privateKeyPath, String passphrase) throws IOException {
         try {
-            Key secretKey = new SecretKeySpec(passphrase.getBytes(),  "AES");
+
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            Key secretKey = null;
             Cipher cipher = Cipher.getInstance("AES");
+
+            File file = new File(privateKeyPath);
+            KeySpec spec = new PBEKeySpec(passphrase.toCharArray(), salt, 65536, 256);
+            SecretKey tmp = factory.generateSecret(spec);
+            secretKey = new SecretKeySpec(tmp.getEncoded(),  "AES");
+
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            file = cipher.doFinal(file);
+            byte[] fileContent = Files.readAllBytes(file.toPath());
+            fileContent = cipher.doFinal(fileContent);
 
-            privateKeyContent = DatatypeConverter.printBase64Binary(file);
+            String privateKeyContent = new String(fileContent);
 
-            privateKeyContent = privateKeyContent.replace("-----BEGIN ENCRYPTED PRIVATE KEY-----", "");
-            privateKeyContent = privateKeyContent.replace("-----END ENCRYPTED PRIVATE KEY-----", "");
-            privateKeyContent = privateKeyContent.replaceAll("\\n", "");
+            privateKeyContent = privateKeyContent.replaceAll("\\n", "").replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "");
 
             KeyFactory kf = KeyFactory.getInstance("RSA");
 
             PKCS8EncodedKeySpec keySpecPKCS8 = new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(privateKeyContent));
             PrivateKey privKey = kf.generatePrivate(keySpecPKCS8);
             return privKey;
-
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
         } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
             e.printStackTrace();
         } catch (BadPaddingException e) {
             e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
             e.printStackTrace();
         }
-
-        return null;
-        //return fromPem(Paths.get(privateKeyPath), passphrase);
-
+    return null;
     }
 }

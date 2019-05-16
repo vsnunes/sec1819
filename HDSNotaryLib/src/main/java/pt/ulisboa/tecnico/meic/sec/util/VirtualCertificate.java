@@ -80,13 +80,14 @@ public class VirtualCertificate implements Certification {
             throw new HDSSecurityException("No such algorithm: " + e.getMessage());
         } catch (IOException e) {
             throw new HDSSecurityException("IO Problem: " + e.getMessage());
-        } catch (InvalidKeySpecException e) {
-            throw new HDSSecurityException("Invalid Key: " + e.getMessage());
+      /*  } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+            throw new HDSSecurityException("Invalid Key: " + e.getMessage());*/
         } catch (InvalidKeyException e) {
             e.printStackTrace();
             throw new HDSSecurityException("Invalid Key exception: " + e.getMessage());
-        } catch (URISyntaxException e) {
-            throw new HDSSecurityException("URI problem: " + e.getMessage());
+        /*} catch (URISyntaxException e) {
+            throw new HDSSecurityException("URI problem: " + e.getMessage());*/
         } catch (NoSuchPaddingException e) {
             throw new HDSSecurityException("Padding problem when encrypting: " + e.getMessage());
         } catch (IllegalBlockSizeException e) {
