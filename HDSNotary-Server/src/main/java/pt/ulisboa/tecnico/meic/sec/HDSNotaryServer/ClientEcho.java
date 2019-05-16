@@ -22,9 +22,23 @@ public class ClientEcho {
     private boolean delivered;
     private Interaction quorumEchos;
     private Interaction quorumReadys;
+    private final Lock deliveredLock = new ReentrantLock();
+    private Condition deliveredCondition = deliveredLock.newCondition();
 
     public ClientEcho() {
         this.clean();
+    }
+
+    public Condition getDeliveredCondition() {
+        return deliveredCondition;
+    }
+
+    public void setDeliveredCondition(Condition deliveredCondition) {
+        this.deliveredCondition = deliveredCondition;
+    }
+
+    public Lock getDeliveredLock() {
+        return this.deliveredLock;
     }
 
     public ArrayList<Interaction> getEchos() {

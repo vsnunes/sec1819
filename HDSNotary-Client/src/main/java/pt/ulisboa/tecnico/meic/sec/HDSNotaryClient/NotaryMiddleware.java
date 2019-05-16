@@ -100,9 +100,13 @@ public class NotaryMiddleware implements NotaryInterface {
         try {
                 System.out.println("zé assinado: " + ""+request.getWts()+request.getResponse());
                 request.setSigma(Digest.createDigest(""+request.getWts()+request.getResponse(), cert));
-
+            int test = 1;
             for (NotaryInterface notaryInterface : servers) {
+                /*if(test==3) {
+                    break;
+                }*/
                 completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
+                test++;
             }
 
             int received = 0;

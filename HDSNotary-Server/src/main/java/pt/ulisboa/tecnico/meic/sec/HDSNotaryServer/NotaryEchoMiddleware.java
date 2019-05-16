@@ -200,7 +200,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     waited++; 
                     if (waited >= 200) { 
                         System.out.println("Timeout expired on echos");
-                    throw new HDSSecurityException("Timeout expired on echos"); 
+                        throw new HDSSecurityException("Timeout expired on echos"); 
                     }
                      
                 }
@@ -249,7 +249,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     }*/
 
                     waited = 0;
-                    while (clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) {
+                    while ((clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) && (!clientEcho.isDelivered())) {
                         Thread.sleep(500);
                         System.out.println("After READY sleep " + clientEcho.getNumberOfQuorumReceivedReadys() + " ID " + echoIdentifier);
                         waited++; 
@@ -257,24 +257,32 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                             System.out.println("Timeout expired on readys"); 
                             throw new HDSSecurityException("Timeout expired on readys"); 
                         }
-                        
                     }
+                    if(!clientEcho.isDelivered()) {
+                        if(clientEcho.getDeliveredLock().tryLock()) {
+                            clientEcho.setDelivered(true);
+                            request = clientEcho.getQuorumReadys();
+                            request.setNotaryID(idNotary);
+                            request.setType(Interaction.Type.INTENTION2SELL);
 
-                    request = clientEcho.getQuorumReadys();
-                    request.setNotaryID(idNotary);
-                    request.setType(Interaction.Type.INTENTION2SELL);
-
-                    // only after receiving readys
-                    synchronized (clientEcho) {
-                        clientEcho.setDelivered(true);
-                        System.out.println("ANTES: " + request.toString());
-                        //clientEchosMap.remove(echoIdentifier);
-                        return notaryService.intentionToSell(request);
+                            // only after receiving readys
+                            synchronized (clientEcho) {
+                                clientEcho.setDelivered(true);
+                                System.out.println("ANTES: " + request.toString());
+                                //clientEchosMap.remove(echoIdentifier);
+                                try {
+                                    return notaryService.intentionToSell(request);
+                                }
+                                finally {
+                                    clientEcho.getDeliveredLock().unlock();
+                                }
+                            }
+                        }
                     }
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
 
         } else {

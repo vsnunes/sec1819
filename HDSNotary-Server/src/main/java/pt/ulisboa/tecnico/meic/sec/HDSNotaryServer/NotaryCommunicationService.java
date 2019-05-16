@@ -249,73 +249,75 @@ public class NotaryCommunicationService extends UnicastRemoteObject
          */
 
         // ================= Amplification phase! =================
-        if (clientEcho.getNumberOfQuorumReceivedReadys() > F) {
-            // here im sleeping to make sure that this phase is not wrongly triggered
+        if ((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
+            clientEcho.setSentReady(true);
+            ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_NOTARIES);
+
+            CompletionService<Interaction> completionServiceReady = new ExecutorCompletionService<Interaction>(
+                    poolExecutor);
+
+            final int idNotary = new Integer(Main.NOTARY_ID);
+            request.setNotaryID(idNotary);
+            cert = new VirtualCertificate();
             try {
-                Thread.sleep(20000);
-                if(!(clientEcho.getNumberOfQuorumReceivedReadys() > (2*F))) {
-                    ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_NOTARIES);
-                    CompletionService<Interaction> completionAmplificationPhase = new ExecutorCompletionService<Interaction>(poolExecutor);
-                    System.out.println("FASE DE AMPLIFICAÇÃO: começou");
-                    /*Here im officially starting the amplification*/
-                    final int idNotary = new Integer(Main.NOTARY_ID);
-                    request.setNotaryID(idNotary);
-                    int readyClock = NotaryService.readyCounter[idNotary][clientId] + 1;
-                    request.setReadyClock(readyClock);
-                    /*broadcast ready*/
-                    for (NotaryCommunicationInterface notary : NotaryEchoMiddleware.servers) {
-                        try {
-                            completionAmplificationPhase.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, request));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+                request.setReadySignature(Digest.createDigest(request.readyString(), cert));
+            } catch (NoSuchAlgorithmException e1) {
+                e1.printStackTrace();
+            } catch (HDSSecurityException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            for (NotaryCommunicationInterface notary : NotaryEchoMiddleware.servers) {
+                try {
+                    completionServiceReady.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, request));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            int waited = 0;
+            while ((clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) && (!clientEcho.isDelivered())) {
+                try {
+                    Thread.sleep(500);
+                    System.out.println("After Amplification READY sleep " + clientEcho.getNumberOfQuorumReceivedReadys() + " ID " + echoIdentifier);
+                    waited++; 
+                    if (waited >= 200) {
+                        System.out.println("Timeout expired on readys AMPLIFICATION"); 
+                        throw new RemoteException("Timeout expired on readys AMPLIFICATIO"); 
                     }
-                    System.out.println("FASE DE AMPLIFICAÇÃO: acabou o broadcast");
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
 
-
-                    /*wait until quorum*/
-                    int waited = 0;
-                    System.out.println("FASE DE AMPLIFICAÇÃO: before quorum readys tenho " + clientEcho.getNumberOfQuorumReceivedReadys() + " no array");
-                    while (clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) {
-                        Thread.sleep(500);
-                        System.out.println("After amplification phase READY sleep of " + clientEcho.getNumberOfQuorumReceivedReadys() + " ID " + echoIdentifier);
-                        waited++; 
-                        if (waited >= 200) {
-                            System.out.println("Timeout expired on readys of amplification phase"); 
-                            throw new RemoteException("Timeout expired on readys of amplification phase"); 
-                        }
-                        
-                    }
-                    System.out.println("FASE DE AMPLIFICAÇÃO: after quorum readys tenho " + clientEcho.getNumberOfQuorumReceivedReadys() + " no array");
-
-
+            if(!clientEcho.isDelivered()) {
+                if(clientEcho.getDeliveredLock().tryLock()) {
+                    clientEcho.setDelivered(true);
                     request = clientEcho.getQuorumReadys();
                     request.setNotaryID(idNotary);
                     request.setType(Interaction.Type.INTENTION2SELL);
 
                     // only after receiving readys
-                    if(!clientEcho.isDelivered()) {
-                        synchronized (clientEcho) {
-                            clientEcho.setDelivered(true);
-                            try {
-                                NotaryService.getInstance().intentionToSell(request);
-                                System.out.println("FASE DE AMPLIFICAÇÃO: entreguei a mensagem!!!!");
-                            } catch (GoodException | HDSSecurityException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
+                    synchronized (clientEcho) {
+                        clientEcho.setDelivered(true);
+                        System.out.println("ANTES: " + request.toString());
+                        //clientEchosMap.remove(echoIdentifier);
+                        try {
+                            NotaryService.getInstance().intentionToSell(request);
+                        } catch (GoodException | HDSSecurityException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
                         }
-                    } 
-                    else {
-                        System.out.println("FASE DE AMPLIFICAÇÃO: a mensagem já tinha sido entregue, não a entreguei de novo!!!");
+                        finally {
+                            clientEcho.getDeliveredLock().unlock();
+                        }
                     }
-
-
                 }
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
             }
+
+
         }
         /*if ((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
             System.out.println("VAREJEIRA ENTREI NA FASE DE AMPLIFICAÇÃO!!!!!!");
