@@ -132,7 +132,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                         .getAbsolutePath());
 
         try {
-            System.out.println(request.toString());
             /* compare hmacs */
             if (!Digest.verify(request, cert)) {
                 throw new HDSSecurityException("Tampering detected!");
@@ -431,7 +430,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
      */
     private void doWrite(){
-        //System.out.println("Writing GoodsUser...");
         try {
 
             File file = new File(USERSGOODSTMP_FILE);
@@ -439,9 +437,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             FileOutputStream f = new FileOutputStream(file, false);
             ObjectOutputStream o = new ObjectOutputStream(f);
             o.writeObject(goods);
-            //System.out.println("The Object goods was succesfully written to a file");
             o.writeObject(users);
-            //System.out.println("The Object users was succesfully written to a file");
 
             o.close();
             swapFiles(USERSGOODS_FILE,USERSGOODSTMP_FILE);
@@ -455,7 +451,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     To be called when notary service starts
      */
     private boolean doRead() {
-        //System.out.println("Reading GoodsUser...");
         try {
             File file = new File(USERSGOODS_FILE);
             if(!file.exists()){
@@ -465,9 +460,7 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             FileInputStream fi = new FileInputStream(file);
             ObjectInputStream oi = new ObjectInputStream(fi);
             goods = (HashMap<Integer, Good>) oi.readObject();
-            //System.out.println("The Object goods has been read from the file...");
             users = (HashMap<Integer, User>) oi.readObject();
-            //System.out.println("The Object users has been read from the file...");
 
             oi.close();
             return true;
@@ -573,7 +566,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     /*Execute transactions pending*/
     private ArrayList<Transaction> doReadTransactions(){
-        //System.out.println("Reading transaction...");
         ArrayList<Transaction> transactions = new ArrayList<Transaction>();
         ObjectInputStream oi = null;
         try {
@@ -589,18 +581,12 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
                 oi = new ObjectInputStream(fi);
                 transactionCounter = (int) oi.readObject();
                 Transaction transaction = (Transaction) oi.readObject();
-                //System.out.println("The Object Transaction has been read from the file...");
                 User seller = (User) oi.readObject();
-                //System.out.println("The Object User(seller) has been read from the file...");
                 User buyer = (User) oi.readObject();
-                //System.out.println("The Object User(buyer) has been read from the file...");
                 Good good = (Good) oi.readObject();
-                //System.out.println("The Object Good has been read from the file...");
                 User owner = (User) oi.readObject();
-                //System.out.println("The Object User(owner of good) has been read from the file...");
                 good.setOwner(owner);
                 TransactionState tsate = (TransactionState) oi.readObject();
-                //System.out.println("The Object Transaction has been read from the file...");
 
                 transaction.setSeller(seller);
                 transaction.setBuyer(buyer);
@@ -633,7 +619,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
     }
 
     private static void swapFiles(String original, String tmp) {
-        //System.out.println("Performing the swap of " + tmp + " ...");
         File originalFile= new File(original);
         try {
             originalFile.createNewFile();
@@ -659,7 +644,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
             ObjectOutputStream o = new ObjectOutputStream(f);
             o.writeObject(transactionCounter);
             o.writeObject(transaction);
-            //System.out.println("The Object transaction was succesfully written to a file");
             o.writeObject(transaction.getSeller());
             o.writeObject(transaction.getBuyer());
             o.writeObject(transaction.getGood());
@@ -727,7 +711,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     /*update clocks for RB phase*/
     public static void doWriteRB(){
-        //System.out.println("Writing RBClocks...");
         try {
 
             File file = new File(RBTMP_FILE);
@@ -748,7 +731,6 @@ public class NotaryService extends UnicastRemoteObject implements NotaryInterfac
 
     /*read clock for RB phase*/
     private boolean doReadRB() {
-        //System.out.println("Reading RBClocks...");
         try {
             File file = new File(RB_FILE);
             if(!file.exists()){

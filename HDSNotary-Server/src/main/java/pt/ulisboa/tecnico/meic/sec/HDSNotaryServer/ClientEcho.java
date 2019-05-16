@@ -138,21 +138,11 @@ public class ClientEcho {
                     if (numberOfInteractions > maxEchos) {
                         maxEchos = numberOfInteractions;
                         if(maxEchos > ((NUMBER_OF_NOTARIES + F)/2)) {
-                            //if(quorumEchos == null) {
                                 setQuorumEchos(interaction);
                                 System.out.println(" getNumberOfQuorumReceivedEchos Escrevi no QuorumsEchos: " + interaction.toString());
                                 break;
-                            /*}
-                            else {
-                                System.out.println(" getNumberOfQuorumReceivedEchos quorumEchos e null" + maxEchos);
-                            }*/
                         }
-                        else {
-                            //System.out.println(" getNumberOfQuorumReceivedEchos nao entrei no if da verificacao do quorum" + maxEchos);
-                        }
-                    } 
-                    else {
-                        //System.out.println(" getNumberOfQuorumReceivedEchos nao escrevi" + maxEchos);
+
                     }
                 }
             }
@@ -166,25 +156,13 @@ public class ClientEcho {
             for (Interaction interaction : this.readys) {
                 if (interaction != null) {
                     int numberOfInteractions = frequency(this.readys, interaction);
-                    //System.out.println(" getNumberOfQuorumReceivedReadys #interactions " + numberOfInteractions + " maxReadys: " + maxReadys);
                     if (numberOfInteractions > maxReadys) {
                         maxReadys=numberOfInteractions;
                         if(maxReadys > (2*F)) {
-                            //if(quorumReadys == null) {
                                 setQuorumReadys(interaction);
                                 System.out.println(" getNumberOfQuorumReceivedReadys Escrevi no QuorumsReadys: " + interaction.toString());
                                 break;
-                            /*}
-                            else {
-                                System.out.println(" getNumberOfQuorumReceivedReadys quorumReadys e null" + maxReadys);
-                            }*/
                         }
-                        else {
-                            //System.out.println(" getNumberOfQuorumReceivedReadys nao entrei no if da verificacao do quorum" + maxReadys);
-                        }
-                    } 
-                    else {
-                        //System.out.println(" getNumberOfQuorumReceivedReadys nao escrevi" + maxReadys);
                     }
                 }
             } 
@@ -193,7 +171,6 @@ public class ClientEcho {
     } 
     
     public void clean() {
-        System.out.println("varejeira do clean!!!");
         this.echos = new ArrayList<>();
         this.readys = new ArrayList<>();
         this.sentEcho = false;

@@ -98,15 +98,9 @@ public class NotaryMiddleware implements NotaryInterface {
 
         /*prepare request arguments*/
         try {
-                System.out.println("zé assinado: " + ""+request.getWts()+request.getResponse());
                 request.setSigma(Digest.createDigest(""+request.getWts()+request.getResponse(), cert));
-            int test = 1;
             for (NotaryInterface notaryInterface : servers) {
-                if(test==4) {
-                    break;
-                }
                 completionService.submit(new NotaryTask(notaryInterface, NotaryTask.Operation.INTENTION2SELL, request));
-                test++;
             }
 
             int received = 0;
@@ -205,8 +199,6 @@ public class NotaryMiddleware implements NotaryInterface {
                     System.out.println("owner: " + result.getOwnerID());
                     clientCert.init(new File(System.getProperty("project.users.cert.path") + result.getOwnerID() + System.getProperty("project.users.cert.ext")).getAbsolutePath());
                     if(Digest.verify(result.getSigma(),""+result.getWts()+result.getResponse(), clientCert) == false) {
-                        System.out.println("zé assinado: " + "" + result.getWts() + result.getResponse());
-                        System.out.println("zé bizantino!");
                         continue;
                     }
                 }

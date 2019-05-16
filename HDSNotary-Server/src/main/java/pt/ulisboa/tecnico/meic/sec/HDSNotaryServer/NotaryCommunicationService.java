@@ -44,8 +44,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
     @Override
     public void echo(Interaction request) throws RemoteException {
-
-        System.out.println("Varejeira: recebi echo do " + request.getNotaryID());
+        System.out.println("Received echo from notary " + request.getNotaryID());
         int clientId = -1;
         if(request.getType()==Type.INTENTION2SELL) {
             clientId = request.getUserID();
@@ -88,7 +87,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("DEBUG: asneira na verificação do cliente\n"+e.getMessage());
+            System.out.println("You are not the correct user!\n"+e.getMessage());
             throw new RemoteException("You are not the correct user!");
         }
 
@@ -96,24 +95,15 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             lastEchoCounter = NotaryService.echoCounter[notaryId][clientId];
         }
 
-        // System.out.println("varejeira lastEchoCounter " + lastEchoCounter);
-        // System.out.println("varejeira echoClock " + request.getEchoClock());
         if (request.getEchoClock() <= lastEchoCounter) {
-            System.out.println("Replay attack of echo message! vindo do notario " + notaryId);
-            throw new RemoteException("Replay attack of echo message! vindo do notario " + notaryId);
+            System.out.println("Replay attack of echo message! From Notary " + notaryId);
+            throw new RemoteException("Replay attack of echo message! From Notary " + notaryId);
         }
 
         synchronized (NotaryService.echoCounter) {
             NotaryService.echoCounter[notaryId][clientId] = new Integer(request.getEchoClock());
             NotaryService.doWriteRB();
-            System.out.println("recebi o echo do " + request.getNotaryID() + " e realizei a escrita persistente");
         }
-
-        // System.out.println("Varejeira after checking echo clock");
-        /*
-         * ClientEcho clientEcho = null; synchronized (NotaryEchoMiddleware.clientEchos)
-         * { clientEcho = NotaryEchoMiddleware.clientEchos[clientId]; }
-         */
 
         // if this request exists on echoHashMap
         ClientEcho clientEcho = null;
@@ -149,7 +139,6 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        // System.out.println("Varejeira after cert");
         // compare hmacs
         try {
             if (Digest.verify(request.getNotaryIDSignature(), request.echoString(), notaryCert) == false) {
@@ -159,22 +148,14 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        // System.out.println("Varejeira after sign");
 
-        // if (notaryInteraction == null) {
-        // System.out.println("Varejeira after if notaryInteraction a null");
         clientEcho.addEcho(request);
-        System.out.println("FILIPE: ECHO recebi este request " + request.toString() + " do notario "
-                + request.getNotaryID() + " e o ID " + echoIdentifier + " e estou com "
-                + clientEcho.getNumberOfQuorumReceivedEchos() + " valores iguais no array");
 
-        System.out.println("Varejeira: sai do echo do " + request.getNotaryID() + "**saida**");
-        // System.out.println("Varejeira leaving echo function");
     }
 
     @Override
     public void ready(Interaction request) throws RemoteException {
-        System.out.println("Varejeira: recebi ready do " + request.getNotaryID());
+        System.out.println("Received ready from notary " + request.getNotaryID());
         int clientId = -1;
         if(request.getType()==Type.INTENTION2SELL) {
             clientId = request.getUserID();
@@ -217,7 +198,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("DEBUG: asneira na verificação do cliente\n"+e.getMessage());
+            System.out.println("You are not the correct user!\n" + e.getMessage());
             throw new RemoteException("You are not the correct user!");
         }
 
@@ -282,9 +263,6 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
 
         clientEcho.addReady(request);
-        System.out.println("FILIPE: READY recebi este request " + request.toString() + " do notario "
-                + request.getNotaryID() + " e o ID " + echoIdentifier + " e estou com "
-                + clientEcho.getNumberOfQuorumReceivedReadys() + " valores iguais no array");
 
         // ================= Amplification phase! =================
         if ((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
@@ -319,8 +297,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             while ((clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) && (!clientEcho.isDelivered())) {
                 try {
                     Thread.sleep(500);
-                    System.out.println("After Amplification READY sleep " + clientEcho.getNumberOfQuorumReceivedReadys() + " ID " + echoIdentifier);
-                    waited++; 
+                    waited++;
                     if (waited >= 200) {
                         System.out.println("Timeout expired on readys AMPLIFICATION"); 
                         throw new RemoteException("Timeout expired on readys AMPLIFICATION"); 
@@ -332,15 +309,15 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
             if(!clientEcho.isDelivered()) {
                 if(clientEcho.getDeliveredLock().tryLock()) {
+                    System.out.println("AMPLIFICATION PHASE: acquired the lock, the request will be handled here. So" +
+                            " no response to the client");
                     clientEcho.setDelivered(true);
                     request = clientEcho.getQuorumReadys();
                     request.setNotaryID(idNotary);
-                    //request.setType(Interaction.Type.INTENTION2SELL);
 
                     // only after receiving readys
                     synchronized (clientEcho) {
                         clientEcho.setDelivered(true);
-                        System.out.println("AMPLIFICATION ANTE DE ENTREGAR: " + request.toString());
                         try {
                             if(request.getType()==Interaction.Type.INTENTION2SELL) {
                                 NotaryService.getInstance().intentionToSell(request);
@@ -362,7 +339,5 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                 }
             }
         }
-        System.out.println("Varejeira: sai do ready do " + request.getNotaryID() + "**saida**");
-
     }
 }
