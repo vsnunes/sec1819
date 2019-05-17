@@ -57,6 +57,10 @@ An alternative way is to use the Portuguese Citizen Card:
     cd HDSNotary-Server
     mvn exec:java -Dexec.args="1 CCSmartCard"
 
+### Number of notaries and number of byzantine faults
+By default the project are prepared to work with N = 4 (4 notaries) and to handle
+1 byzantine fault.
+
 ## Client
 To run Clients:
 
@@ -89,16 +93,12 @@ The Bad-Client is a special client designed for testing the security requirement
 
 This clients accepts all arguments as a regular client and it's only available on the VirtualCertificares mode to simplify testing.
 
-There are 14 options which try to break our security measures. Every normal operation has 4 variants:
+There are several options which try to break our security measures:
 Attack on the Message from Client to Notary:
-* Replay Attack
-* Tampering
+* Intention to Sell sented only to 2 out of 4 notaries
+* Intention to Sell sented only to 3 out of 4 notaries
+* BuyGood without proof of work
 
-Attack on the Message from the Notary to the Client:
-* Replay Attack 
-* Tampering
-
-Aditionannaly there's also an example of the wrong key being used.
 
 ## Testing Security Measures
 From root folder:

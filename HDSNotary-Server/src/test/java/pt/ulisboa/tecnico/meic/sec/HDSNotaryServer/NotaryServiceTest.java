@@ -39,7 +39,7 @@ public class NotaryServiceTest {
         notary.createGood();
     }
 
-    @Test
+    /*@Test
     public void intentionToSellTestTrue() throws GoodException, RemoteException, HDSSecurityException, NoSuchAlgorithmException {
 
         VirtualCertificate cert = new VirtualCertificate();
@@ -188,7 +188,7 @@ public class NotaryServiceTest {
         notary.transferGood(buyerRequest);
         notary.transferGood(secondRequest);
 
-    }
+    }*/
 
     @After
     public void tearDown() {
