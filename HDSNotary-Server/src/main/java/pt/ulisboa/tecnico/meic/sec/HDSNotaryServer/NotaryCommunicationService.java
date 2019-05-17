@@ -5,11 +5,7 @@ import pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.interfaces.NotaryCommunicatio
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
-import pt.ulisboa.tecnico.meic.sec.util.CFGHelper;
-import pt.ulisboa.tecnico.meic.sec.util.Certification;
-import pt.ulisboa.tecnico.meic.sec.util.Digest;
-import pt.ulisboa.tecnico.meic.sec.util.Interaction;
-import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
+import pt.ulisboa.tecnico.meic.sec.util.*;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction.Type;
 
 import static pt.ulisboa.tecnico.meic.sec.HDSNotaryServer.NotaryService.*;
@@ -134,25 +130,27 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             }
         }
 
-        VirtualCertificate notaryCert = new VirtualCertificate();
+
         try {
-            notaryCert.init(new File("../HDSNotaryLib/src/main/resources/certs/notary" + request.getNotaryID() + ".crt")
-                    .getAbsolutePath());
+            Certification notaryCert = getCert();
+
+            // compare hmacs
+            try {
+                if (Digest.verify(request.getNotaryIDSignature(), request.echoString(), notaryCert) == false) {
+                    throw new HDSSecurityException("tampering detected in echo message!");
+                }
+            } catch (NoSuchAlgorithmException | HDSSecurityException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            clientEcho.addEcho(request);
+
         } catch (HDSSecurityException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        // compare hmacs
-        try {
-            if (Digest.verify(request.getNotaryIDSignature(), request.echoString(), notaryCert) == false) {
-                throw new HDSSecurityException("tampering detected in echo message!");
-            }
-        } catch (NoSuchAlgorithmException | HDSSecurityException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
 
-        clientEcho.addEcho(request);
 
     }
 
@@ -251,10 +249,9 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         
 
 
-        VirtualCertificate notaryCert = new VirtualCertificate();
+
         try {
-            notaryCert.init(new File("../HDSNotaryLib/src/main/resources/certs/notary" + request.getNotaryID() + ".crt")
-                    .getAbsolutePath());
+            Certification notaryCert = getCert();
 
             try {
                 if (Digest.verify(request.getReadySignature(), request.readyString(), notaryCert) == false) {
@@ -280,9 +277,9 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
             final int idNotary = new Integer(Main.NOTARY_ID);
             request.setNotaryID(idNotary);
-            cert = new VirtualCertificate();
+
             try {
-                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+                cert = getCert();
                 request.setReadySignature(Digest.createDigest(request.readyString(), cert));
             } catch (NoSuchAlgorithmException e1) {
                 System.out.println("In amplification: digest of ready message not created! (NoSuchAlgorithm)");
@@ -347,5 +344,28 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                 }
             }
         }
+    }
+
+    private Certification getCert() throws HDSSecurityException {
+        Certification cert = null;
+        NotaryService notaryService = null;
+        try {
+            notaryService = NotaryService.getInstance();
+            //VIRTUAL CERTS
+            if (notaryService.isUsingVirtualCerts()) {
+                cert = new VirtualCertificate();
+                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+            } else {
+                cert = new CCSmartCard();
+                cert.init();
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (GoodException e) {
+            e.printStackTrace();
+        }
+
+
+        return cert;
     }
 }

@@ -159,8 +159,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             request.setEchoClock(echoClock);
             request.setType(Interaction.Type.INTENTION2SELL);
 
-            cert = new VirtualCertificate();
-            cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+            cert = getCert();
             try {
                 request.setNotaryIDSignature(Digest.createDigest(request.echoString(), cert));
             } catch (NoSuchAlgorithmException e1) {
@@ -184,6 +183,13 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             boolean receivedAllEchos = false, receivedAllReadys = false;
 
             int waited = 0;
+            int timeoutLimit;
+            if (notaryService.isUsingVirtualCerts()) {
+                timeoutLimit = 20;
+            } else
+            {
+                timeoutLimit = 200;
+            }
             while (clientEcho.getNumberOfQuorumReceivedEchos() <= ((N + F) / 2)) {
                 try {
                     Thread.sleep(500);
@@ -192,7 +198,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     e.printStackTrace();
                 }
                 waited++;
-                if (waited >= 20) {
+                if (waited >= timeoutLimit) {
                     System.out.println("Timeout expired on echos");
                     throw new HDSSecurityException("Timeout expired on echos");
                 }
@@ -207,8 +213,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             request.setReadyClock(readyClock);
             request.setType(Interaction.Type.INTENTION2SELL);
 
-            cert = new VirtualCertificate();
-            cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+            cert = getCert();
             try {
                 request.setReadySignature(Digest.createDigest(request.readyString(), cert));
             } catch (NoSuchAlgorithmException e1) {
@@ -366,8 +371,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
 
             request.setEchoClock(echoClock);
 
-            cert = new VirtualCertificate();
-            cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+            cert = getCert();
             try {
                 request.setNotaryIDSignature(Digest.createDigest(request.echoString(), cert));
             } catch (NoSuchAlgorithmException e1) {
@@ -410,8 +414,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 request.setReadyClock(readyClock);
                 request.setType(Interaction.Type.TRANSFERGOOD);
 
-                cert = new VirtualCertificate();
-                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+                cert = getCert();
                 try {
                     request.setReadySignature(Digest.createDigest(request.readyString(), cert));
                 } catch (NoSuchAlgorithmException e1) {
@@ -484,5 +487,19 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
     @Override
     public void shutdown() throws RemoteException {
         notaryService.shutdown();
+    }
+
+    private Certification getCert() throws HDSSecurityException {
+        Certification cert;
+        //VIRTUAL CERTS
+        if (notaryService.isUsingVirtualCerts()) {
+            cert = new VirtualCertificate();
+            cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+        } else {
+            cert = new CCSmartCard();
+            cert.init();
+        }
+
+        return cert;
     }
 }
