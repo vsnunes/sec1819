@@ -52,6 +52,9 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         else if (request.getType()==Type.TRANSFERGOOD) {
             clientId = request.getSellerID();
         } 
+        else {
+            System.out.println("operation not found!");
+        }
         int notaryId = request.getNotaryID();
         int lastEchoCounter = -1;
 
@@ -163,6 +166,10 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         else if (request.getType()==Type.TRANSFERGOOD) {
             clientId = request.getSellerID();
         } 
+
+        else {
+            System.out.println("Operation not found!");
+        }
         int notaryId = request.getNotaryID();
         int lastReadyCounter = -1;
 
@@ -266,7 +273,6 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
         // ================= Amplification phase! =================
         if ((clientEcho.isSentReady() == false) && (clientEcho.getNumberOfQuorumReceivedReadys() > F)) {
-            clientEcho.setSentReady(true);
             ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMBER_OF_NOTARIES);
 
             CompletionService<Interaction> completionServiceReady = new ExecutorCompletionService<Interaction>(
@@ -306,6 +312,8 @@ public class NotaryCommunicationService extends UnicastRemoteObject
                     e.printStackTrace();
                 }
             }
+            clientEcho.setSentReady(true);
+
 
             if(!clientEcho.isDelivered()) {
                 if(clientEcho.getDeliveredLock().tryLock()) {

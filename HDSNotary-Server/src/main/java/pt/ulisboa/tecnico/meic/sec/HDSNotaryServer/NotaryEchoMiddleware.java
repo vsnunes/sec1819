@@ -41,10 +41,10 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
 
     private NotaryService notaryService;
 
-    protected volatile static ConcurrentHashMap <String, ClientEcho> clientEchosMap;
+    protected volatile static ConcurrentHashMap<String, ClientEcho> clientEchosMap;
 
     /** list for echos of all clients */
-    //protected static ClientEcho[] clientEchos;
+    // protected static ClientEcho[] clientEchos;
 
     static final long TIMEOUT_SEC = 30;
 
@@ -97,24 +97,27 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
     public Interaction intentionToSell(Interaction request)
             throws RemoteException, GoodException, HDSSecurityException {
         CompletionService<Interaction> completionServiceEcho = new ExecutorCompletionService<Interaction>(poolExecutor);
-        CompletionService<Interaction> completionServiceReady = new ExecutorCompletionService<Interaction>(poolExecutor);
+        CompletionService<Interaction> completionServiceReady = new ExecutorCompletionService<Interaction>(
+                poolExecutor);
+
+        System.out.println(" Recebi o pedido: " + request.toString());
+
 
         int clientId = request.getUserID();
-        
-        //ClientEcho clientEcho = clientEchos[clientId];
+
+        // ClientEcho clientEcho = clientEchos[clientId];
         ClientEcho clientEcho = null;
 
-       
         String echoIdentifier = "ITS" + String.valueOf(request.getUserID()) + String.valueOf(request.getUserClock());
-        synchronized(clientEchosMap){
-            if(clientEchosMap.containsKey(echoIdentifier)) {
+        synchronized (clientEchosMap) {
+            if (clientEchosMap.containsKey(echoIdentifier)) {
                 clientEcho = clientEchosMap.get(echoIdentifier);
             } else {
                 clientEcho = new ClientEcho();
                 clientEchosMap.put(echoIdentifier, clientEcho);
             }
         }
-        
+
         try {
             initRMI();
         } catch (NotaryEchoMiddlewareException e) {
@@ -137,7 +140,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
             e2.printStackTrace();
         }
 
-        if(clientEcho.isDelivered()) {
+        if (clientEcho.isDelivered()) {
             System.out.println("This message was already delivered in the application");
             throw new HDSSecurityException("This message was already delivered in the application");
         }
@@ -150,7 +153,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         if (clientEcho.isSentEcho() == false) {
             final int id = new Integer(Main.NOTARY_ID);
             request.setNotaryID(id);
-        
+
             int echoClock = NotaryService.echoCounter[id][clientId] + 1;
 
             request.setEchoClock(echoClock);
@@ -164,7 +167,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
             }
-            clientEcho.setSentEcho(true);
             Interaction tmp = request;
 
             for (int i = 1; i <= this.servers.size(); i++) {
@@ -178,58 +180,69 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     e.printStackTrace();
                 }
             }
-            try {
-                boolean receivedAllEchos = false, receivedAllReadys = false;
 
-                
-                int waited = 0;
-                while (clientEcho.getNumberOfQuorumReceivedEchos() <= ((N + F) / 2)) {
-                    Thread.sleep(500);
-                    waited++;
-                    if (waited >= 200) { 
-                        System.out.println("Timeout expired on echos");
-                        throw new HDSSecurityException("Timeout expired on echos"); 
-                    }
-                     
-                }
+            boolean receivedAllEchos = false, receivedAllReadys = false;
 
-                request = clientEcho.getQuorumEchos();
-                final int idNotary = new Integer(Main.NOTARY_ID);
-                request.setNotaryID(idNotary);
-                int readyClock = NotaryService.readyCounter[idNotary][clientId] + 1;
-                request.setReadyClock(readyClock);
-                request.setType(Interaction.Type.INTENTION2SELL);
-
-                cert = new VirtualCertificate();
-                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+            int waited = 0;
+            while (clientEcho.getNumberOfQuorumReceivedEchos() <= ((N + F) / 2)) {
                 try {
-                    request.setReadySignature(Digest.createDigest(request.readyString(), cert));
-                } catch (NoSuchAlgorithmException e1) {
-                    e1.printStackTrace();
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-                if (clientEcho.isSentReady() == false) {
-                    clientEcho.setSentReady(true);
-                    for (NotaryCommunicationInterface notary : this.servers) {
-                        try {
-                            completionServiceReady.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, request));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                waited++;
+                if (waited >= 20) {
+                    System.out.println("Timeout expired on echos");
+                    throw new HDSSecurityException("Timeout expired on echos");
+                }
+
+            }
+
+            clientEcho.setSentEcho(true);
+            request = clientEcho.getQuorumEchos();
+            final int idNotary = new Integer(Main.NOTARY_ID);
+            request.setNotaryID(idNotary);
+            int readyClock = NotaryService.readyCounter[idNotary][clientId] + 1;
+            request.setReadyClock(readyClock);
+            request.setType(Interaction.Type.INTENTION2SELL);
+
+            cert = new VirtualCertificate();
+            cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+            try {
+                request.setReadySignature(Digest.createDigest(request.readyString(), cert));
+            } catch (NoSuchAlgorithmException e1) {
+                e1.printStackTrace();
+            }
+            if (clientEcho.isSentReady() == false) {
+                for (NotaryCommunicationInterface notary : this.servers) {
+                    try {
+                        completionServiceReady
+                                .submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, request));
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
+            }
 
+            if (clientEcho.isDelivered() == false) {
 
-                if (clientEcho.isDelivered() == false) {
-                    
-                    waited = 0;
-                    while ((clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) && (!clientEcho.isDelivered())) {
+                waited = 0;
+                while ((clientEcho.getNumberOfQuorumReceivedReadys() <= (2 * F)) && (!clientEcho.isDelivered())) {
+                    try {
                         Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
                         waited++;
                         if (waited >= 200) {
                             System.out.println("Timeout expired on readys"); 
                             throw new HDSSecurityException("Timeout expired on readys"); 
                         }
                     }
+                    clientEcho.setSentReady(true);
+
                     if(!clientEcho.isDelivered()) {
                         if(clientEcho.getDeliveredLock().tryLock()) {
                             clientEcho.setDelivered(true);
@@ -251,10 +264,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     }
 
                 }
-
-            } catch (Exception e) {
-                //e.printStackTrace();
-            }
 
         }
 
@@ -365,7 +374,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
             }
-            clientEcho.setSentEcho(true);
             Interaction tmp = request;
 
             for (int i = 1; i <= this.servers.size(); i++) {
@@ -378,8 +386,8 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
             }
+            clientEcho.setSentEcho(true);
             try {
                 boolean receivedAllEchos = false, receivedAllReadys = false;
 
@@ -410,7 +418,6 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                     e1.printStackTrace();
                 }
                 if (clientEcho.isSentReady() == false) {
-                    clientEcho.setSentReady(true);
                     for (NotaryCommunicationInterface notary : this.servers) {
                         try {
                             completionServiceReady.submit(new NotaryEchoTask(notary, NotaryEchoTask.Operation.READY, request));
@@ -431,6 +438,8 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
                             throw new HDSSecurityException("Timeout expired on readys"); 
                         }
                     }
+                    clientEcho.setSentReady(true);
+
                     if(!clientEcho.isDelivered()) {
                         if(clientEcho.getDeliveredLock().tryLock()) {
                             clientEcho.setDelivered(true);
