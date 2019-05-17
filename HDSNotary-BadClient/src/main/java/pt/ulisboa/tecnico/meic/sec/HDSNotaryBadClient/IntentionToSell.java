@@ -14,16 +14,17 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetStateOfGoodTamperingNotary extends Operation {
+public class IntentionToSell extends Operation {
 
-    public GetStateOfGoodTamperingNotary(ClientInterface ci, NotaryInterface ni) {
-        super("GetStateOfGood", ci, ni);
+    public IntentionToSell(ClientInterface ci, NotaryMiddleware ni) {
+        super("IntentionToSell", ci, ni);
     }
 
     @Override
     public boolean getAndCheckArgs() {
         try {
             args.add(Integer.parseInt(new BoxUI(REQUEST_GOODID).showAndGet()));
+            args.add(Boolean.parseBoolean(new BoxUI(REQUEST_TOSELL).showAndGet()));
 
             return true;
         } catch(NumberFormatException e) {
@@ -36,26 +37,29 @@ public class GetStateOfGoodTamperingNotary extends Operation {
         Interaction response;
 
         int good = (int)args.get(0);
+        boolean intention = (boolean)args.get(1);
 
         try {
-            Interaction request = new Interaction();
-            request.setUserID(ClientService.userID);
-            request.setGoodID(good);
-            request.setUserClock(notaryInterface.getClock(ClientService.userID)+1);
 
             Certification cert = new VirtualCertificate();
             cert.init("", new File(System.getProperty("project.user.private.path") +
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
+            /*prepare request arguments*/
+            Interaction request = new Interaction();
+            request.setUserID(ClientService.userID);
+            request.setGoodID(good);
+            request.setResponse(intention);
+            request.setUserClock(notaryInterface.getClock(ClientService.userID)+1);
             request.setHmac(Digest.createDigest(request, cert));
 
-
-            response = notaryInterface.getStateOfGood(request);
+            response = notaryInterface.intentionToSell(request);
+            
+            //Check the MAC using the cert of a corresponded Notary
+            System.setProperty("project.notary.cert.path", "../HDSNotaryLib/src/main/resources/certs/notary" + response.getNotaryID() + ".crt");
 
             VirtualCertificate notaryCert = new VirtualCertificate();
             notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
-
-            response.setBuyerID(3);
 
             /*compare hmacs*/
             if(Digest.verify(response, notaryCert) == false){
@@ -68,7 +72,6 @@ public class GetStateOfGoodTamperingNotary extends Operation {
             }
 
             setStatus(response.getResponse());
-
         }
         catch(GoodException e) {
             setStatus(Status.FAILURE_NOTARY_REPORT, e.getMessage());
@@ -81,7 +84,11 @@ public class GetStateOfGoodTamperingNotary extends Operation {
 
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
+        } catch (NullPointerException e) {
+            System.out.println("Amplification was probably triggered on server - some responses from notary might be " +
+                    "be missing");
         }
+
     }
 
     @Override

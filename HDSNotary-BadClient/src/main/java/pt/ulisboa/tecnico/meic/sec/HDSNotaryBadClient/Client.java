@@ -1,14 +1,12 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient;
 
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient.exceptions.NotaryMiddlewareException;
 import pt.ulisboa.tecnico.meic.sec.gui.BoxUI;
 import pt.ulisboa.tecnico.meic.sec.gui.MenuUI;
 import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -19,21 +17,33 @@ public class Client {
 
     public static void main(String[] args){
         int option;
-        NotaryInterface notaryInterface;
+        NotaryMiddleware notaryInterface;
 
         try {
-            clientInterface = ClientService.getInstance();
+
 
             //maven args for client ID, which by default is 1
             if (args.length > 0) {
                 ClientService.userID = Integer.parseInt(args[0]);
-                ClientService.CLIENT_SERVICE_PORT = 9999;
+                if(ClientService.userID < 1 || ClientService.userID > 5){
+                    new BoxUI("user not found").show(BoxUI.RED_BOLD_BRIGHT);
+                    return;
+                }
+                ClientService.CLIENT_SERVICE_PORT = 10010 + ClientService.userID;
                 ClientService.CLIENT_SERVICE_NAME = "Client" + ClientService.userID;
 
-                if (args.length > 1)
-                    ClientService.NOTARY_URI = args[1];
-            }
+                if (args.length > 1) {
+                    if (args[1].equals("CCSmartCard")) {
+                        ClientService.NOTARY_USES_VIRTUAL = false;
 
+                        //Sets the notary cert path CC Certificate and not the virtual one
+                        System.setProperty("project.notary.cert.path", System.getProperty("project.notary.certCC.path"));
+                    } else {
+                        ClientService.NOTARY_USES_VIRTUAL = true;
+                    }
+                }
+            }
+            clientInterface = ClientService.getInstance();
             notaryInterface = ClientService.notaryInterface;
 
             Registry reg = LocateRegistry.createRegistry(ClientService.CLIENT_SERVICE_PORT);
@@ -46,8 +56,7 @@ public class Client {
             System.out.println(" ClientID           : " + ClientService.userID);
             System.out.println(" Client Service Name: " + ClientService.CLIENT_SERVICE_NAME);
             System.out.println(" Client Service Port: " + ClientService.CLIENT_SERVICE_PORT);
-            System.out.println(" Notary URL         : " + ClientService.NOTARY_URI);
-            System.out.println(" MALICIOUS CLIENT!");
+            System.out.println(" Authentication     : " + ((ClientService.NOTARY_USES_VIRTUAL) ? "Virtual Certificates" : "Cartao do Cidadao"));
             System.out.println(" ====================== DEBUG ============================= ");
             System.out.println("Press any key to dismiss ...");
 
@@ -58,42 +67,34 @@ public class Client {
             }
 
         } catch (RemoteException e) {
-            System.err.println("Cannot create Digest ClientServer singleton " + e.getMessage());
+            System.err.println("** Client: Remoting problem: " + e.getMessage());
+            return;
+        } catch (NotaryMiddlewareException e) {
+            new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+            return;
+        } catch (IOException e) {
+            new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
             return;
         }
 
-        try {
-            notaryInterface = (NotaryInterface) Naming.lookup(ClientService.NOTARY_URI);
-        } catch (NotBoundException e) {
-            new BoxUI(":( NotBound on Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-        } catch (MalformedURLException e) {
-            new BoxUI(":( Malform URL! Cannot find Notary Service!").show(BoxUI.RED_BOLD_BRIGHT);
-        } catch (RemoteException e) {
-            new BoxUI(":( It looks like I miss the connection with Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-        }
 
         do {
             MenuUI menu = new MenuUI("User client");
 
-            menu.addEntry("Tampering: Intention to sell");
-            menu.addEntry("Tampering Response: Intention to sell");
-            menu.addEntry("Replay Attack: Intention to sell");
-            menu.addEntry("Replay Attack Response: Intention to sell");
-            menu.addEntry("Altered Key: Intention to sell");
-            menu.addEntry("Tampering: Get State of Good");
-            menu.addEntry("Tampering Response: Get State of Good");
-            menu.addEntry("Replay Attack: Get State of Good");
-            menu.addEntry("Replay Attack Response: Get State of Good");
-            menu.addEntry("Tampering: Buy Good");
-            menu.addEntry("Tampering Response: Buy Good");
-            menu.addEntry("Replay Attack: Buy Good");
-            menu.addEntry("Replay Attack Response: Buy Good");
+            menu.addEntry("To Notary: Intention to sell");
+            menu.addEntry("To Notary: Get State of Good");
+            menu.addEntry("Buy Good Without Proof of Work");
             menu.addEntry("DEBUG -> System state");
             menu.addEntry("Exit");
+            menu.addEntry("Intention to sell broadcast to 2 out of 4 notaries");
+            menu.addEntry("Intention to sell broadcast to 3 out of 4 notaries");
 
             option = menu.display();
 
-            if (option == 15) break; //Exit case
+            if (option == 5) {
+                notaryInterface.shutdown();
+                break; //Exit case
+            }
 
             Operation operation = parseOperation(option, clientInterface, notaryInterface);
 
@@ -157,22 +158,15 @@ public class Client {
 
     }
 
-    public static Operation parseOperation(int option, ClientInterface ci, NotaryInterface ni) {
+    public static Operation parseOperation(int option, ClientInterface ci, NotaryMiddleware ni) {
         switch (option) {
-            case 1: return new IntentionToSellTampered(ci, ni);
-            case 2: return new IntentionToSellTamperedNotary(ci, ni);
-            case 3: return new IntentionToSellReplay(ci, ni);
-            case 4: return new IntentionToSellReplayNotary(ci, ni);
-            case 5: return new IntentionToSellAlteredKey(ci, ni);
-            case 6: return new GetStateOfGoodTampering(ci, ni);
-            case 7: return new GetStateOfGoodTamperingNotary(ci, ni);
-            case 8: return new GetStateOfGoodReplay(ci,ni);
-            case 9: return new GetStateOfGoodReplayNotary(ci, ni);
-            case 10: return new BuyGoodTampered(ci, ni);
-            case 11: return new BuyGoodTamperedNotary(ci, ni);
-            case 12: return new BuyGoodReplay(ci, ni);
-            case 13: return new BuyGoodReplayNotary(ci, ni);
-            case 14: return new Debug(ci, ni);
+            case 1: return new IntentionToSell(ci, ni);
+            case 2: return new GetStateOfGood(ci, ni);
+            case 3: return new BuyGoodWithoutPoW(ci, ni);
+            case 4: return new Debug(ci, ni);
+            case 6: return new IntentionToSellTo2(ci,ni);
+            case 7: return new IntentionToSellTo3(ci,ni);
+
         }
         return null;
     }

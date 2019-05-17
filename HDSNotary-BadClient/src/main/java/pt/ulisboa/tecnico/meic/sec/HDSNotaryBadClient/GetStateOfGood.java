@@ -14,9 +14,9 @@ import java.io.File;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetStateOfGoodReplayNotary extends Operation {
+public class GetStateOfGood extends Operation {
 
-    public GetStateOfGoodReplayNotary(ClientInterface ci, NotaryInterface ni) {
+    public GetStateOfGood(ClientInterface ci, NotaryMiddleware ni) {
         super("GetStateOfGood", ci, ni);
     }
 
@@ -51,6 +51,9 @@ public class GetStateOfGoodReplayNotary extends Operation {
 
             response = notaryInterface.getStateOfGood(request);
 
+            //Check the MAC using the cert of a corresponded Notary
+            System.setProperty("project.notary.cert.path", "../HDSNotaryLib/src/main/resources/certs/notary" + response.getNotaryID() + ".crt");
+
             VirtualCertificate notaryCert = new VirtualCertificate();
             notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
 
@@ -58,8 +61,6 @@ public class GetStateOfGoodReplayNotary extends Operation {
             if(Digest.verify(response, notaryCert) == false){
                 throw new HDSSecurityException(NOTARY_REPORT_TAMPERING);
             }
-
-            response.setUserClock(0);
 
             /*check freshness*/
             if(request.getUserClock() != response.getUserClock()){
@@ -80,6 +81,10 @@ public class GetStateOfGoodReplayNotary extends Operation {
 
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
+        }
+        catch (NullPointerException e) {
+            System.out.println("Amplification was probably triggered on server - some responses from notary might be " +
+                    "be missing");
         }
     }
 

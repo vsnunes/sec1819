@@ -6,7 +6,7 @@ import java.rmi.RemoteException;
 
 public class Debug extends Operation {
 
-    public Debug(ClientInterface ci, NotaryInterface ni) {
+    public Debug(ClientInterface ci, NotaryMiddleware ni) {
         super("Debug", ci, ni);
     }
 

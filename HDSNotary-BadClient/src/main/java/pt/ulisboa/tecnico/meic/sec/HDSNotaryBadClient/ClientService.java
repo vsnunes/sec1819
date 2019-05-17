@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient;
 
+import pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient.exceptions.NotaryMiddlewareException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.GoodException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.HDSSecurityException;
 import pt.ulisboa.tecnico.meic.sec.exceptions.TransactionException;
@@ -12,10 +13,8 @@ import pt.ulisboa.tecnico.meic.sec.util.Interaction;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
@@ -26,34 +25,30 @@ import static pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient.Operation.NOTARY_RE
 public class ClientService extends UnicastRemoteObject implements ClientInterface, Serializable {
 
     /** URI Of Notary **/
-    public static String NOTARY_URI = "//localhost:10000/HDSNotary";
 
-    public static NotaryInterface notaryInterface;
+    /** Certification Method used by Notary **/
+    public static boolean NOTARY_USES_VIRTUAL = true;
+
+    public static NotaryMiddleware notaryInterface;
 
     public static int userID = 1;
 
     /** Port for accepting clients connection to the service **/
-    public static int CLIENT_SERVICE_PORT = 9999;
+    public static int CLIENT_SERVICE_PORT = 10010 + userID;
     public static String CLIENT_SERVICE_NAME = "Client" + userID;
 
     /** Instance of ClientService the one will allow others client to connect to. **/
     private static ClientService instance;
 
-    protected ClientService() throws RemoteException {
+    protected ClientService() throws RemoteException, NotaryMiddlewareException, IOException {
         super();
 
-        try {
-            notaryInterface = (NotaryInterface) Naming.lookup(NOTARY_URI);
-        } catch (NotBoundException e) {
-            new BoxUI(":( NotBound on Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-        } catch (MalformedURLException e) {
-            new BoxUI(":( Malform URL! Cannot find Notary Service!").show(BoxUI.RED_BOLD_BRIGHT);
-        } catch (RemoteException e) {
-            new BoxUI(":( It looks like I miss the connection with Notary!").show(BoxUI.RED_BOLD_BRIGHT);
-        }
+
+        notaryInterface = new NotaryMiddleware(System.getProperty("project.nameserver.config"));
+
     }
 
-    public static ClientService getInstance() throws RemoteException {
+    public static ClientService getInstance() throws RemoteException, NotaryMiddlewareException, IOException {
         if(instance == null){
             return new ClientService();
         }
@@ -108,8 +103,13 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
 
             String data = "" + request.getSellerID() + request.getBuyerID() + request.getGoodID() + request.getSellerClock() + request.getBuyerClock();
             request.setSellerHMAC(Digest.createDigest(data, cert));
-
             response = notaryInterface.transferGood(request);
+            if(response == null) {
+                throw new GoodException("Byzantine quorum not achieved :(");
+            }
+
+            //Check the MAC using the cert of a corresponded Notary
+            System.setProperty("project.notary.cert.path", "../HDSNotaryLib/src/main/resources/certs/notary" + response.getNotaryID() + ".crt");
 
             /*checks answer from notary*/
             Certification notaryCert = new VirtualCertificate();
@@ -145,6 +145,9 @@ public class ClientService extends UnicastRemoteObject implements ClientInterfac
             new BoxUI("Security problem: " + e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
         } catch (GoodException e) {
             new BoxUI(e.getMessage()).show(BoxUI.RED_BOLD_BRIGHT);
+        } catch (NullPointerException e) {
+            System.out.println("Amplification was probably triggered on server - some responses from notary might be " +
+                    "be missing");
         }
 
         return null;

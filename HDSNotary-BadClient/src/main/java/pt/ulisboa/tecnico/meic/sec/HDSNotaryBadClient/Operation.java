@@ -32,7 +32,7 @@ public abstract class Operation {
 
     protected ClientInterface clientInterface;
 
-    protected NotaryInterface notaryInterface;
+    protected NotaryMiddleware notaryInterface;
 
     /** Status of this operation **/
     protected Status status;
@@ -52,14 +52,14 @@ public abstract class Operation {
         this.status = Status.NOT_EXECUTED;
     }
 
-    public Operation(String name, NotaryInterface notaryInterface) {
+    public Operation(String name, NotaryMiddleware notaryInterface) {
         this.name = name;
         this.args = new ArrayList<>();
         this.notaryInterface = notaryInterface;
         this.status = Status.NOT_EXECUTED;
     }
 
-    public Operation(String name, ClientInterface clientInterface, NotaryInterface notaryInterface) {
+    public Operation(String name, ClientInterface clientInterface, NotaryMiddleware notaryInterface) {
         this.name = name;
         this.args = new ArrayList<>();
         this.clientInterface = clientInterface;

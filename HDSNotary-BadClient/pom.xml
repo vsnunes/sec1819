@@ -8,8 +8,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mainClass>pt.ulisboa.tecnico.meic.sec.HDSNotaryBadClient.Client</mainClass>
 
-        <!-- Location of Notary Certification -->
+        <!-- The Servers URLs -->
+        <project.nameserver.config>../HDSNotaryLib/src/main/resources/Servers.cfg</project.nameserver.config>
+
+        <!-- Location of Notary Virtual Certification -->
         <project.notary.cert.path>../HDSNotaryLib/src/main/resources/certs/rootca.crt</project.notary.cert.path>
+        <project.notary.certCC.path>../HDSNotaryLib/src/main/resources/certs/rootcaCC.crt</project.notary.certCC.path>
 
         <!-- Location of User certificates -->
         <project.users.cert.path>../HDSNotaryLib/src/main/resources/certs/user</project.users.cert.path>
@@ -81,6 +85,10 @@
                             <value>${project.notary.cert.path}</value>
                         </systemProperty>
                         <systemProperty>
+                            <key>project.notary.certCC.path</key>
+                            <value>${project.notary.certCC.path}</value>
+                        </systemProperty>
+                        <systemProperty>
                             <key>project.users.cert.path</key>
                             <value>${project.users.cert.path}</value>
                         </systemProperty>
@@ -95,6 +103,10 @@
                         <systemProperty>
                             <key>project.user.private.ext</key>
                             <value>${project.user.private.ext}</value>
+                        </systemProperty>
+                        <systemProperty>
+                            <key>project.nameserver.config</key>
+                            <value>${project.nameserver.config}</value>
                         </systemProperty>
                     </systemProperties>
                 </configuration>
@@ -122,5 +134,5 @@
             </plugin>
         </plugins>
     </build>
-    
+
 </project>

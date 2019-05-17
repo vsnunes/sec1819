@@ -293,7 +293,9 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         int nounce  = request.getNounce();
         byte[] proofOfWork = request.getProofOfWork();
 
-        if(!Arrays.equals(proofOfWork, ProofOfWork.calculateWithNounce("2", request.toStringPOW(), nounce))){
+        System.out.println(DatatypeConverter.printBase64Binary(proofOfWork));
+        if(!Arrays.equals(proofOfWork, ProofOfWork.calculateWithNounce("2", request.toStringPOW(), nounce)) && ProofOfWork.verifyProof(proofOfWork, 3)){
+            System.out.println("Proof of Work not valid");
             throw new HDSSecurityException("Proof of Work not valid");
         }
         //ClientEcho clientEcho = clientEchos[clientId];

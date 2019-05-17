@@ -85,7 +85,7 @@ public class ClientBoxStats implements ClientVisitor {
     }
 
     @Override
-    public void accept(BuyGoodTampered operation) {
+    public void accept(BuyGoodWithoutPoW operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
         }
@@ -95,17 +95,7 @@ public class ClientBoxStats implements ClientVisitor {
     }
 
     @Override
-    public void accept(BuyGoodTamperedNotary operation) {
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
-        }
-        else {
-            new BoxUI(CLIENT_BUYGOOD_NOTOK).show(BoxUI.RED_BOLD_BRIGHT);
-        }
-    }
-
-    @Override
-    public void accept(GetStateOfGoodReplay operation) {
+    public void accept(GetStateOfGood operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
         } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
@@ -113,93 +103,28 @@ public class ClientBoxStats implements ClientVisitor {
     }
 
     @Override
-    public void accept(GetStateOfGoodReplayNotary operation) {
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
-        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
-
-    }
-
-    @Override
-    public void accept(GetStateOfGoodTampering operation) {
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
-        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
-
-    }
-
-    @Override
-    public void accept(GetStateOfGoodTamperingNotary operation) {
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(INFO_ITEM_FORSALE).show(BoxUI.GREEN_BOLD);
-        } else new BoxUI(INFO_ITEM_NOTFORSALE).show(BoxUI.RED_BOLD);
-
-    }
-
-    @Override
-    public void accept(BuyGoodReplayNotary operation) {
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
-        }
-        else {
-            new BoxUI(CLIENT_BUYGOOD_NOTOK).show(BoxUI.RED_BOLD_BRIGHT);
-        }
-    }
-
-    @Override
-    public void accept(BuyGoodReplay operation) {
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(CLIENT_BUYGOOD_OK).show(BoxUI.GREEN_BOLD);
-        }
-        else {
-            new BoxUI(CLIENT_BUYGOOD_NOTOK).show(BoxUI.RED_BOLD_BRIGHT);
-        }
-    }
-
-    @Override
-    public void accept(IntentionToSellTampered operation) {
+    public void accept(IntentionToSell operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
         } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);
     }
 
     @Override
-    public void accept(IntentionToSellTamperedNotary operation) {
+    public void accept(IntentionToSellTo2 operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
         } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);
     }
 
     @Override
-    public void accept(IntentionToSellReplay operation) {
+    public void accept(IntentionToSellTo3 operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
         } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);
     }
 
     @Override
-    public void accept(IntentionToSellReplayNotary operation) {
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
-        } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);
-    }
-
-    @Override
-    public void accept(IntentionToSellAlteredKey operation) {
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(INFO_ITEM_INT_FORSALE).show(BoxUI.GREEN_BOLD);
-        } else new BoxUI(INFO_ITEM_INT_NOTFORSALE).show(BoxUI.RED_BOLD);
-    }
-
-    @Override
-    public void accept(TransferGoodTampered operation) {
-        if (operation.getStatus() == Operation.Status.SUCCESS) {
-            new BoxUI(CLIENT_SUCCESS_TRANSFER).show(BoxUI.GREEN_BOLD);
-        } else new BoxUI(CLIENT_TRANSFER_PROBLEM).show(BoxUI.RED_BOLD);
-    }
-
-    @Override
-    public void accept(TransferGoodReplay operation) {
+    public void accept(TransferGood operation) {
         if (operation.getStatus() == Operation.Status.SUCCESS) {
             new BoxUI(CLIENT_SUCCESS_TRANSFER).show(BoxUI.GREEN_BOLD);
         } else new BoxUI(CLIENT_TRANSFER_PROBLEM).show(BoxUI.RED_BOLD);

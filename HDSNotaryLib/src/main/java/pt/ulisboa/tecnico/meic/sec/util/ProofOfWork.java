@@ -53,7 +53,7 @@ public class ProofOfWork {
         return null;
     }
 
-    private static boolean verifyProof(byte[] hmac, int difficulty) {
+    public static boolean verifyProof(byte[] hmac, int difficulty) {
         int i = 0;
         while (i < difficulty) {
             if(hmac[i] != 0)
