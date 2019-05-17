@@ -88,6 +88,8 @@ public class Client {
             menu.addEntry("Exit");
             menu.addEntry("Intention to sell broadcast to 2 out of 4 notaries");
             menu.addEntry("Intention to sell broadcast to 3 out of 4 notaries");
+            menu.addEntry("Intention to sell - Replay Attack");
+            menu.addEntry("Intention to sell - Tampered");
 
             option = menu.display();
 
@@ -166,6 +168,8 @@ public class Client {
             case 4: return new Debug(ci, ni);
             case 6: return new IntentionToSellTo2(ci,ni);
             case 7: return new IntentionToSellTo3(ci,ni);
+            case 8: return new IntentionToSellReplay(ci, ni);
+            case 9: return new IntentionToSellTampered(ci, ni);
 
         }
         return null;
