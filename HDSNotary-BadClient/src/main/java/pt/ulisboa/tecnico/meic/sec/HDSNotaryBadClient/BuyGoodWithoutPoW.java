@@ -6,8 +6,10 @@ import pt.ulisboa.tecnico.meic.sec.interfaces.ClientInterface;
 import pt.ulisboa.tecnico.meic.sec.interfaces.NotaryInterface;
 import pt.ulisboa.tecnico.meic.sec.util.Digest;
 import pt.ulisboa.tecnico.meic.sec.util.Interaction;
+import pt.ulisboa.tecnico.meic.sec.util.ProofOfWork;
 import pt.ulisboa.tecnico.meic.sec.util.VirtualCertificate;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -15,17 +17,17 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 
-public class BuyGoodTamperedNotary extends Operation {
+public class BuyGoodWithoutPoW extends Operation {
     private String clientID;
-    public BuyGoodTamperedNotary(ClientInterface ci, NotaryInterface ni) {
-        super("BuyGoodTampered", ci, ni);
+    public BuyGoodWithoutPoW(ClientInterface ci, NotaryMiddleware ni) {
+        super("BuyGoodWithoutPow", ci, ni);
     }
 
     @Override
     public boolean getAndCheckArgs() {
         try {
             clientID = new BoxUI("What is the client ID?").showAndGet();
-            args.add("//localhost:1000" + clientID + "/Client" + clientID);
+            args.add("//localhost:1001" + clientID + "/Client" + clientID);
             args.add(Integer.parseInt(new BoxUI("What is the good ID to buy?").showAndGet()));
             return true;
         } catch(NumberFormatException e) {
@@ -68,7 +70,6 @@ public class BuyGoodTamperedNotary extends Operation {
                     ClientService.userID + System.getProperty("project.user.private.ext")).getAbsolutePath());
 
 
-
             int buyerClock = notaryInterface.getClock(ClientService.userID);
             int sellerClock = notaryInterface.getClock(Integer.parseInt(clientID));
 
@@ -77,14 +78,25 @@ public class BuyGoodTamperedNotary extends Operation {
 
             String data = "" + good + ClientService.userID + request.getBuyerClock() + request.getSellerClock();
             request.setBuyerHMAC(Digest.createDigest(data, cert));
+            /** increment id of current read operation*/
+            request.setWts(request.getWts()+1);
+            /** this signature is used to check byzantine things */
+            request.setSigma(Digest.createDigest(""+request.getWts()+request.getResponse(), cert));
+
+            System.out.println("Wrong proof of work");
+            ProofOfWork proofOfWork = ProofOfWork.calculateHMAC("2",request.toStringPOW(),1);
+            request.setProofOfWork(Digest.createDigest(data, cert));
+            request.setNounce(2);
 
             response = anotherClient.buyGood(request);
             if(response != null) {
+
+                //Check the MAC using the cert of a corresponded Notary
+                System.setProperty("project.notary.cert.path", "../HDSNotaryLib/src/main/resources/certs/notary" + response.getNotaryID() + ".crt");
+                
                 /*checks answer from notary*/
                 VirtualCertificate notaryCert = new VirtualCertificate();
                 notaryCert.init(new File(System.getProperty("project.notary.cert.path")).getAbsolutePath());
-
-                response.setGoodID(3);
 
                 /*compare hmacs*/
                 if (Digest.verify(response, notaryCert) == false) {
@@ -133,6 +145,10 @@ public class BuyGoodTamperedNotary extends Operation {
 
         } catch (HDSSecurityException e) {
             setStatus(Status.FAILURE_SECURITY, e.getMessage());
+        }
+        catch (NullPointerException e) {
+            System.out.println("Amplification was probably triggered on server - some responses from notary might be " +
+                    "be missing");
         }
 
         //DO NOT BLOCK THIS THREAD
