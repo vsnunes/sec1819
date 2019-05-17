@@ -303,7 +303,7 @@ public class NotaryEchoMiddleware extends UnicastRemoteObject implements NotaryI
         byte[] proofOfWork = request.getProofOfWork();
 
         System.out.println(DatatypeConverter.printBase64Binary(proofOfWork));
-        if(!Arrays.equals(proofOfWork, ProofOfWork.calculateWithNounce("2", request.toStringPOW(), nounce)) && ProofOfWork.verifyProof(proofOfWork, 3)){
+        if(!Arrays.equals(proofOfWork, ProofOfWork.calculateWithNounce("2", request.toStringPOW(), nounce)) || (!ProofOfWork.verifyProof(proofOfWork, 3))){
             System.out.println("Proof of Work not valid");
             throw new HDSSecurityException("Proof of Work not valid");
         }
