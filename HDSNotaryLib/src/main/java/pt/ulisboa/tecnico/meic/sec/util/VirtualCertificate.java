@@ -113,6 +113,7 @@ public class VirtualCertificate implements Certification {
         } catch(CertificateException e) {
             throw new HDSSecurityException("Public Key problem: " + e.getMessage());
         } catch (IOException e) {
+            e.printStackTrace();
             throw new HDSSecurityException("IO Problem: " + e.getMessage());
         } catch (InvalidKeyException e) {
             throw new HDSSecurityException("Invalid Key exception: " + e.getMessage());

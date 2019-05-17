@@ -132,7 +132,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
 
         try {
-            Certification notaryCert = getCert();
+            Certification notaryCert = getCert(request.getNotaryID());
 
             // compare hmacs
             try {
@@ -251,7 +251,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
 
 
         try {
-            Certification notaryCert = getCert();
+            Certification notaryCert = getCert(request.getNotaryID());
 
             try {
                 if (Digest.verify(request.getReadySignature(), request.readyString(), notaryCert) == false) {
@@ -279,7 +279,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             request.setNotaryID(idNotary);
 
             try {
-                cert = getCert();
+                cert = getCert(idNotary);
                 request.setReadySignature(Digest.createDigest(request.readyString(), cert));
             } catch (NoSuchAlgorithmException e1) {
                 System.out.println("In amplification: digest of ready message not created! (NoSuchAlgorithm)");
@@ -346,7 +346,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
         }
     }
 
-    private Certification getCert() throws HDSSecurityException {
+    private Certification getCert(int notaryId) throws HDSSecurityException {
         Certification cert = null;
         NotaryService notaryService = null;
         try {
@@ -354,7 +354,7 @@ public class NotaryCommunicationService extends UnicastRemoteObject
             //VIRTUAL CERTS
             if (notaryService.isUsingVirtualCerts()) {
                 cert = new VirtualCertificate();
-                cert.init("", new File(System.getProperty("project.notary.private")).getAbsolutePath());
+                cert.init(new File("../HDSNotaryLib/src/main/resources/certs/notary" + notaryId + ".crt").getAbsolutePath(), new File(System.getProperty("project.notary.private")).getAbsolutePath());
             } else {
                 cert = new CCSmartCard();
                 cert.init();
