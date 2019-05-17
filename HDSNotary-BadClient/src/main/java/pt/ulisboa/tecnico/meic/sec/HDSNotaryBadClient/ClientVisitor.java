@@ -15,4 +15,6 @@ public interface ClientVisitor {
     void accept(Debug operation);
     void accept(IntentionToSellTo2 operation);
     void accept(IntentionToSellTo3 operation);
+    void accept(IntentionToSellReplay operation);
+    void accept(IntentionToSellTampered operation);
 }
