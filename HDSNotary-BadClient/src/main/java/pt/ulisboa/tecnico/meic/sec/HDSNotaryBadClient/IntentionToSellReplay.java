@@ -49,7 +49,7 @@ public class IntentionToSellReplay extends Operation {
             request.setUserID(ClientService.userID);
             request.setGoodID(good);
             request.setResponse(intention);
-            request.setUserClock(1);
+            request.setUserClock(0);
             request.setHmac(Digest.createDigest(request, cert));
 
 
